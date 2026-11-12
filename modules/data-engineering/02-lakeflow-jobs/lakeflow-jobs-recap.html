@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recap 2: Deploy Workloads with Lakeflow Jobs · dbxhelp</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<style>
+  :root { --accent: #FF3621; --navy: #1B3139; --blue: #2272B4; --bg: #F9F7F4; --text: #1F2328; --muted: #6B7280; --border: #E5E7EB; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); }
+  header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: var(--navy); color: #fff; }
+  header a.home { color: #fff; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  header .title { color: #CBD5E1; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+  .toggle { display: inline-flex; background: rgba(255,255,255,0.12); border-radius: 999px; padding: 3px; }
+  .toggle button { border: 0; background: transparent; color: #E2E8F0; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 0.9em; }
+  .toggle button.active { background: #fff; color: var(--navy); font-weight: 600; }
+  header .link { color: #E2E8F0; font-size: 0.85em; text-decoration: none; border: 1px solid rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 6px; }
+  header .link:hover { background: rgba(255,255,255,0.1); }
+
+  /* ---------- shared markdown styling ---------- */
+  .md h1 { font-size: 2em; color: var(--navy); margin: 0 0 0.5em; }
+  .md h2 { color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 0.3em; margin-top: 1.8em; }
+  .md h3 { color: var(--navy); }
+  .md a { color: var(--blue); }
+  .md code { background: #EEF2F6; padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.9em; }
+  .md pre { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow: auto; }
+  .md pre code { background: none; padding: 0; font-size: 0.88em; line-height: 1.5; }
+  .md blockquote { margin: 1em 0; padding: 10px 16px; border-left: 4px solid var(--blue); background: #E3F2FD; border-radius: 4px; color: #1F2937; }
+  .md blockquote p { margin: 0.3em 0; }
+  .md table { border-collapse: collapse; width: 100%; margin: 1em 0; background: #fff; font-size: 0.95em; }
+  .md th, .md td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  .md th { background: #F1F5F9; }
+  .md li { margin: 0.25em 0; line-height: 1.55; }
+  .md p { line-height: 1.6; }
+
+  /* ---------- document mode ---------- */
+  #doc { max-width: 920px; margin: 0 auto; padding: 32px 24px 80px; }
+  #doc .md { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 36px 44px; }
+
+  /* ---------- presentation mode ---------- */
+  #slides { display: none; height: calc(100vh - 52px); padding: 18px; }
+  body.present #doc { display: none; }
+  body.present #slides { display: flex; flex-direction: column; align-items: center; }
+  .stage { flex: 1; width: 100%; max-width: 1280px; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .slide { width: 100%; height: 100%; max-height: 760px; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-top: 6px solid var(--accent); padding: 40px 56px; overflow: auto; font-size: 1.22em; }
+  .slide.title-slide { display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, var(--navy), #24495A); color: #fff; }
+  .slide.title-slide h1 { color: #fff; font-size: 2.3em; }
+  .slide.title-slide blockquote { background: rgba(255,255,255,0.1); border-left-color: var(--accent); color: #fff; }
+  .slide.title-slide code { background: rgba(255,255,255,0.15); color: #fff; }
+  .slide.title-slide strong { color: #FFD7CF; }
+  .slide h2 { margin-top: 0; font-size: 1.6em; border-bottom-color: var(--accent); }
+  .controls { display: flex; align-items: center; gap: 14px; padding-top: 12px; color: var(--muted); font-size: 0.9em; }
+  .controls button { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 1em; }
+  .controls button:hover { border-color: var(--blue); }
+  .progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--accent); transition: width 0.2s; }
+  body:not(.present) .progress { display: none; }
+  :fullscreen #slides { height: 100vh; }
+  @media (max-width: 700px) { .slide { padding: 24px; font-size: 1em; } #doc .md { padding: 20px; } header .title { display: none; } }
+  @media print { header, .controls, .progress { display: none; } #doc .md { border: 0; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="../../../index.html" title="All topics"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</a>
+  <span class="title">Data Engineering with Databricks › Recap 2: Deploy Workloads with Lakeflow Jobs</span>
+  <div class="toggle" role="tablist">
+    <button id="btnDoc" class="active" title="Document view (D)">📄 Document</button>
+    <button id="btnSlides" title="Presentation view (P)">🎞️ Presentation</button>
+  </div>
+  <a class="link" href="lakeflow-jobs-recap.md" download>⬇ .md</a>
+  <a class="link" href="https://github.com/misrori/dbxhelp/tree/main/modules/data-engineering/02-lakeflow-jobs" target="_blank">GitHub</a>
+</header>
+
+<main id="doc"><article class="md" id="docBody"></article></main>
+
+<section id="slides">
+  <div class="stage"><div class="slide md" id="slide"></div></div>
+  <div class="controls">
+    <button id="prev" title="Previous (←)">←</button>
+    <span id="counter"></span>
+    <button id="next" title="Next (→ / Space)">→</button>
+    <button id="fs" title="Fullscreen (F)">⛶</button>
+    <span>← → navigate · F fullscreen · D document</span>
+  </div>
+</section>
+<div class="progress" id="progress"></div>
+
+<script type="text/markdown" id="source">
+# Recap: Deploy Workloads with Lakeflow Jobs
+
+> **Course 2 of 4 · Data Engineering with Databricks** · ⏱ ~8 minutes
+>
+> Turning notebooks, SQL and pipelines into **reliable, scheduled, observable** production workloads.
+
+**The one idea to remember:** a job is a **DAG of tasks**. Dependencies, triggers, parameters and conditions decide *what* runs and *when*. Repair runs and notifications keep it healthy.
+
+## What we covered
+
+| Lesson | Key takeaway |
+|---|---|
+| 1 Creating a job | Single notebook task in the **Jobs UI**: configure, run, review the run |
+| 2 Lab: multiple tasks | Several tasks with **dependencies**, building a DAG |
+| 3 Scheduling options | **Scheduled**, **file arrival**, **continuous** triggers, plus **task parameters** |
+| 4 Controlling the flow | **Run if** conditions, **repair runs**, **task values**, the **If/else** task |
+| 5 Lab: modular orchestration | **Run Job** task: a parent ("master") job calling other jobs |
+
+## Jobs, tasks and the DAG
+
+```
+Ingest_Source_1 ─┐
+Ingest_Source_2 ─┼─► Clean_Data ─► If/else: bad_records > 0 ─true──► Fix_Bad_Records
+Ingest_Source_3 ─┘                                           └false─► Aggregate_Records
+```
+
+| Building block | What it is |
+|---|---|
+| **Job** | A named workflow with triggers, parameters, notifications and permissions |
+| **Task** | One unit of work: notebook, Python script/wheel, **SQL**, **dashboard**, **pipeline**, dbt, **Run Job**, **If/else**, **For each** |
+| **Dependency** | "Depends on" edges between tasks. Tasks without dependencies run **in parallel** |
+| **Compute** | **Serverless** (recommended), a **job cluster** that tasks of the job can share, or a **SQL warehouse** for SQL and dashboard tasks |
+
+Job clusters are created for the run and terminated afterwards. They are cheaper than all-purpose clusters, which are meant for interactive development.
+
+## Triggers: when does a job run?
+
+| Trigger | Starts a run | Use when |
+|---|---|---|
+| **Manual / API** | *Run now*, REST API, another orchestrator | Ad hoc runs, testing |
+| **Scheduled** | Cron-style schedule with a time zone (UI or cron syntax) | Data arrives at **known times**; reports due at fixed times |
+| **File arrival** | New files in a UC **volume** or **external location** (checked about every minute; use **Test trigger** to verify the path) | Files arrive at **unpredictable** times |
+| **Table update** | One or more UC tables are updated | Run right after an upstream team's table changes |
+| **Continuous** | A new run starts as soon as the previous one ends | Always-on streaming workloads |
+
+Data-driven triggers (file arrival, table update) avoid **empty runs** and runs that start **too early**.
+
+## Parameters and dynamic values
+
+```python
+# In the task notebook, read a task/job parameter like a widget
+catalog = dbutils.widgets.get("catalog")
+
+# Pass a value to downstream tasks
+dbutils.jobs.taskValues.set(key="bad_records", value=5)
+```
+
+| Kind | Example | Scope |
+|---|---|---|
+| **Job parameters** | `env = prod`, referenced as `{{job.parameters.env}}` | Pushed down to every task |
+| **Task parameters** | `catalog = dbacademy` | One task |
+| **Dynamic value references** | `{{job.id}}`, `{{job.run_id}}`, `{{job.start_time.iso_date}}`, `{{tasks.Clean_Data.values.bad_records}}` | Resolved at run time |
+| **Task values** | `dbutils.jobs.taskValues.set / get` | Pass small results between tasks |
+
+Parameters make one notebook reusable across catalogs, environments and dates. Never hard-code them.
+
+## Controlling the flow
+
+**Run if dependencies:** when should a task with upstream tasks start?
+
+| Run if | Runs when | Typical use |
+|---|---|---|
+| **All succeeded** (default) | every upstream task succeeded | Normal flow |
+| At least one succeeded | ≥ 1 succeeded | Partial-source processing |
+| None failed | nothing failed | Skip-tolerant flows |
+| **All done** | everything finished, whatever the result | **Cleanup**, final notification |
+| At least one failed / All failed | something (everything) failed | **Alerting**, fallback |
+
+**If/else condition task:** branch on a value, e.g. `{{tasks.Clean_Data.values.bad_records}} > 0`. The *true* branch fixes the bad records, and the *false* branch goes straight to aggregation.
+
+**For each task:** run a nested task once per item of a list (e.g. per country), with a **concurrency** setting.
+
+## When things fail
+
+- **Repair run:** after a failure, re-run **only the failed tasks and their dependents**. Successful tasks are not executed again, which saves time and money.
+- **Retries:** per task, a retry count and interval. Retries are off by default for most tasks.
+- **Timeout:** the maximum duration of a task. When exceeded, the status is *Timed Out*. With retries, the timeout applies to each attempt.
+- **Duration threshold:** sends a **warning** only and does not stop the task.
+- **Notifications:** email, Slack or webhooks on start, success, failure or duration warning, at job or task level.
+- **Max concurrent runs:** the default is **1**. Extra triggered runs are skipped unless **queueing** is enabled.
+- Task statuses to recognise: *Succeeded*, *Failed*, ***Upstream failed*** (a dependency failed), *Excluded* (condition not met), *Timed Out*, *Skipped*.
+
+## Modular orchestration: Run Job task
+
+```
+Master_Job
+ ├─ Run Job: Ingestion_Job ─┐
+ ├─ Run Job: Reference_Job ─┼─► Run Job: Reporting_Job
+```
+
+- Split large workflows into **smaller, reusable jobs** owned by different people or teams.
+- The parent job controls the order and passes parameters down.
+- Each child job keeps its own run history, permissions and compute settings.
+
+## Decision cheat sheet
+
+| Situation | Choose |
+|---|---|
+| Files land at random times during the day | **File arrival** trigger, not a 5-minute schedule |
+| Downstream job must run after another team's table is refreshed | **Table update** trigger |
+| A cleanup task must always run | Run if **All done** |
+| Only the third of five tasks failed | **Repair run** |
+| Different logic when bad records are found | **If/else** task with a **task value** |
+| Same notebook for 12 countries | **For each** task with parameters |
+| A 40-task workflow maintained by three teams | Several jobs combined with **Run Job** tasks |
+
+## Common mistakes
+
+- ❌ Raising the duration **warning** threshold to fix *Timed Out* failures. It's the **timeout** that stops the task.
+- ❌ Re-running the whole job after one task failed. Use **repair run**.
+- ❌ Running production jobs on an **all-purpose** cluster. Use **serverless** or a **job cluster**.
+- ❌ Hard-coding catalog or schema names in task notebooks. Use **parameters**.
+- ❌ Expecting overlapping runs: max concurrent runs is **1** by default.
+
+**Next course:** *Build Data Pipelines with Lakeflow Spark Declarative Pipelines*, the pipelines these jobs will trigger.
+
+</script>
+<script>
+function dbxQuiz(root, questions) {
+  if (typeof root === 'string') root = document.getElementById(root);
+  var i = 0, score = 0, picked = null, shown = false;
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/`([^`]+)`/g, '<code>$1</code>'); }
+  function btn(label, primary) { return '<button style="margin-top:14px;padding:8px 18px;border-radius:4px;border:none;cursor:pointer;background:' + (primary ? '#2272B4' : '#E0E0E0') + ';color:' + (primary ? '#fff' : '#333') + ';font-size:0.95em">' + label + '</button>'; }
+  function render() {
+    if (i >= questions.length) {
+      root.innerHTML = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;text-align:center;background:#fff"><div style="font-size:1.3em;font-weight:bold;color:#333">Score: ' + score + ' / ' + questions.length + '</div>' + btn('Retake', true) + '</div>';
+      root.querySelector('button').onclick = function () { i = 0; score = 0; picked = null; shown = false; render(); };
+      return;
+    }
+    var Q = questions[i], h = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;background:#fff">';
+    h += '<div style="color:#999;font-size:0.85em;margin-bottom:6px">Question ' + (i + 1) + ' of ' + questions.length + '</div>';
+    h += '<div style="font-weight:bold;color:#333;margin-bottom:12px;line-height:1.5">' + esc(Q.q) + '</div>';
+    Q.o.forEach(function (t, k) {
+      var bg = '#fff', bd = '#e0e0e0';
+      if (shown && k === Q.c) { bg = '#E8F5E9'; bd = '#43A047'; }
+      else if (shown && k === picked) { bg = '#FFEBEE'; bd = '#E53935'; }
+      else if (!shown && k === picked) { bg = '#E3F2FD'; bd = '#2272B4'; }
+      h += '<div data-k="' + k + '" style="padding:10px 14px;margin:6px 0;border:2px solid ' + bd + ';background:' + bg + ';border-radius:6px;cursor:' + (shown ? 'default' : 'pointer') + ';color:#333">' + String.fromCharCode(97 + k) + ') ' + esc(t) + '</div>';
+    });
+    if (shown) {
+      h += '<div style="margin-top:12px;padding:12px;background:#F5F5F5;border-radius:6px;color:#333"><strong>' + (picked === Q.c ? '&#9989; Correct.' : '&#10060; Not quite.') + '</strong> ' + esc(Q.e) + '</div>' + btn(i + 1 < questions.length ? 'Next' : 'See score', true);
+    } else {
+      h += btn('Submit', picked !== null);
+    }
+    root.innerHTML = h + '</div>';
+    if (!shown) root.querySelectorAll('[data-k]').forEach(function (el) { el.onclick = function () { picked = +el.getAttribute('data-k'); render(); }; });
+    root.querySelector('button').onclick = function () {
+      if (!shown) { if (picked === null) return; if (picked === Q.c) score++; shown = true; }
+      else { i++; picked = null; shown = false; }
+      render();
+    };
+  }
+  render();
+}
+
+var QUIZ = [{"q": "Files from a partner arrive in a Unity Catalog volume at unpredictable times. How should the processing job be triggered?", "o": ["A schedule every 5 minutes", "A continuous trigger", "A file arrival trigger on the volume", "Manually by an operator"], "c": 2, "e": "A file arrival trigger starts the job only when new files appear. There are no empty runs and no delay waiting for the next schedule."}, {"q": "In a 5-task job, only task 3 failed after tasks 1 and 2 succeeded. What is the most efficient way to finish the run after fixing the bug?", "o": ["Run the whole job again", "Use Repair run to re-run the failed task and its dependents", "Clone the job and run only task 3", "Increase the retry count and wait"], "c": 1, "e": "Repair run re-executes only the failed tasks and their downstream dependents. Successful tasks are not repeated."}, {"q": "A cleanup task must run at the end of every job run, even when upstream tasks fail. Which Run if condition do you set?", "o": ["All succeeded", "At least one succeeded", "None failed", "All done"], "c": 3, "e": "'All done' runs once all upstream tasks have finished, whatever their result. That makes it the right choice for cleanup and final notifications."}, {"q": "The notebook of task Clean_Data calls `dbutils.jobs.taskValues.set(key='bad_records', value=5)`. How does a downstream If/else task reference this value?", "o": ["`{{job.parameters.bad_records}}`", "`{{tasks.Clean_Data.values.bad_records}}`", "`dbutils.widgets.get('bad_records')`", "`${bad_records}`"], "c": 1, "e": "Task values are referenced with `{{tasks.<task_key>.values.<key>}}` in downstream tasks, including If/else conditions."}, {"q": "A task keeps ending with status 'Timed Out' although its runs are legitimately getting longer. What should you change?", "o": ["The duration warning threshold", "The task timeout", "Max concurrent runs", "The notification settings"], "c": 1, "e": "The timeout stops the task. The duration threshold only sends a warning and never stops it."}];
+</script>
+<script>
+(function () {
+  var md = document.getElementById('source').textContent.replace(/<\\\/script/gi, '</script').trim();
+  marked.setOptions({ gfm: true, breaks: false });
+  function render(text) {
+    var div = document.createElement('div');
+    div.innerHTML = marked.parse(text);
+    div.querySelectorAll('pre code').forEach(function (el) { try { hljs.highlightElement(el); } catch (e) {} });
+    div.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; });
+    return div.innerHTML;
+  }
+
+  // Document view: the whole markdown file
+  var docBody = document.getElementById('docBody');
+  docBody.innerHTML = render(md);
+  if (QUIZ && QUIZ.length) {
+    docBody.insertAdjacentHTML('beforeend', '<h2>Check yourself</h2><div id="quizDoc"></div>');
+    dbxQuiz('quizDoc', QUIZ);
+  }
+
+  // Presentation view: split on "## " headings (outside fenced code blocks)
+  var slides = [], cur = [], fence = false;
+  md.split('\n').forEach(function (line) {
+    if (/^\s*```/.test(line)) fence = !fence;
+    if (!fence && /^## /.test(line) && cur.length) { slides.push(cur.join('\n')); cur = []; }
+    cur.push(line);
+  });
+  if (cur.length) slides.push(cur.join('\n'));
+  var html = slides.map(render), idx = 0;
+  if (QUIZ && QUIZ.length) { slides.push('quiz'); html.push('<h2>Check yourself</h2><div class="quiz-slot"></div>'); }
+
+  var slideEl = document.getElementById('slide'), counter = document.getElementById('counter'), progress = document.getElementById('progress');
+  function show(n) {
+    idx = Math.max(0, Math.min(slides.length - 1, n));
+    slideEl.innerHTML = html[idx];
+    slideEl.classList.toggle('title-slide', idx === 0);
+    slideEl.scrollTop = 0;
+    var slot = slideEl.querySelector('.quiz-slot');
+    if (slot) dbxQuiz(slot, QUIZ);
+    counter.textContent = (idx + 1) + ' / ' + slides.length;
+    progress.style.width = ((idx + 1) / slides.length * 100) + '%';
+    history.replaceState(null, '', '#slides/' + (idx + 1));
+  }
+  function mode(m) {
+    var present = m === 'slides';
+    document.body.classList.toggle('present', present);
+    document.getElementById('btnSlides').classList.toggle('active', present);
+    document.getElementById('btnDoc').classList.toggle('active', !present);
+    if (present) show(idx); else history.replaceState(null, '', '#doc');
+  }
+  document.getElementById('btnDoc').onclick = function () { mode('doc'); };
+  document.getElementById('btnSlides').onclick = function () { mode('slides'); };
+  document.getElementById('prev').onclick = function () { show(idx - 1); };
+  document.getElementById('next').onclick = function () { show(idx + 1); };
+  document.getElementById('fs').onclick = function () {
+    if (document.fullscreenElement) document.exitFullscreen(); else document.getElementById('slides').requestFullscreen();
+  };
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var present = document.body.classList.contains('present');
+    if (e.key === 'p' || e.key === 'P') return mode('slides');
+    if (e.key === 'd' || e.key === 'D') return mode('doc');
+    if (!present) return;
+    if (['ArrowRight', 'PageDown', ' '].indexOf(e.key) >= 0) { e.preventDefault(); show(idx + 1); }
+    else if (['ArrowLeft', 'PageUp'].indexOf(e.key) >= 0) { e.preventDefault(); show(idx - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'f' || e.key === 'F') document.getElementById('fs').click();
+  });
+
+  var m = location.hash.match(/^#slides(?:\/(\d+))?/);
+  if (m) { idx = (parseInt(m[1] || '1', 10) || 1) - 1; mode('slides'); }
+})();
+</script>
+</body>
+</html>

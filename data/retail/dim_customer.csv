@@ -1,0 +1,501 @@
+customer_id,customer_name,region,segment
+1,Customer 0001,North America,Enterprise
+2,Customer 0002,EMEA,SMB
+3,Customer 0003,North America,Consumer
+4,Customer 0004,APAC,Enterprise
+5,Customer 0005,EMEA,Enterprise
+6,Customer 0006,EMEA,SMB
+7,Customer 0007,EMEA,Enterprise
+8,Customer 0008,North America,SMB
+9,Customer 0009,EMEA,SMB
+10,Customer 0010,APAC,Enterprise
+11,Customer 0011,APAC,Consumer
+12,Customer 0012,EMEA,Enterprise
+13,Customer 0013,LATAM,SMB
+14,Customer 0014,EMEA,Enterprise
+15,Customer 0015,APAC,Consumer
+16,Customer 0016,APAC,Consumer
+17,Customer 0017,North America,Consumer
+18,Customer 0018,EMEA,SMB
+19,Customer 0019,APAC,Consumer
+20,Customer 0020,APAC,SMB
+21,Customer 0021,North America,Enterprise
+22,Customer 0022,EMEA,SMB
+23,Customer 0023,EMEA,SMB
+24,Customer 0024,EMEA,SMB
+25,Customer 0025,North America,SMB
+26,Customer 0026,EMEA,SMB
+27,Customer 0027,EMEA,Consumer
+28,Customer 0028,North America,Consumer
+29,Customer 0029,EMEA,Consumer
+30,Customer 0030,EMEA,SMB
+31,Customer 0031,LATAM,Consumer
+32,Customer 0032,North America,Consumer
+33,Customer 0033,APAC,Consumer
+34,Customer 0034,EMEA,Enterprise
+35,Customer 0035,EMEA,SMB
+36,Customer 0036,EMEA,Consumer
+37,Customer 0037,APAC,SMB
+38,Customer 0038,North America,SMB
+39,Customer 0039,APAC,SMB
+40,Customer 0040,EMEA,SMB
+41,Customer 0041,North America,SMB
+42,Customer 0042,North America,Consumer
+43,Customer 0043,EMEA,SMB
+44,Customer 0044,LATAM,SMB
+45,Customer 0045,EMEA,Enterprise
+46,Customer 0046,EMEA,Consumer
+47,Customer 0047,APAC,SMB
+48,Customer 0048,EMEA,SMB
+49,Customer 0049,LATAM,SMB
+50,Customer 0050,LATAM,Consumer
+51,Customer 0051,EMEA,Consumer
+52,Customer 0052,North America,SMB
+53,Customer 0053,EMEA,Consumer
+54,Customer 0054,EMEA,SMB
+55,Customer 0055,North America,Consumer
+56,Customer 0056,APAC,SMB
+57,Customer 0057,North America,Enterprise
+58,Customer 0058,APAC,Consumer
+59,Customer 0059,EMEA,Consumer
+60,Customer 0060,North America,Enterprise
+61,Customer 0061,APAC,SMB
+62,Customer 0062,APAC,SMB
+63,Customer 0063,EMEA,SMB
+64,Customer 0064,EMEA,Consumer
+65,Customer 0065,APAC,Consumer
+66,Customer 0066,EMEA,Enterprise
+67,Customer 0067,APAC,Consumer
+68,Customer 0068,EMEA,SMB
+69,Customer 0069,EMEA,Consumer
+70,Customer 0070,APAC,Enterprise
+71,Customer 0071,North America,SMB
+72,Customer 0072,EMEA,Consumer
+73,Customer 0073,EMEA,SMB
+74,Customer 0074,North America,Consumer
+75,Customer 0075,EMEA,SMB
+76,Customer 0076,LATAM,Consumer
+77,Customer 0077,EMEA,SMB
+78,Customer 0078,EMEA,SMB
+79,Customer 0079,EMEA,SMB
+80,Customer 0080,EMEA,SMB
+81,Customer 0081,EMEA,Consumer
+82,Customer 0082,EMEA,Consumer
+83,Customer 0083,APAC,Enterprise
+84,Customer 0084,EMEA,Consumer
+85,Customer 0085,EMEA,Enterprise
+86,Customer 0086,LATAM,SMB
+87,Customer 0087,North America,Consumer
+88,Customer 0088,APAC,Enterprise
+89,Customer 0089,EMEA,SMB
+90,Customer 0090,EMEA,SMB
+91,Customer 0091,North America,Consumer
+92,Customer 0092,LATAM,Enterprise
+93,Customer 0093,EMEA,SMB
+94,Customer 0094,APAC,SMB
+95,Customer 0095,EMEA,SMB
+96,Customer 0096,EMEA,SMB
+97,Customer 0097,EMEA,Consumer
+98,Customer 0098,EMEA,Consumer
+99,Customer 0099,North America,Enterprise
+100,Customer 0100,LATAM,Consumer
+101,Customer 0101,LATAM,Consumer
+102,Customer 0102,APAC,Enterprise
+103,Customer 0103,North America,SMB
+104,Customer 0104,EMEA,Enterprise
+105,Customer 0105,EMEA,Consumer
+106,Customer 0106,EMEA,Consumer
+107,Customer 0107,North America,SMB
+108,Customer 0108,LATAM,Consumer
+109,Customer 0109,North America,Consumer
+110,Customer 0110,EMEA,SMB
+111,Customer 0111,LATAM,SMB
+112,Customer 0112,North America,Consumer
+113,Customer 0113,EMEA,SMB
+114,Customer 0114,North America,Consumer
+115,Customer 0115,EMEA,Consumer
+116,Customer 0116,EMEA,Enterprise
+117,Customer 0117,North America,Consumer
+118,Customer 0118,EMEA,Enterprise
+119,Customer 0119,APAC,SMB
+120,Customer 0120,North America,Consumer
+121,Customer 0121,EMEA,SMB
+122,Customer 0122,North America,Consumer
+123,Customer 0123,EMEA,Consumer
+124,Customer 0124,EMEA,SMB
+125,Customer 0125,North America,SMB
+126,Customer 0126,EMEA,Consumer
+127,Customer 0127,EMEA,SMB
+128,Customer 0128,LATAM,Consumer
+129,Customer 0129,EMEA,SMB
+130,Customer 0130,EMEA,Consumer
+131,Customer 0131,APAC,Consumer
+132,Customer 0132,EMEA,Enterprise
+133,Customer 0133,APAC,Consumer
+134,Customer 0134,North America,Consumer
+135,Customer 0135,North America,Enterprise
+136,Customer 0136,APAC,SMB
+137,Customer 0137,North America,Consumer
+138,Customer 0138,EMEA,Enterprise
+139,Customer 0139,EMEA,SMB
+140,Customer 0140,EMEA,Consumer
+141,Customer 0141,North America,SMB
+142,Customer 0142,North America,SMB
+143,Customer 0143,North America,Consumer
+144,Customer 0144,APAC,Enterprise
+145,Customer 0145,EMEA,SMB
+146,Customer 0146,EMEA,Consumer
+147,Customer 0147,North America,SMB
+148,Customer 0148,North America,SMB
+149,Customer 0149,EMEA,Enterprise
+150,Customer 0150,EMEA,Consumer
+151,Customer 0151,APAC,SMB
+152,Customer 0152,APAC,SMB
+153,Customer 0153,EMEA,Enterprise
+154,Customer 0154,EMEA,Consumer
+155,Customer 0155,APAC,Consumer
+156,Customer 0156,APAC,SMB
+157,Customer 0157,EMEA,Enterprise
+158,Customer 0158,APAC,Consumer
+159,Customer 0159,EMEA,Consumer
+160,Customer 0160,EMEA,Consumer
+161,Customer 0161,APAC,Consumer
+162,Customer 0162,APAC,Consumer
+163,Customer 0163,EMEA,Consumer
+164,Customer 0164,EMEA,Consumer
+165,Customer 0165,APAC,Consumer
+166,Customer 0166,APAC,SMB
+167,Customer 0167,APAC,Enterprise
+168,Customer 0168,APAC,Consumer
+169,Customer 0169,EMEA,Consumer
+170,Customer 0170,North America,SMB
+171,Customer 0171,APAC,SMB
+172,Customer 0172,EMEA,Enterprise
+173,Customer 0173,EMEA,Consumer
+174,Customer 0174,LATAM,SMB
+175,Customer 0175,North America,SMB
+176,Customer 0176,LATAM,SMB
+177,Customer 0177,LATAM,Enterprise
+178,Customer 0178,LATAM,Enterprise
+179,Customer 0179,LATAM,SMB
+180,Customer 0180,EMEA,SMB
+181,Customer 0181,North America,SMB
+182,Customer 0182,North America,SMB
+183,Customer 0183,EMEA,SMB
+184,Customer 0184,EMEA,Consumer
+185,Customer 0185,EMEA,Consumer
+186,Customer 0186,North America,Consumer
+187,Customer 0187,North America,Consumer
+188,Customer 0188,EMEA,Enterprise
+189,Customer 0189,North America,SMB
+190,Customer 0190,EMEA,Consumer
+191,Customer 0191,North America,SMB
+192,Customer 0192,EMEA,SMB
+193,Customer 0193,EMEA,SMB
+194,Customer 0194,EMEA,SMB
+195,Customer 0195,LATAM,Consumer
+196,Customer 0196,APAC,Consumer
+197,Customer 0197,EMEA,SMB
+198,Customer 0198,EMEA,SMB
+199,Customer 0199,EMEA,SMB
+200,Customer 0200,North America,SMB
+201,Customer 0201,EMEA,SMB
+202,Customer 0202,North America,Consumer
+203,Customer 0203,APAC,Enterprise
+204,Customer 0204,EMEA,SMB
+205,Customer 0205,North America,SMB
+206,Customer 0206,APAC,Consumer
+207,Customer 0207,North America,SMB
+208,Customer 0208,EMEA,Enterprise
+209,Customer 0209,EMEA,SMB
+210,Customer 0210,APAC,Enterprise
+211,Customer 0211,EMEA,Consumer
+212,Customer 0212,EMEA,Consumer
+213,Customer 0213,North America,SMB
+214,Customer 0214,North America,Enterprise
+215,Customer 0215,APAC,Consumer
+216,Customer 0216,EMEA,SMB
+217,Customer 0217,EMEA,Consumer
+218,Customer 0218,North America,Enterprise
+219,Customer 0219,EMEA,Consumer
+220,Customer 0220,North America,Consumer
+221,Customer 0221,North America,Consumer
+222,Customer 0222,North America,Consumer
+223,Customer 0223,APAC,Consumer
+224,Customer 0224,North America,SMB
+225,Customer 0225,APAC,SMB
+226,Customer 0226,APAC,Consumer
+227,Customer 0227,North America,SMB
+228,Customer 0228,EMEA,Consumer
+229,Customer 0229,APAC,SMB
+230,Customer 0230,North America,SMB
+231,Customer 0231,EMEA,SMB
+232,Customer 0232,EMEA,SMB
+233,Customer 0233,North America,Enterprise
+234,Customer 0234,EMEA,Consumer
+235,Customer 0235,North America,Enterprise
+236,Customer 0236,EMEA,SMB
+237,Customer 0237,EMEA,SMB
+238,Customer 0238,EMEA,Consumer
+239,Customer 0239,North America,Consumer
+240,Customer 0240,APAC,Consumer
+241,Customer 0241,EMEA,Enterprise
+242,Customer 0242,EMEA,Consumer
+243,Customer 0243,APAC,Consumer
+244,Customer 0244,EMEA,Consumer
+245,Customer 0245,North America,Consumer
+246,Customer 0246,EMEA,SMB
+247,Customer 0247,EMEA,Enterprise
+248,Customer 0248,EMEA,Consumer
+249,Customer 0249,EMEA,Enterprise
+250,Customer 0250,North America,Enterprise
+251,Customer 0251,North America,Enterprise
+252,Customer 0252,EMEA,SMB
+253,Customer 0253,EMEA,Consumer
+254,Customer 0254,EMEA,SMB
+255,Customer 0255,EMEA,SMB
+256,Customer 0256,EMEA,SMB
+257,Customer 0257,APAC,SMB
+258,Customer 0258,APAC,Consumer
+259,Customer 0259,EMEA,Enterprise
+260,Customer 0260,EMEA,SMB
+261,Customer 0261,LATAM,SMB
+262,Customer 0262,North America,Consumer
+263,Customer 0263,North America,Consumer
+264,Customer 0264,LATAM,Enterprise
+265,Customer 0265,EMEA,Enterprise
+266,Customer 0266,EMEA,Consumer
+267,Customer 0267,North America,SMB
+268,Customer 0268,North America,Consumer
+269,Customer 0269,EMEA,Consumer
+270,Customer 0270,North America,Enterprise
+271,Customer 0271,APAC,Consumer
+272,Customer 0272,EMEA,Enterprise
+273,Customer 0273,EMEA,Consumer
+274,Customer 0274,LATAM,SMB
+275,Customer 0275,North America,Enterprise
+276,Customer 0276,North America,Consumer
+277,Customer 0277,EMEA,Consumer
+278,Customer 0278,APAC,Consumer
+279,Customer 0279,EMEA,Consumer
+280,Customer 0280,APAC,SMB
+281,Customer 0281,EMEA,SMB
+282,Customer 0282,North America,SMB
+283,Customer 0283,APAC,Consumer
+284,Customer 0284,EMEA,Consumer
+285,Customer 0285,North America,Consumer
+286,Customer 0286,North America,SMB
+287,Customer 0287,North America,Consumer
+288,Customer 0288,EMEA,Consumer
+289,Customer 0289,North America,SMB
+290,Customer 0290,EMEA,Consumer
+291,Customer 0291,EMEA,Consumer
+292,Customer 0292,APAC,Enterprise
+293,Customer 0293,APAC,SMB
+294,Customer 0294,North America,Consumer
+295,Customer 0295,EMEA,Enterprise
+296,Customer 0296,APAC,Enterprise
+297,Customer 0297,EMEA,Consumer
+298,Customer 0298,EMEA,Consumer
+299,Customer 0299,North America,SMB
+300,Customer 0300,EMEA,Consumer
+301,Customer 0301,EMEA,Consumer
+302,Customer 0302,North America,Consumer
+303,Customer 0303,North America,Consumer
+304,Customer 0304,North America,Consumer
+305,Customer 0305,EMEA,SMB
+306,Customer 0306,North America,SMB
+307,Customer 0307,North America,SMB
+308,Customer 0308,North America,SMB
+309,Customer 0309,North America,SMB
+310,Customer 0310,North America,SMB
+311,Customer 0311,EMEA,Enterprise
+312,Customer 0312,EMEA,Enterprise
+313,Customer 0313,North America,Consumer
+314,Customer 0314,EMEA,SMB
+315,Customer 0315,North America,Consumer
+316,Customer 0316,LATAM,SMB
+317,Customer 0317,EMEA,Enterprise
+318,Customer 0318,EMEA,SMB
+319,Customer 0319,EMEA,Enterprise
+320,Customer 0320,North America,SMB
+321,Customer 0321,LATAM,SMB
+322,Customer 0322,North America,Enterprise
+323,Customer 0323,APAC,SMB
+324,Customer 0324,APAC,SMB
+325,Customer 0325,North America,SMB
+326,Customer 0326,EMEA,Enterprise
+327,Customer 0327,LATAM,SMB
+328,Customer 0328,APAC,SMB
+329,Customer 0329,EMEA,Consumer
+330,Customer 0330,EMEA,Enterprise
+331,Customer 0331,North America,SMB
+332,Customer 0332,LATAM,Enterprise
+333,Customer 0333,APAC,Consumer
+334,Customer 0334,APAC,SMB
+335,Customer 0335,North America,SMB
+336,Customer 0336,EMEA,Consumer
+337,Customer 0337,LATAM,SMB
+338,Customer 0338,North America,Consumer
+339,Customer 0339,North America,Consumer
+340,Customer 0340,EMEA,SMB
+341,Customer 0341,North America,Enterprise
+342,Customer 0342,EMEA,Enterprise
+343,Customer 0343,EMEA,SMB
+344,Customer 0344,North America,SMB
+345,Customer 0345,EMEA,Consumer
+346,Customer 0346,North America,SMB
+347,Customer 0347,North America,Consumer
+348,Customer 0348,APAC,Consumer
+349,Customer 0349,North America,Consumer
+350,Customer 0350,EMEA,SMB
+351,Customer 0351,North America,Consumer
+352,Customer 0352,APAC,Enterprise
+353,Customer 0353,EMEA,SMB
+354,Customer 0354,North America,SMB
+355,Customer 0355,EMEA,Enterprise
+356,Customer 0356,North America,Consumer
+357,Customer 0357,LATAM,SMB
+358,Customer 0358,North America,Enterprise
+359,Customer 0359,EMEA,SMB
+360,Customer 0360,EMEA,SMB
+361,Customer 0361,EMEA,Consumer
+362,Customer 0362,APAC,SMB
+363,Customer 0363,LATAM,Consumer
+364,Customer 0364,North America,SMB
+365,Customer 0365,EMEA,Consumer
+366,Customer 0366,North America,Consumer
+367,Customer 0367,APAC,Enterprise
+368,Customer 0368,North America,Consumer
+369,Customer 0369,North America,Enterprise
+370,Customer 0370,EMEA,SMB
+371,Customer 0371,North America,Consumer
+372,Customer 0372,EMEA,Consumer
+373,Customer 0373,EMEA,Consumer
+374,Customer 0374,APAC,SMB
+375,Customer 0375,North America,SMB
+376,Customer 0376,EMEA,Consumer
+377,Customer 0377,EMEA,SMB
+378,Customer 0378,LATAM,Consumer
+379,Customer 0379,North America,SMB
+380,Customer 0380,EMEA,SMB
+381,Customer 0381,APAC,Consumer
+382,Customer 0382,APAC,SMB
+383,Customer 0383,North America,Consumer
+384,Customer 0384,EMEA,Consumer
+385,Customer 0385,EMEA,Consumer
+386,Customer 0386,North America,SMB
+387,Customer 0387,EMEA,SMB
+388,Customer 0388,North America,Enterprise
+389,Customer 0389,LATAM,Consumer
+390,Customer 0390,North America,Enterprise
+391,Customer 0391,APAC,SMB
+392,Customer 0392,North America,SMB
+393,Customer 0393,EMEA,Consumer
+394,Customer 0394,LATAM,SMB
+395,Customer 0395,North America,SMB
+396,Customer 0396,LATAM,SMB
+397,Customer 0397,APAC,Consumer
+398,Customer 0398,EMEA,Consumer
+399,Customer 0399,EMEA,Consumer
+400,Customer 0400,North America,Consumer
+401,Customer 0401,EMEA,SMB
+402,Customer 0402,North America,Consumer
+403,Customer 0403,North America,Enterprise
+404,Customer 0404,North America,SMB
+405,Customer 0405,North America,SMB
+406,Customer 0406,North America,SMB
+407,Customer 0407,EMEA,Consumer
+408,Customer 0408,North America,SMB
+409,Customer 0409,APAC,Enterprise
+410,Customer 0410,North America,Consumer
+411,Customer 0411,APAC,SMB
+412,Customer 0412,North America,Consumer
+413,Customer 0413,LATAM,SMB
+414,Customer 0414,EMEA,SMB
+415,Customer 0415,North America,Consumer
+416,Customer 0416,APAC,SMB
+417,Customer 0417,North America,SMB
+418,Customer 0418,North America,SMB
+419,Customer 0419,North America,Enterprise
+420,Customer 0420,North America,Consumer
+421,Customer 0421,EMEA,Consumer
+422,Customer 0422,North America,Consumer
+423,Customer 0423,APAC,Consumer
+424,Customer 0424,EMEA,SMB
+425,Customer 0425,North America,Consumer
+426,Customer 0426,APAC,Enterprise
+427,Customer 0427,EMEA,Consumer
+428,Customer 0428,LATAM,Consumer
+429,Customer 0429,North America,SMB
+430,Customer 0430,EMEA,Consumer
+431,Customer 0431,APAC,SMB
+432,Customer 0432,North America,Consumer
+433,Customer 0433,EMEA,Consumer
+434,Customer 0434,EMEA,SMB
+435,Customer 0435,EMEA,SMB
+436,Customer 0436,North America,Consumer
+437,Customer 0437,EMEA,Enterprise
+438,Customer 0438,APAC,Consumer
+439,Customer 0439,EMEA,Consumer
+440,Customer 0440,EMEA,SMB
+441,Customer 0441,EMEA,SMB
+442,Customer 0442,EMEA,Consumer
+443,Customer 0443,APAC,Consumer
+444,Customer 0444,EMEA,SMB
+445,Customer 0445,EMEA,SMB
+446,Customer 0446,North America,SMB
+447,Customer 0447,EMEA,Consumer
+448,Customer 0448,EMEA,SMB
+449,Customer 0449,North America,SMB
+450,Customer 0450,North America,SMB
+451,Customer 0451,LATAM,SMB
+452,Customer 0452,LATAM,Consumer
+453,Customer 0453,EMEA,SMB
+454,Customer 0454,North America,Consumer
+455,Customer 0455,EMEA,Consumer
+456,Customer 0456,North America,Consumer
+457,Customer 0457,EMEA,Consumer
+458,Customer 0458,North America,SMB
+459,Customer 0459,North America,Consumer
+460,Customer 0460,North America,Consumer
+461,Customer 0461,North America,Consumer
+462,Customer 0462,North America,Consumer
+463,Customer 0463,North America,SMB
+464,Customer 0464,EMEA,SMB
+465,Customer 0465,North America,Enterprise
+466,Customer 0466,EMEA,Consumer
+467,Customer 0467,EMEA,Enterprise
+468,Customer 0468,North America,Consumer
+469,Customer 0469,North America,Consumer
+470,Customer 0470,APAC,SMB
+471,Customer 0471,APAC,SMB
+472,Customer 0472,APAC,Consumer
+473,Customer 0473,EMEA,Enterprise
+474,Customer 0474,LATAM,Enterprise
+475,Customer 0475,LATAM,Consumer
+476,Customer 0476,North America,Consumer
+477,Customer 0477,LATAM,Consumer
+478,Customer 0478,EMEA,Consumer
+479,Customer 0479,EMEA,SMB
+480,Customer 0480,North America,Consumer
+481,Customer 0481,North America,SMB
+482,Customer 0482,APAC,Consumer
+483,Customer 0483,EMEA,SMB
+484,Customer 0484,EMEA,Consumer
+485,Customer 0485,North America,Consumer
+486,Customer 0486,EMEA,Enterprise
+487,Customer 0487,APAC,Consumer
+488,Customer 0488,EMEA,SMB
+489,Customer 0489,EMEA,Consumer
+490,Customer 0490,EMEA,SMB
+491,Customer 0491,EMEA,Consumer
+492,Customer 0492,EMEA,SMB
+493,Customer 0493,North America,Consumer
+494,Customer 0494,LATAM,SMB
+495,Customer 0495,North America,Enterprise
+496,Customer 0496,EMEA,Enterprise
+497,Customer 0497,North America,SMB
+498,Customer 0498,LATAM,Enterprise
+499,Customer 0499,EMEA,SMB
+500,Customer 0500,LATAM,Consumer

@@ -1,0 +1,32 @@
+[
+  {
+    "q": "Files from a partner arrive in a Unity Catalog volume at unpredictable times. How should the processing job be triggered?",
+    "o": ["A schedule every 5 minutes", "A continuous trigger", "A file arrival trigger on the volume", "Manually by an operator"],
+    "c": 2,
+    "e": "A file arrival trigger starts the job only when new files appear. There are no empty runs and no delay waiting for the next schedule."
+  },
+  {
+    "q": "In a 5-task job, only task 3 failed after tasks 1 and 2 succeeded. What is the most efficient way to finish the run after fixing the bug?",
+    "o": ["Run the whole job again", "Use Repair run to re-run the failed task and its dependents", "Clone the job and run only task 3", "Increase the retry count and wait"],
+    "c": 1,
+    "e": "Repair run re-executes only the failed tasks and their downstream dependents. Successful tasks are not repeated."
+  },
+  {
+    "q": "A cleanup task must run at the end of every job run, even when upstream tasks fail. Which Run if condition do you set?",
+    "o": ["All succeeded", "At least one succeeded", "None failed", "All done"],
+    "c": 3,
+    "e": "'All done' runs once all upstream tasks have finished, whatever their result. That makes it the right choice for cleanup and final notifications."
+  },
+  {
+    "q": "The notebook of task Clean_Data calls `dbutils.jobs.taskValues.set(key='bad_records', value=5)`. How does a downstream If/else task reference this value?",
+    "o": ["`{{job.parameters.bad_records}}`", "`{{tasks.Clean_Data.values.bad_records}}`", "`dbutils.widgets.get('bad_records')`", "`${bad_records}`"],
+    "c": 1,
+    "e": "Task values are referenced with `{{tasks.<task_key>.values.<key>}}` in downstream tasks, including If/else conditions."
+  },
+  {
+    "q": "A task keeps ending with status 'Timed Out' although its runs are legitimately getting longer. What should you change?",
+    "o": ["The duration warning threshold", "The task timeout", "Max concurrent runs", "The notification settings"],
+    "c": 1,
+    "e": "The timeout stops the task. The duration threshold only sends a warning and never stops it."
+  }
+]

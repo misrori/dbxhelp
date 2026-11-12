@@ -93,6 +93,10 @@
 {{MARKDOWN}}
 </script>
 <script>
+{{QUIZ_JS}}
+var QUIZ = {{QUIZ_JSON}};
+</script>
+<script>
 (function () {
   var md = document.getElementById('source').textContent.replace(/<\\\/script/gi, '</script').trim();
   marked.setOptions({ gfm: true, breaks: false });
@@ -105,7 +109,12 @@
   }
 
   // Document view: the whole markdown file
-  document.getElementById('docBody').innerHTML = render(md);
+  var docBody = document.getElementById('docBody');
+  docBody.innerHTML = render(md);
+  if (QUIZ && QUIZ.length) {
+    docBody.insertAdjacentHTML('beforeend', '<h2>Check yourself</h2><div id="quizDoc"></div>');
+    dbxQuiz('quizDoc', QUIZ);
+  }
 
   // Presentation view: split on "## " headings (outside fenced code blocks)
   var slides = [], cur = [], fence = false;
@@ -116,6 +125,7 @@
   });
   if (cur.length) slides.push(cur.join('\n'));
   var html = slides.map(render), idx = 0;
+  if (QUIZ && QUIZ.length) { slides.push('quiz'); html.push('<h2>Check yourself</h2><div class="quiz-slot"></div>'); }
 
   var slideEl = document.getElementById('slide'), counter = document.getElementById('counter'), progress = document.getElementById('progress');
   function show(n) {
@@ -123,6 +133,8 @@
     slideEl.innerHTML = html[idx];
     slideEl.classList.toggle('title-slide', idx === 0);
     slideEl.scrollTop = 0;
+    var slot = slideEl.querySelector('.quiz-slot');
+    if (slot) dbxQuiz(slot, QUIZ);
     counter.textContent = (idx + 1) + ' / ' + slides.length;
     progress.style.width = ((idx + 1) / slides.length * 100) + '%';
     history.replaceState(null, '', '#slides/' + (idx + 1));

@@ -1,0 +1,32 @@
+[
+  {
+    "q": "What is the main purpose of continuous integration (CI) for a data engineering team?",
+    "o": ["Deploy every commit to production immediately", "Merge changes frequently and validate them automatically with tests", "Back up notebooks every night", "Run all jobs continuously"],
+    "c": 1,
+    "e": "CI means integrating changes often and running automated checks (lint, unit tests, validation) on every change. Continuous deployment then releases the validated code."
+  },
+  {
+    "q": "Which is the best way to make a PySpark transformation unit-testable?",
+    "o": ["Keep it in one long notebook cell", "Write it as a function that takes and returns a DataFrame, in a separate module", "Read the source table inside the function using a hard-coded name", "Test it by running the production job"],
+    "c": 1,
+    "e": "Pure DataFrame-in, DataFrame-out functions in modules can be imported by notebooks and jobs, and tested on small in-memory data with pytest."
+  },
+  {
+    "q": "Which utility compares two DataFrames for both schema and rows in a unit test, ignoring row order by default?",
+    "o": ["`df1.collect() == df2.collect()`", "`assertDataFrameEqual(actual, expected)`", "`df1.exceptAll(df2).count() == 0`", "`assertSchemaEqual(actual, expected)`"],
+    "c": 1,
+    "e": "pyspark.testing.assertDataFrameEqual checks schema and data, ignoring row order by default. assertSchemaEqual checks only the schema."
+  },
+  {
+    "q": "Two engineers change the same pipeline at the same time. Which workflow keeps this safe?",
+    "o": ["Both edit the same shared Git folder on main", "Each works on a feature branch in their own Git folder and merges through a pull request", "One exports the notebook as DBC and emails it", "Use notebook revision history to undo conflicts"],
+    "c": 1,
+    "e": "Feature branches in personal Git folders and reviewed pull requests isolate changes and make conflicts visible before merging."
+  },
+  {
+    "q": "The same job must be deployed to dev, test and prod with a different catalog in each. What is the recommended approach?",
+    "o": ["Create the job by hand in each workspace", "Copy the job JSON and edit it per environment", "Define it once in a bundle and use targets with variables", "Hard-code the catalog and change it before each deployment"],
+    "c": 2,
+    "e": "A bundle describes the job once. Targets and variables supply the environment-specific values, and `databricks bundle deploy -t <target>` promotes it."
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "q": "You run the same COPY INTO command every hour against a volume. What happens to files that were already loaded in a previous run?",
+    "o": ["They are loaded again, creating duplicates", "They are skipped, because COPY INTO is idempotent", "The command fails until the files are deleted", "They are reloaded only if mergeSchema is true"],
+    "c": 1,
+    "e": "COPY INTO tracks which files it has loaded and skips them on re-runs. Use COPY_OPTIONS ('force' = 'true') to reload on purpose."
+  },
+  {
+    "q": "A CSV load must keep values that don't match the defined schema instead of turning them into NULLs. What do you use?",
+    "o": ["The `_metadata` column", "`header => true`", "The rescued data column (`_rescued_data`)", "`mergeSchema`"],
+    "c": 2,
+    "e": "The rescued data column stores non-conforming values as JSON so nothing is silently lost. You can then inspect rows where `_rescued_data IS NOT NULL`."
+  },
+  {
+    "q": "Which expression adds the source file name to every ingested row?",
+    "o": ["`input_file()`", "`_metadata.file_name`", "`current_timestamp()`", "`_rescued_data.file`"],
+    "c": 1,
+    "e": "Every file-based source exposes a hidden `_metadata` column with fields like file_name, file_path and file_modification_time. You must select it explicitly."
+  },
+  {
+    "q": "The team needs to keep 40 Salesforce objects in sync in Unity Catalog with minimal maintenance. What is the best fit?",
+    "o": ["A notebook that calls the Salesforce REST API on a schedule", "Lakehouse Federation", "A Lakeflow Connect managed connector", "COPY INTO from a nightly CSV export"],
+    "c": 2,
+    "e": "Start with the most managed option. The Salesforce managed connector provides incremental ingestion into streaming tables, with schema-change handling and no custom code."
+  },
+  {
+    "q": "A JSON payload's schema keeps changing and analysts need fast queries on nested fields. Which approach fits best?",
+    "o": ["Store it as STRING and use regexp_extract", "`parse_json()` into a VARIANT column", "Flatten every field into its own column by hand", "Convert it to CSV first"],
+    "c": 1,
+    "e": "VARIANT stores semi-structured data efficiently without a fixed schema, and supports path queries like `v:items[0].sku::int`."
+  }
+]

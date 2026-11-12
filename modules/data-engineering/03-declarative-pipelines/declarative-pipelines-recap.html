@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recap 3: Build Data Pipelines with Lakeflow Spark Declarative Pipelines · dbxhelp</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<style>
+  :root { --accent: #FF3621; --navy: #1B3139; --blue: #2272B4; --bg: #F9F7F4; --text: #1F2328; --muted: #6B7280; --border: #E5E7EB; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); }
+  header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: var(--navy); color: #fff; }
+  header a.home { color: #fff; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  header .title { color: #CBD5E1; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+  .toggle { display: inline-flex; background: rgba(255,255,255,0.12); border-radius: 999px; padding: 3px; }
+  .toggle button { border: 0; background: transparent; color: #E2E8F0; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 0.9em; }
+  .toggle button.active { background: #fff; color: var(--navy); font-weight: 600; }
+  header .link { color: #E2E8F0; font-size: 0.85em; text-decoration: none; border: 1px solid rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 6px; }
+  header .link:hover { background: rgba(255,255,255,0.1); }
+
+  /* ---------- shared markdown styling ---------- */
+  .md h1 { font-size: 2em; color: var(--navy); margin: 0 0 0.5em; }
+  .md h2 { color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 0.3em; margin-top: 1.8em; }
+  .md h3 { color: var(--navy); }
+  .md a { color: var(--blue); }
+  .md code { background: #EEF2F6; padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.9em; }
+  .md pre { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow: auto; }
+  .md pre code { background: none; padding: 0; font-size: 0.88em; line-height: 1.5; }
+  .md blockquote { margin: 1em 0; padding: 10px 16px; border-left: 4px solid var(--blue); background: #E3F2FD; border-radius: 4px; color: #1F2937; }
+  .md blockquote p { margin: 0.3em 0; }
+  .md table { border-collapse: collapse; width: 100%; margin: 1em 0; background: #fff; font-size: 0.95em; }
+  .md th, .md td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  .md th { background: #F1F5F9; }
+  .md li { margin: 0.25em 0; line-height: 1.55; }
+  .md p { line-height: 1.6; }
+
+  /* ---------- document mode ---------- */
+  #doc { max-width: 920px; margin: 0 auto; padding: 32px 24px 80px; }
+  #doc .md { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 36px 44px; }
+
+  /* ---------- presentation mode ---------- */
+  #slides { display: none; height: calc(100vh - 52px); padding: 18px; }
+  body.present #doc { display: none; }
+  body.present #slides { display: flex; flex-direction: column; align-items: center; }
+  .stage { flex: 1; width: 100%; max-width: 1280px; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .slide { width: 100%; height: 100%; max-height: 760px; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-top: 6px solid var(--accent); padding: 40px 56px; overflow: auto; font-size: 1.22em; }
+  .slide.title-slide { display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, var(--navy), #24495A); color: #fff; }
+  .slide.title-slide h1 { color: #fff; font-size: 2.3em; }
+  .slide.title-slide blockquote { background: rgba(255,255,255,0.1); border-left-color: var(--accent); color: #fff; }
+  .slide.title-slide code { background: rgba(255,255,255,0.15); color: #fff; }
+  .slide.title-slide strong { color: #FFD7CF; }
+  .slide h2 { margin-top: 0; font-size: 1.6em; border-bottom-color: var(--accent); }
+  .controls { display: flex; align-items: center; gap: 14px; padding-top: 12px; color: var(--muted); font-size: 0.9em; }
+  .controls button { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 1em; }
+  .controls button:hover { border-color: var(--blue); }
+  .progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--accent); transition: width 0.2s; }
+  body:not(.present) .progress { display: none; }
+  :fullscreen #slides { height: 100vh; }
+  @media (max-width: 700px) { .slide { padding: 24px; font-size: 1em; } #doc .md { padding: 20px; } header .title { display: none; } }
+  @media print { header, .controls, .progress { display: none; } #doc .md { border: 0; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="../../../index.html" title="All topics"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</a>
+  <span class="title">Data Engineering with Databricks › Recap 3: Build Data Pipelines with Lakeflow Spark Declarative Pipelines</span>
+  <div class="toggle" role="tablist">
+    <button id="btnDoc" class="active" title="Document view (D)">📄 Document</button>
+    <button id="btnSlides" title="Presentation view (P)">🎞️ Presentation</button>
+  </div>
+  <a class="link" href="declarative-pipelines-recap.md" download>⬇ .md</a>
+  <a class="link" href="https://github.com/misrori/dbxhelp/tree/main/modules/data-engineering/03-declarative-pipelines" target="_blank">GitHub</a>
+</header>
+
+<main id="doc"><article class="md" id="docBody"></article></main>
+
+<section id="slides">
+  <div class="stage"><div class="slide md" id="slide"></div></div>
+  <div class="controls">
+    <button id="prev" title="Previous (←)">←</button>
+    <span id="counter"></span>
+    <button id="next" title="Next (→ / Space)">→</button>
+    <button id="fs" title="Fullscreen (F)">⛶</button>
+    <span>← → navigate · F fullscreen · D document</span>
+  </div>
+</section>
+<div class="progress" id="progress"></div>
+
+<script type="text/markdown" id="source">
+# Recap: Build Data Pipelines with Lakeflow Spark Declarative Pipelines
+
+> **Course 3 of 4 · Data Engineering with Databricks** · ⏱ ~9 minutes
+>
+> Building a **bronze → silver → gold** pipeline *declaratively*: you describe the tables, and the pipeline handles the order, incremental processing, checkpoints, retries and data quality. (Formerly *Delta Live Tables / DLT*.)
+
+**The one idea to remember:** use **streaming tables** for ingestion and row-level transforms, and **materialized views** for aggregates and joins that must stay correct. Add **expectations** to every layer you care about.
+
+## What we covered
+
+| Topic | Key takeaway |
+|---|---|
+| Why declarative pipelines | Define *what* the tables are, not *how* to run them. Dependencies are resolved automatically |
+| Dataset types | **Streaming tables**, **materialized views**, temporary views, and **flows** |
+| Developing a pipeline | **Lakeflow Pipelines Editor**, pipeline settings, dry run, and the pipeline graph |
+| Medallion with Auto Loader | `STREAM read_files()` into bronze, cleaned silver, aggregated gold |
+| Data quality | **Expectations**: warn, drop or fail |
+| Running in production | Triggered vs continuous, development vs production mode, scheduling with a job |
+| Monitoring | Pipeline graph, data quality metrics, and the **event log** |
+| Change data capture | **AUTO CDC INTO** (formerly APPLY CHANGES) for **SCD Type 1 and 2** |
+
+## Dataset types
+
+| Object | Semantics | Typical layer |
+|---|---|---|
+| **Streaming table (ST)** | Incremental and append-oriented: each source row is processed **once** | Bronze ingestion, silver cleansing, CDC targets |
+| **Materialized view (MV)** | Query result that is kept **correct** on every refresh. It is refreshed incrementally when possible and reflects updates and deletes | Gold aggregates, joins with changing dimensions |
+| **Temporary view** | Not persisted, visible only inside the pipeline | Intermediate logic |
+| **Flow** | A query that writes into a target. Several **append flows** can feed one ST | Fan-in from many sources, backfills |
+
+`STREAM(...)` / `spark.readStream` gives a **streaming** read, so the result is a streaming table. A plain `FROM` / `spark.read` gives a **batch** read, so the result is a materialized view.
+
+## A medallion pipeline in SQL
+
+```sql
+-- Bronze: incremental file ingestion with Auto Loader
+CREATE OR REFRESH STREAMING TABLE orders_bronze
+COMMENT 'Raw orders'
+AS SELECT *, _metadata.file_name AS source_file, current_timestamp() AS ingested_at
+FROM STREAM read_files('/Volumes/shop/raw/orders/', format => 'json');
+
+-- Silver: clean + data quality
+CREATE OR REFRESH STREAMING TABLE orders_silver (
+  CONSTRAINT valid_id     EXPECT (order_id IS NOT NULL) ON VIOLATION DROP ROW,
+  CONSTRAINT positive_amt EXPECT (amount > 0)           ON VIOLATION FAIL UPDATE,
+  CONSTRAINT has_email    EXPECT (email IS NOT NULL)                      -- warn only
+)
+AS SELECT order_id, lower(email) AS email, CAST(amount AS DECIMAL(10,2)) AS amount,
+          CAST(order_ts AS TIMESTAMP) AS order_ts
+FROM STREAM(orders_bronze);
+
+-- Gold: aggregate for BI
+CREATE OR REFRESH MATERIALIZED VIEW daily_revenue
+AS SELECT date(order_ts) AS order_date, sum(amount) AS revenue, count(*) AS orders
+FROM orders_silver
+GROUP BY ALL;
+```
+
+Tables reference each other by name, and the pipeline builds the **dependency graph** from those references. You never write "run bronze first".
+
+## The same in Python
+
+```python
+from pyspark import pipelines as dp        # older code: import dlt
+from pyspark.sql import functions as F
+
+@dp.table(comment="Raw orders")
+def orders_bronze():
+    return (spark.readStream.format("cloudFiles")
+            .option("cloudFiles.format", "json")
+            .load("/Volumes/shop/raw/orders/"))
+
+@dp.table
+@dp.expect_or_drop("valid_id", "order_id IS NOT NULL")
+@dp.expect_or_fail("positive_amt", "amount > 0")
+def orders_silver():
+    return spark.readStream.table("orders_bronze").withColumn("email", F.lower("email"))
+
+@dp.materialized_view
+def daily_revenue():
+    return (spark.read.table("orders_silver")
+            .groupBy(F.to_date("order_ts").alias("order_date"))
+            .agg(F.sum("amount").alias("revenue")))
+```
+
+SQL and Python files can be mixed in the same pipeline.
+
+## Data quality with expectations
+
+| Expectation | Invalid rows | Pipeline |
+|---|---|---|
+| `EXPECT (...)` / `@dp.expect` (default: **warn**) | Kept | Continues. Violations are counted |
+| `ON VIOLATION DROP ROW` / `@dp.expect_or_drop` | **Dropped** | Continues. Violations are counted |
+| `ON VIOLATION FAIL UPDATE` / `@dp.expect_or_fail` | — | The update **fails**. Nothing is committed for that flow |
+
+- Violation metrics show up in the pipeline UI and in the **event log**.
+- `expect_all`, `expect_all_or_drop` and `expect_all_or_fail` take a dictionary of rules.
+- **Quarantine pattern:** don't just drop bad rows. Write them to a separate table with the inverted rule, so you can inspect them.
+
+## Developing and running a pipeline
+
+| Setting | Options | Guidance |
+|---|---|---|
+| **Editor** | Lakeflow Pipelines Editor (multi-file, graph, data preview) | Use **dry run** to validate code and the graph without processing data |
+| **Destination** | Default catalog and schema in Unity Catalog | Tables are published as UC objects |
+| **Compute** | **Serverless** (recommended) or classic | Serverless gives fast start and incremental MV refresh |
+| **Pipeline mode** | **Triggered**: process available data, then stop. **Continuous**: always running | Triggered with a schedule for hourly or daily SLAs, continuous for low latency |
+| **Run type** | Development: reuses compute, no retries. Production: retries and restarts | Production for scheduled runs |
+| **Refresh** | Normal update, refresh selected tables, **full refresh** | Full refresh recomputes from scratch. Careful with sources that no longer hold old data |
+| **Configuration** | Key-value parameters (e.g. `source_path`) | Avoid hard-coded paths. Read them in code with `spark.conf.get("source_path")` |
+
+Schedule the pipeline with its own schedule, or as a **pipeline task in a Lakeflow Job** (course 2).
+
+## Monitoring: the event log
+
+- **Pipeline graph:** status, row counts and timing per dataset.
+- **Data quality tab:** expectation pass and fail counts per table.
+- **Event log:** a Delta table with every update, flow progress, data quality metric and error.
+
+```sql
+SELECT timestamp, event_type, message
+FROM event_log(TABLE(orders_silver))     -- or event_log('<pipeline-id>')
+WHERE event_type IN ('flow_progress', 'update_progress')
+ORDER BY timestamp DESC;
+```
+
+## Change data capture with AUTO CDC
+
+```sql
+CREATE OR REFRESH STREAMING TABLE customers_silver;
+
+CREATE FLOW customers_cdc AS AUTO CDC INTO customers_silver
+FROM STREAM(customers_cdc_bronze)
+KEYS (customer_id)
+APPLY AS DELETE WHEN operation = 'DELETE'
+SEQUENCE BY event_ts                 -- decides which change wins (handles out-of-order data)
+COLUMNS * EXCEPT (operation, event_ts)
+STORED AS SCD TYPE 2;                -- or SCD TYPE 1
+```
+
+| | SCD Type 1 | SCD Type 2 |
+|---|---|---|
+| Target holds | Latest state, one row per key | One row **per version** |
+| History | Overwritten | Kept in **`__START_AT` / `__END_AT`** |
+| Current rows | All rows | `WHERE __END_AT IS NULL` |
+
+AUTO CDC replaces hand-written `MERGE` logic for ordering, deduplication, deletes and SCD2 versioning. Use **AUTO CDC FROM SNAPSHOT** when the source only delivers full snapshots.
+
+## Common mistakes
+
+- ❌ A **streaming table** for a gold aggregate that must reflect late corrections. Use an **MV**.
+- ❌ A **materialized view** for raw, high-volume append ingestion. Use an **ST**.
+- ❌ `EXPECT` without an action, expecting it to remove rows. The default only **warns**.
+- ❌ **Continuous** mode for a daily report. Use **triggered** mode with a schedule.
+- ❌ A full refresh of a bronze ST whose source (e.g. Kafka) no longer holds old events. That data is lost.
+- ❌ Hand-written MERGE for out-of-order CDC. **AUTO CDC + `SEQUENCE BY`** handles it.
+
+**Next course:** *DevOps Essentials for Data Engineering*, which takes this code into a tested, versioned deployment.
+
+</script>
+<script>
+function dbxQuiz(root, questions) {
+  if (typeof root === 'string') root = document.getElementById(root);
+  var i = 0, score = 0, picked = null, shown = false;
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/`([^`]+)`/g, '<code>$1</code>'); }
+  function btn(label, primary) { return '<button style="margin-top:14px;padding:8px 18px;border-radius:4px;border:none;cursor:pointer;background:' + (primary ? '#2272B4' : '#E0E0E0') + ';color:' + (primary ? '#fff' : '#333') + ';font-size:0.95em">' + label + '</button>'; }
+  function render() {
+    if (i >= questions.length) {
+      root.innerHTML = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;text-align:center;background:#fff"><div style="font-size:1.3em;font-weight:bold;color:#333">Score: ' + score + ' / ' + questions.length + '</div>' + btn('Retake', true) + '</div>';
+      root.querySelector('button').onclick = function () { i = 0; score = 0; picked = null; shown = false; render(); };
+      return;
+    }
+    var Q = questions[i], h = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;background:#fff">';
+    h += '<div style="color:#999;font-size:0.85em;margin-bottom:6px">Question ' + (i + 1) + ' of ' + questions.length + '</div>';
+    h += '<div style="font-weight:bold;color:#333;margin-bottom:12px;line-height:1.5">' + esc(Q.q) + '</div>';
+    Q.o.forEach(function (t, k) {
+      var bg = '#fff', bd = '#e0e0e0';
+      if (shown && k === Q.c) { bg = '#E8F5E9'; bd = '#43A047'; }
+      else if (shown && k === picked) { bg = '#FFEBEE'; bd = '#E53935'; }
+      else if (!shown && k === picked) { bg = '#E3F2FD'; bd = '#2272B4'; }
+      h += '<div data-k="' + k + '" style="padding:10px 14px;margin:6px 0;border:2px solid ' + bd + ';background:' + bg + ';border-radius:6px;cursor:' + (shown ? 'default' : 'pointer') + ';color:#333">' + String.fromCharCode(97 + k) + ') ' + esc(t) + '</div>';
+    });
+    if (shown) {
+      h += '<div style="margin-top:12px;padding:12px;background:#F5F5F5;border-radius:6px;color:#333"><strong>' + (picked === Q.c ? '&#9989; Correct.' : '&#10060; Not quite.') + '</strong> ' + esc(Q.e) + '</div>' + btn(i + 1 < questions.length ? 'Next' : 'See score', true);
+    } else {
+      h += btn('Submit', picked !== null);
+    }
+    root.innerHTML = h + '</div>';
+    if (!shown) root.querySelectorAll('[data-k]').forEach(function (el) { el.onclick = function () { picked = +el.getAttribute('data-k'); render(); }; });
+    root.querySelector('button').onclick = function () {
+      if (!shown) { if (picked === null) return; if (picked === Q.c) score++; shown = true; }
+      else { i++; picked = null; shown = false; }
+      render();
+    };
+  }
+  render();
+}
+
+var QUIZ = [{"q": "A gold table aggregates revenue per day, and upstream orders can be corrected or deleted days later. Which dataset type keeps the result correct?", "o": ["Streaming table", "Materialized view", "Temporary view", "Append flow"], "c": 1, "e": "A materialized view is kept correct on every refresh, including updates and deletes in its sources. A streaming table processes each input row only once."}, {"q": "Rows with a NULL order_id must be removed from the silver table, but the pipeline must keep running. Which expectation do you use?", "o": ["`EXPECT (order_id IS NOT NULL)`", "`EXPECT (order_id IS NOT NULL) ON VIOLATION DROP ROW`", "`EXPECT (order_id IS NOT NULL) ON VIOLATION FAIL UPDATE`", "A CHECK constraint on the table"], "c": 1, "e": "DROP ROW removes invalid rows and records the count. Plain EXPECT only warns, and FAIL UPDATE stops the update."}, {"q": "Which statement makes a streaming read in a SQL pipeline definition?", "o": ["`FROM orders_bronze`", "`FROM STREAM(orders_bronze)`", "`FROM LIVE.orders_bronze`", "`FROM TABLE(orders_bronze)`"], "c": 1, "e": "`STREAM(...)` (or `STREAM read_files(...)`) gives an incremental, streaming read, producing a streaming table. A plain FROM is a batch read."}, {"q": "A change feed contains inserts, updates and deletes that may arrive out of order. The business needs the full history of customer addresses. What do you use?", "o": ["MERGE INTO in a foreachBatch", "AUTO CDC with SEQUENCE BY ... STORED AS SCD TYPE 2", "AUTO CDC STORED AS SCD TYPE 1", "A materialized view with ROW_NUMBER()"], "c": 1, "e": "AUTO CDC uses the sequence column to order changes correctly. SCD Type 2 keeps every version with __START_AT and __END_AT."}, {"q": "A pipeline feeds a dashboard that is refreshed once per day. Which pipeline mode is the most cost-effective?", "o": ["Continuous", "Triggered, scheduled daily", "Continuous with development mode", "Triggered, with a full refresh every run"], "c": 1, "e": "Triggered mode processes the available data and then stops. Continuous mode keeps compute running all the time, and full refresh reprocesses everything."}];
+</script>
+<script>
+(function () {
+  var md = document.getElementById('source').textContent.replace(/<\\\/script/gi, '</script').trim();
+  marked.setOptions({ gfm: true, breaks: false });
+  function render(text) {
+    var div = document.createElement('div');
+    div.innerHTML = marked.parse(text);
+    div.querySelectorAll('pre code').forEach(function (el) { try { hljs.highlightElement(el); } catch (e) {} });
+    div.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; });
+    return div.innerHTML;
+  }
+
+  // Document view: the whole markdown file
+  var docBody = document.getElementById('docBody');
+  docBody.innerHTML = render(md);
+  if (QUIZ && QUIZ.length) {
+    docBody.insertAdjacentHTML('beforeend', '<h2>Check yourself</h2><div id="quizDoc"></div>');
+    dbxQuiz('quizDoc', QUIZ);
+  }
+
+  // Presentation view: split on "## " headings (outside fenced code blocks)
+  var slides = [], cur = [], fence = false;
+  md.split('\n').forEach(function (line) {
+    if (/^\s*```/.test(line)) fence = !fence;
+    if (!fence && /^## /.test(line) && cur.length) { slides.push(cur.join('\n')); cur = []; }
+    cur.push(line);
+  });
+  if (cur.length) slides.push(cur.join('\n'));
+  var html = slides.map(render), idx = 0;
+  if (QUIZ && QUIZ.length) { slides.push('quiz'); html.push('<h2>Check yourself</h2><div class="quiz-slot"></div>'); }
+
+  var slideEl = document.getElementById('slide'), counter = document.getElementById('counter'), progress = document.getElementById('progress');
+  function show(n) {
+    idx = Math.max(0, Math.min(slides.length - 1, n));
+    slideEl.innerHTML = html[idx];
+    slideEl.classList.toggle('title-slide', idx === 0);
+    slideEl.scrollTop = 0;
+    var slot = slideEl.querySelector('.quiz-slot');
+    if (slot) dbxQuiz(slot, QUIZ);
+    counter.textContent = (idx + 1) + ' / ' + slides.length;
+    progress.style.width = ((idx + 1) / slides.length * 100) + '%';
+    history.replaceState(null, '', '#slides/' + (idx + 1));
+  }
+  function mode(m) {
+    var present = m === 'slides';
+    document.body.classList.toggle('present', present);
+    document.getElementById('btnSlides').classList.toggle('active', present);
+    document.getElementById('btnDoc').classList.toggle('active', !present);
+    if (present) show(idx); else history.replaceState(null, '', '#doc');
+  }
+  document.getElementById('btnDoc').onclick = function () { mode('doc'); };
+  document.getElementById('btnSlides').onclick = function () { mode('slides'); };
+  document.getElementById('prev').onclick = function () { show(idx - 1); };
+  document.getElementById('next').onclick = function () { show(idx + 1); };
+  document.getElementById('fs').onclick = function () {
+    if (document.fullscreenElement) document.exitFullscreen(); else document.getElementById('slides').requestFullscreen();
+  };
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var present = document.body.classList.contains('present');
+    if (e.key === 'p' || e.key === 'P') return mode('slides');
+    if (e.key === 'd' || e.key === 'D') return mode('doc');
+    if (!present) return;
+    if (['ArrowRight', 'PageDown', ' '].indexOf(e.key) >= 0) { e.preventDefault(); show(idx + 1); }
+    else if (['ArrowLeft', 'PageUp'].indexOf(e.key) >= 0) { e.preventDefault(); show(idx - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'f' || e.key === 'F') document.getElementById('fs').click();
+  });
+
+  var m = location.hash.match(/^#slides(?:\/(\d+))?/);
+  if (m) { idx = (parseInt(m[1] || '1', 10) || 1) - 1; mode('slides'); }
+})();
+</script>
+</body>
+</html>

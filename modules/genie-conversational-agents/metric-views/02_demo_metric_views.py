@@ -43,7 +43,7 @@
 # MAGIC <div>
 # MAGIC <strong style="color: #1B5E20; font-size: 1.1em">Runs on Serverless</strong>
 # MAGIC <p style="margin: 8px 0 0 0; color: #333">Attach this notebook to <strong>Serverless</strong> (the default). Serverless always runs a recent runtime, so every metric view feature used here (YAML spec 1.1, agent metadata, window measures) is available. A classic cluster also works if it runs <strong>DBR 17.3 LTS or above</strong>.</p>
-# MAGIC <p style="margin: 8px 0 0 0; color: #333">You need a Unity Catalog catalog where you may create a schema. In the lab environment, the current (default) catalog normally works. Otherwise set the <strong>catalog</strong> widget at the top.</p>
+# MAGIC <p style="margin: 8px 0 0 0; color: #333">You only need a Unity Catalog <strong>schema you can write to</strong> (in the lab: your own schema in <code>dbacademy</code>). You fill it in once in section A.</p>
 # MAGIC </div>
 # MAGIC </div>
 # MAGIC </div>
@@ -51,42 +51,22 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## A. Setup
+# MAGIC ## A. Setup: Choose Where to Work and Load the Data
 # MAGIC
-# MAGIC The cell below creates two widgets:
-# MAGIC - **catalog**: leave it empty to use the current catalog
-# MAGIC - **schema**: the demo schema (`dbxhelp_metric_views` by default)
+# MAGIC **Fill in one variable:** the `catalog.schema` you can write to. Nothing is created outside it, and no `CREATE SCHEMA` permission is needed.
 # MAGIC
-# MAGIC All demo objects are created in that schema, and the cleanup cell at the end removes them.
+# MAGIC - In the Databricks Academy lab, this is usually `dbacademy.<your labuser schema>`. Leave `FILL_IN` and run the cell once, and the error message suggests your schema.
+# MAGIC - Elsewhere, use any schema you own, e.g. `main.my_sandbox`.
 
 # COMMAND ----------
 
-# DBTITLE 1,Configure catalog and schema
-dbutils.widgets.text("catalog", "", "Catalog (empty = current)")
-dbutils.widgets.text("schema", "dbxhelp_metric_views", "Schema")
-
-CATALOG = dbutils.widgets.get("catalog").strip() or spark.sql("SELECT current_catalog()").first()[0]
-SCHEMA = dbutils.widgets.get("schema").strip() or "dbxhelp_metric_views"
-
-if CATALOG in ("hive_metastore", "samples", "system"):
-    raise ValueError(
-        f"Current catalog is '{CATALOG}', which can't hold metric views. "
-        "Type a Unity Catalog catalog you can write to into the 'catalog' widget and re-run."
-    )
-
-spark.sql(f"CREATE SCHEMA IF NOT EXISTS `{CATALOG}`.`{SCHEMA}`")
-spark.sql(f"USE CATALOG `{CATALOG}`")
-spark.sql(f"USE SCHEMA `{SCHEMA}`")
-
-S = f"`{CATALOG}`.`{SCHEMA}`"   # fully qualified schema, used inside the YAML definitions
-print(f"Working in: {CATALOG}.{SCHEMA}")
+# DBTITLE 1,FILL IN: catalog.schema to work in
+WORK_SCHEMA = "FILL_IN"   # e.g. "dbacademy.labuser1234567_1700000000"
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## B. Create a Small Retail Star Schema
-# MAGIC
-# MAGIC The data is generated with SQL, so no files or external sources are needed and every run produces the same numbers.
+# MAGIC The next cell downloads the synthetic **retail** dataset from the [dbxhelp GitHub repo](https://github.com/misrori/dbxhelp/tree/main/data/retail) and creates three Delta tables in `WORK_SCHEMA`:
 # MAGIC
 # MAGIC | Table | Rows | Description |
 # MAGIC |---|---|---|
@@ -96,107 +76,21 @@ print(f"Working in: {CATALOG}.{SCHEMA}")
 # MAGIC
 # MAGIC Cheap products are ordered much more often than expensive ones. This skew is what makes the "average of averages" mistake visible.
 # MAGIC
-# MAGIC We also declare **primary and foreign keys with `RELY`** and add **comments**. Both help Genie (and the optimizer) understand the model.
+# MAGIC The tables get **comments** and **primary/foreign keys with `RELY`**. Both help Genie (and the optimizer) understand the model. The cell also runs `USE CATALOG` / `USE SCHEMA`, so the SQL cells below can use short table names.
 
 # COMMAND ----------
 
-# DBTITLE 1,Create dimension and fact tables
-spark.sql("DROP TABLE IF EXISTS fact_orders")  # drop the FK holder first so the dims can be replaced
+# DBTITLE 1,Load the synthetic data from GitHub into Delta tables
+import urllib.request as u; exec(u.urlopen("https://raw.githubusercontent.com/misrori/dbxhelp/main/dbxdata.py").read().decode())
+S = load_dataset("retail", WORK_SCHEMA)   # S = `catalog`.`schema`, used inside the YAML definitions below
 
-spark.sql("""
-CREATE OR REPLACE TABLE dim_customer (
-  customer_id   BIGINT NOT NULL COMMENT 'Unique customer identifier',
-  customer_name STRING COMMENT 'Customer display name',
-  region        STRING COMMENT 'Sales region: EMEA, North America, APAC, LATAM',
-  segment       STRING COMMENT 'Customer segment: Enterprise, SMB, Consumer',
-  CONSTRAINT dim_customer_pk PRIMARY KEY (customer_id) RELY
-) COMMENT 'Customer dimension for the retail demo'
-""")
-spark.sql("""
-INSERT OVERWRITE dim_customer
-SELECT
-  id AS customer_id,
-  concat('Customer ', lpad(cast(id AS STRING), 4, '0')) AS customer_name,
-  CASE WHEN pmod(hash(id, 'r'), 100) < 45 THEN 'EMEA'
-       WHEN pmod(hash(id, 'r'), 100) < 75 THEN 'North America'
-       WHEN pmod(hash(id, 'r'), 100) < 92 THEN 'APAC'
-       ELSE 'LATAM' END AS region,
-  CASE WHEN pmod(hash(id, 's'), 10) < 2 THEN 'Enterprise'
-       WHEN pmod(hash(id, 's'), 10) < 6 THEN 'SMB'
-       ELSE 'Consumer' END AS segment
-FROM range(1, 501)
-""")
+# COMMAND ----------
 
-spark.sql("""
-CREATE OR REPLACE TABLE dim_product (
-  product_id   BIGINT NOT NULL COMMENT 'Unique product identifier',
-  product_name STRING COMMENT 'Product name',
-  category     STRING COMMENT 'Product category: Books, Beauty, Home, Sports, Electronics',
-  unit_price   DOUBLE COMMENT 'List price per unit in USD',
-  CONSTRAINT dim_product_pk PRIMARY KEY (product_id) RELY
-) COMMENT 'Product dimension for the retail demo'
-""")
-spark.sql("""
-INSERT OVERWRITE dim_product
-SELECT
-  product_id,
-  concat(category, ' item ', lpad(cast(product_id AS STRING), 2, '0')) AS product_name,
-  category,
-  round(base_price * (0.8 + pmod(hash(product_id, 'v'), 40) / 100.0), 2) AS unit_price
-FROM (
-  SELECT id AS product_id,
-         CASE WHEN id <= 8  THEN 'Books'
-              WHEN id <= 16 THEN 'Beauty'
-              WHEN id <= 24 THEN 'Home'
-              WHEN id <= 32 THEN 'Sports'
-              ELSE 'Electronics' END AS category,
-         CASE WHEN id <= 8  THEN 15.0
-              WHEN id <= 16 THEN 30.0
-              WHEN id <= 24 THEN 80.0
-              WHEN id <= 32 THEN 120.0
-              ELSE 650.0 END AS base_price
-  FROM range(1, 41)
-)
-""")
-
-spark.sql(f"""
-CREATE TABLE fact_orders (
-  order_id    BIGINT NOT NULL COMMENT 'Unique order identifier',
-  order_date  DATE   COMMENT 'Date the order was placed',
-  customer_id BIGINT COMMENT 'FK to dim_customer',
-  product_id  BIGINT COMMENT 'FK to dim_product',
-  quantity    INT    COMMENT 'Units ordered',
-  discount    DOUBLE COMMENT 'Discount rate applied to the order (0.0 - 1.0)',
-  status      STRING COMMENT 'COMPLETED, OPEN, CANCELLED, or TEST (internal test orders - always exclude)',
-  CONSTRAINT fact_orders_pk PRIMARY KEY (order_id) RELY,
-  CONSTRAINT fact_orders_customer_fk FOREIGN KEY (customer_id) REFERENCES {S}.dim_customer,
-  CONSTRAINT fact_orders_product_fk  FOREIGN KEY (product_id)  REFERENCES {S}.dim_product
-) COMMENT 'Order fact table for the retail demo (one row per order)'
-""")
-spark.sql("""
-INSERT INTO fact_orders
-SELECT
-  id AS order_id,
-  date_add(DATE'2025-01-01', cast(pmod(hash(id, 'd'), 669) AS INT)) AS order_date,
-  cast(pmod(hash(id, 'c'), 500) + 1 AS BIGINT) AS customer_id,
-  -- skewed: low product ids (cheap Books) are ordered far more often than Electronics
-  cast(floor(pow(pmod(hash(id, 'p'), 1000) / 1000.0, 2.5) * 40) + 1 AS BIGINT) AS product_id,
-  cast(pmod(hash(id, 'q'), 5) + 1 AS INT) AS quantity,
-  CASE WHEN pmod(hash(id, 'x'), 10) < 3 THEN 0.10
-       WHEN pmod(hash(id, 'x'), 10) = 3 THEN 0.25
-       ELSE 0.0 END AS discount,
-  CASE WHEN pmod(hash(id, 't'), 100) < 2  THEN 'TEST'
-       WHEN pmod(hash(id, 't'), 100) < 8  THEN 'CANCELLED'
-       WHEN pmod(hash(id, 't'), 100) < 12 THEN 'OPEN'
-       ELSE 'COMPLETED' END AS status
-FROM range(1, 60001)
-""")
-
-display(spark.sql("""
-SELECT p.category, count(*) AS orders, round(avg(p.unit_price), 2) AS avg_unit_price
-FROM fact_orders f JOIN dim_product p USING (product_id)
-GROUP BY ALL ORDER BY orders DESC
-"""))
+# DBTITLE 1,Quick look at the skew
+# MAGIC %sql
+# MAGIC SELECT p.category, count(*) AS orders, round(avg(p.unit_price), 2) AS avg_unit_price
+# MAGIC FROM fact_orders f JOIN dim_product p USING (product_id)
+# MAGIC GROUP BY ALL ORDER BY orders DESC;
 
 # COMMAND ----------
 
@@ -394,7 +288,7 @@ AS $$
 {metric_view_yaml}
 $$
 """)
-print(f"Created metric view {CATALOG}.{SCHEMA}.sales_metrics")
+print(f"Created metric view {S}.sales_metrics")
 
 # COMMAND ----------
 
@@ -404,7 +298,7 @@ print(f"Created metric view {CATALOG}.{SCHEMA}.sales_metrics")
 # MAGIC <span style="font-size: 24px">&#8505;&#65039;</span>
 # MAGIC <div>
 # MAGIC <strong style="color: #0d47a1; font-size: 1.1em">Look at it in Catalog Explorer</strong>
-# MAGIC <p style="margin: 8px 0 0 0; color: #333">Open <strong>Catalog</strong> &rarr; your catalog &rarr; <code>dbxhelp_metric_views</code> &rarr; <code>sales_metrics</code>. The <strong>Overview</strong> tab lists fields and measures, and <strong>Edit</strong> opens the visual editor (with a <code>&lt;&gt;</code> YAML tab). Creating a metric view from the UI works the same way: open any table &rarr; <strong>Create &rarr; Metric view</strong>.</p>
+# MAGIC <p style="margin: 8px 0 0 0; color: #333">Open <strong>Catalog</strong> &rarr; your catalog &rarr; your schema &rarr; <code>sales_metrics</code>. The <strong>Overview</strong> tab lists fields and measures, and <strong>Edit</strong> opens the visual editor (with a <code>&lt;&gt;</code> YAML tab). Creating a metric view from the UI works the same way: open any table &rarr; <strong>Create &rarr; Metric view</strong>.</p>
 # MAGIC </div>
 # MAGIC </div>
 # MAGIC </div>
@@ -649,13 +543,15 @@ LIMIT 14
 # MAGIC %md
 # MAGIC ## J. Cleanup (Optional)
 # MAGIC
-# MAGIC Keep the objects if you still want to build the Genie Agent or dashboard. Otherwise uncomment and run:
+# MAGIC Keep the objects if you still want to build the Genie Agent or dashboard. Otherwise uncomment and run. This removes only the demo tables and views, not your schema:
 
 # COMMAND ----------
 
-# DBTITLE 1,Drop the demo schema
-# spark.sql(f"DROP SCHEMA IF EXISTS {S} CASCADE")
-# dbutils.widgets.removeAll()
+# DBTITLE 1,Drop the demo objects (your schema itself is kept)
+# for obj in ["sales_metrics_daily", "sales_metrics", "v_sales_by_category_month"]:
+#     spark.sql(f"DROP VIEW IF EXISTS {S}.{obj}")
+# for tbl in ["fact_orders", "dim_product", "dim_customer"]:
+#     spark.sql(f"DROP TABLE IF EXISTS {S}.{tbl}")
 
 # COMMAND ----------
 

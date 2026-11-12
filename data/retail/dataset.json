@@ -1,0 +1,121 @@
+{
+  "name": "retail",
+  "description": "Small retail star schema: 500 customers, 40 products, 60,000 orders (Jan 2025 - Oct 2026). Cheap Books are ordered far more often than expensive Electronics; includes CANCELLED and TEST orders.",
+  "tables": [
+    {
+      "name": "dim_customer",
+      "file": "dim_customer.csv",
+      "comment": "Customer dimension",
+      "primary_key": [
+        "customer_id"
+      ],
+      "columns": [
+        [
+          "customer_id",
+          "BIGINT NOT NULL",
+          "Unique customer identifier"
+        ],
+        [
+          "customer_name",
+          "STRING",
+          "Customer display name"
+        ],
+        [
+          "region",
+          "STRING",
+          "Sales region: EMEA, North America, APAC, LATAM"
+        ],
+        [
+          "segment",
+          "STRING",
+          "Customer segment: Enterprise, SMB, Consumer"
+        ]
+      ]
+    },
+    {
+      "name": "dim_product",
+      "file": "dim_product.csv",
+      "comment": "Product dimension",
+      "primary_key": [
+        "product_id"
+      ],
+      "columns": [
+        [
+          "product_id",
+          "BIGINT NOT NULL",
+          "Unique product identifier"
+        ],
+        [
+          "product_name",
+          "STRING",
+          "Product name"
+        ],
+        [
+          "category",
+          "STRING",
+          "Product category: Books, Beauty, Home, Sports, Electronics"
+        ],
+        [
+          "unit_price",
+          "DOUBLE",
+          "List price per unit in USD"
+        ]
+      ]
+    },
+    {
+      "name": "fact_orders",
+      "file": "fact_orders.csv",
+      "comment": "Order fact table (one row per order)",
+      "primary_key": [
+        "order_id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "customer_id",
+          "references": "dim_customer"
+        },
+        {
+          "column": "product_id",
+          "references": "dim_product"
+        }
+      ],
+      "columns": [
+        [
+          "order_id",
+          "BIGINT NOT NULL",
+          "Unique order identifier"
+        ],
+        [
+          "order_date",
+          "DATE",
+          "Date the order was placed"
+        ],
+        [
+          "customer_id",
+          "BIGINT",
+          "FK to dim_customer"
+        ],
+        [
+          "product_id",
+          "BIGINT",
+          "FK to dim_product"
+        ],
+        [
+          "quantity",
+          "INT",
+          "Units ordered"
+        ],
+        [
+          "discount",
+          "DOUBLE",
+          "Discount rate applied to the order (0.0 - 1.0)"
+        ],
+        [
+          "status",
+          "STRING",
+          "COMPLETED, OPEN, CANCELLED, or TEST (internal test orders - always exclude)"
+        ]
+      ]
+    }
+  ]
+}

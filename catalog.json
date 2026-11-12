@@ -3,6 +3,109 @@
   "branch": "main",
   "modules": [
     {
+      "id": "de",
+      "title": "Data Engineering with Databricks",
+      "folder": "modules/data-engineering",
+      "workspace_folder": "Data Engineering",
+      "topics": [
+        {
+          "id": "lakeflow-connect",
+          "title": "Recap 1: Data Ingestion with Lakeflow Connect",
+          "summary": "8-minute recap: the ingestion menu, CTAS/read_files vs COPY INTO vs streaming tables with Auto Loader, metadata columns, CSV rescued data, JSON/VARIANT, managed connectors, MERGE INTO. Ends with a 5-question check.",
+          "tags": [
+            "Recap",
+            "Ingestion",
+            "Auto Loader",
+            "Lakeflow Connect"
+          ],
+          "folder": "01-lakeflow-connect",
+          "workspace_folder": "Recaps",
+          "updated": "2026-11-12",
+          "notebooks": [
+            {
+              "file": "01_recap_lakeflow_connect.py",
+              "name": "01 Recap - Data Ingestion with Lakeflow Connect",
+              "from_doc": true
+            }
+          ],
+          "doc": "lakeflow-connect-recap.md",
+          "quiz": "lakeflow-connect-recap.quiz.json",
+          "html": "lakeflow-connect-recap.html"
+        },
+        {
+          "id": "lakeflow-jobs",
+          "title": "Recap 2: Deploy Workloads with Lakeflow Jobs",
+          "summary": "8-minute recap: tasks and the DAG, triggers (scheduled, file arrival, table update, continuous), parameters and task values, Run if, If/else, repair runs, Run Job modular orchestration. Ends with a 5-question check.",
+          "tags": [
+            "Recap",
+            "Lakeflow Jobs",
+            "Orchestration"
+          ],
+          "folder": "02-lakeflow-jobs",
+          "workspace_folder": "Recaps",
+          "updated": "2026-11-12",
+          "notebooks": [
+            {
+              "file": "02_recap_lakeflow_jobs.py",
+              "name": "02 Recap - Deploy Workloads with Lakeflow Jobs",
+              "from_doc": true
+            }
+          ],
+          "doc": "lakeflow-jobs-recap.md",
+          "quiz": "lakeflow-jobs-recap.quiz.json",
+          "html": "lakeflow-jobs-recap.html"
+        },
+        {
+          "id": "declarative-pipelines",
+          "title": "Recap 3: Build Data Pipelines with Lakeflow Spark Declarative Pipelines",
+          "summary": "9-minute recap: streaming tables vs materialized views, a medallion pipeline in SQL and Python, expectations, pipeline settings and modes, the event log, AUTO CDC with SCD Type 1/2. Ends with a 5-question check.",
+          "tags": [
+            "Recap",
+            "Declarative Pipelines",
+            "Data Quality",
+            "CDC"
+          ],
+          "folder": "03-declarative-pipelines",
+          "workspace_folder": "Recaps",
+          "updated": "2026-11-12",
+          "notebooks": [
+            {
+              "file": "03_recap_declarative_pipelines.py",
+              "name": "03 Recap - Build Data Pipelines with Lakeflow Spark Declarative Pipelines",
+              "from_doc": true
+            }
+          ],
+          "doc": "declarative-pipelines-recap.md",
+          "quiz": "declarative-pipelines-recap.quiz.json",
+          "html": "declarative-pipelines-recap.html"
+        },
+        {
+          "id": "devops-essentials",
+          "title": "Recap 4: DevOps Essentials for Data Engineering",
+          "summary": "8-minute recap: DevOps and CI/CD for data teams, modular PySpark code, unit tests with pytest and assertDataFrameEqual, integration tests, Git folders, deploying with the CLI and bundles. Ends with a 5-question check.",
+          "tags": [
+            "Recap",
+            "CI/CD",
+            "Testing",
+            "Git"
+          ],
+          "folder": "04-devops-essentials",
+          "workspace_folder": "Recaps",
+          "updated": "2026-11-12",
+          "notebooks": [
+            {
+              "file": "04_recap_devops_essentials.py",
+              "name": "04 Recap - DevOps Essentials for Data Engineering",
+              "from_doc": true
+            }
+          ],
+          "doc": "devops-essentials-recap.md",
+          "quiz": "devops-essentials-recap.quiz.json",
+          "html": "devops-essentials-recap.html"
+        }
+      ]
+    },
+    {
       "id": "genie",
       "title": "Building Reliable Conversational Agents with Genie",
       "folder": "modules/genie-conversational-agents",
@@ -12,17 +115,43 @@
           "id": "metric-views",
           "title": "Metric Views",
           "summary": "What Unity Catalog metric views are, why Genie gets more reliable with them, MEASURE() queries, agent metadata, and what's new in AI/BI dashboards (local metric views, export as metric view). Hands-on demo runs on Serverless.",
-          "tags": ["Unity Catalog", "Genie", "AI/BI Dashboards", "Serverless"],
+          "tags": [
+            "Unity Catalog",
+            "Genie",
+            "AI/BI Dashboards",
+            "Serverless"
+          ],
           "folder": "metric-views",
           "workspace_folder": "Metric Views",
           "updated": "2026-11-12",
           "notebooks": [
-            { "file": "01_lecture_metric_views.sql", "name": "01 Lecture - Metric Views Explained" },
-            { "file": "02_demo_metric_views.py", "name": "02 Demo - Metric Views Hands-on" }
+            {
+              "file": "01_lecture_metric_views.sql",
+              "name": "01 Lecture - Metric Views Explained"
+            },
+            {
+              "file": "02_demo_metric_views.py",
+              "name": "02 Demo - Metric Views Hands-on"
+            }
           ],
           "doc": "metric-views.md",
           "html": "metric-views.html"
         }
+      ]
+    }
+  ],
+  "datasets": [
+    {
+      "id": "retail",
+      "title": "Retail star schema",
+      "description": "500 customers, 40 products, 60,000 orders (Jan 2025 - Oct 2026) with PK/FK constraints and comments. Skewed so that pre-aggregation mistakes are visible. Includes CANCELLED and TEST orders.",
+      "tables": [
+        "dim_customer",
+        "dim_product",
+        "fact_orders"
+      ],
+      "used_by": [
+        "genie/metric-views"
       ]
     }
   ]

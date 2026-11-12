@@ -1,0 +1,32 @@
+[
+  {
+    "q": "A gold table aggregates revenue per day, and upstream orders can be corrected or deleted days later. Which dataset type keeps the result correct?",
+    "o": ["Streaming table", "Materialized view", "Temporary view", "Append flow"],
+    "c": 1,
+    "e": "A materialized view is kept correct on every refresh, including updates and deletes in its sources. A streaming table processes each input row only once."
+  },
+  {
+    "q": "Rows with a NULL order_id must be removed from the silver table, but the pipeline must keep running. Which expectation do you use?",
+    "o": ["`EXPECT (order_id IS NOT NULL)`", "`EXPECT (order_id IS NOT NULL) ON VIOLATION DROP ROW`", "`EXPECT (order_id IS NOT NULL) ON VIOLATION FAIL UPDATE`", "A CHECK constraint on the table"],
+    "c": 1,
+    "e": "DROP ROW removes invalid rows and records the count. Plain EXPECT only warns, and FAIL UPDATE stops the update."
+  },
+  {
+    "q": "Which statement makes a streaming read in a SQL pipeline definition?",
+    "o": ["`FROM orders_bronze`", "`FROM STREAM(orders_bronze)`", "`FROM LIVE.orders_bronze`", "`FROM TABLE(orders_bronze)`"],
+    "c": 1,
+    "e": "`STREAM(...)` (or `STREAM read_files(...)`) gives an incremental, streaming read, producing a streaming table. A plain FROM is a batch read."
+  },
+  {
+    "q": "A change feed contains inserts, updates and deletes that may arrive out of order. The business needs the full history of customer addresses. What do you use?",
+    "o": ["MERGE INTO in a foreachBatch", "AUTO CDC with SEQUENCE BY ... STORED AS SCD TYPE 2", "AUTO CDC STORED AS SCD TYPE 1", "A materialized view with ROW_NUMBER()"],
+    "c": 1,
+    "e": "AUTO CDC uses the sequence column to order changes correctly. SCD Type 2 keeps every version with __START_AT and __END_AT."
+  },
+  {
+    "q": "A pipeline feeds a dashboard that is refreshed once per day. Which pipeline mode is the most cost-effective?",
+    "o": ["Continuous", "Triggered, scheduled daily", "Continuous with development mode", "Triggered, with a full refresh every run"],
+    "c": 1,
+    "e": "Triggered mode processes the available data and then stops. Continuous mode keeps compute running all the time, and full refresh reprocesses everything."
+  }
+]

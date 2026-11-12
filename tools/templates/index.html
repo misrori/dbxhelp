@@ -87,7 +87,15 @@
   </div>
 
   <h2>Topics</h2>
+  <p class="note">Tip: <code>dbxhelp("de")</code> imports every topic of a module at once (here: all four Data Engineering recaps).</p>
   <div id="topics"></div>
+
+  <h2>Synthetic datasets for demos</h2>
+  <div class="card">
+    <p class="note" style="margin-top:0">Demos never create schemas. You fill in <b>one variable</b>, the <code>catalog.schema</code> you can write to (in the lab: <code>dbacademy.&lt;your labuser schema&gt;</code>). One line then downloads the data from GitHub and creates Delta tables there. Use it in any notebook:</p>
+    <div class="cmd" data-tpl="dataset"></div>
+    <div id="datasets"></div>
+  </div>
 
 </div></main>
 <footer>Source: <a href="https://github.com/{{REPO}}" target="_blank">github.com/{{REPO}}</a> · Not affiliated with Databricks, Inc.</footer>
@@ -107,8 +115,18 @@ window.CATALOG = {{CATALOG_JSON}};
   }
   var templates = {
     'list': function () { return loader + 'dbxhelp()'; },
-    'terminal-generic': function () { return terminalCmd('modules', 'modules'); }
+    'terminal-generic': function () { return terminalCmd('modules', 'modules'); },
+    'dataset': function () {
+      return 'WORK_SCHEMA = "FILL_IN"   # e.g. "dbacademy.labuser1234567_1700000000"\n\n' +
+             'import urllib.request as u; exec(u.urlopen("https://raw.githubusercontent.com/' + repo + '/' + branch + '/dbxdata.py").read().decode())\n' +
+             'S = load_dataset("retail", WORK_SCHEMA)';
+    }
   };
+  document.getElementById('datasets').innerHTML = (C.datasets || []).map(function (d) {
+    return '<div style="margin-top:12px"><b>' + d.id + '</b>: ' + d.title + '. <span class="note">' + d.description +
+      ' Tables: ' + d.tables.map(function (t) { return '<code>' + t + '</code>'; }).join(', ') +
+      ' · <a href="https://github.com/' + repo + '/tree/' + branch + '/data/' + d.id + '" target="_blank">files</a></span></div>';
+  }).join('');
 
   var host = document.getElementById('topics'), html = '';
   C.modules.forEach(function (m) {
