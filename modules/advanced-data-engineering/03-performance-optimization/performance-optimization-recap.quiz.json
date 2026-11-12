@@ -1,0 +1,32 @@
+[
+  {
+    "q": "A query filters a 5 TB table on customer_id, and the query profile shows almost no files pruned. What is the best first step?",
+    "o": ["Double the cluster size", "Partition the table by customer_id", "Use liquid clustering on customer_id (then OPTIMIZE)", "Cache the table with df.cache()"],
+    "c": 2,
+    "e": "No pruning means a layout problem. Liquid clustering co-locates customer_id values so file statistics can skip files. Partitioning by a high-cardinality column creates millions of tiny files."
+  },
+  {
+    "q": "In the Spark UI, one task of a stage runs for 25 minutes while the median task takes 20 seconds. What is the most likely cause?",
+    "o": ["Data skew on the join or grouping key", "Too many executors", "Missing Photon", "Disk cache disabled"],
+    "c": 0,
+    "e": "A single task far slower than the median is the classic sign of skew: one key holds much more data. AQE skew handling, salting, or treating hot keys separately helps."
+  },
+  {
+    "q": "A 2 TB fact table is joined to a 20 MB store dimension, and the plan shows a sort-merge join with a large shuffle. What do you do?",
+    "o": ["Increase spark.sql.shuffle.partitions to 5000", "Broadcast the small dimension (fresh statistics or a BROADCAST hint)", "Convert the dimension to CSV", "Repartition the fact table by store_id before every query"],
+    "c": 1,
+    "e": "A broadcast hash join ships the small table to every executor, so the large side never needs to be shuffled."
+  },
+  {
+    "q": "A transformation trims and lower-cases emails using a Python UDF and is slow. What is the best fix?",
+    "o": ["Rewrite it with built-in functions: lower(trim(email))", "Increase driver memory", "Cache the DataFrame before the UDF", "Run it on a single-node cluster"],
+    "c": 0,
+    "e": "Python UDFs serialize rows between the JVM and Python and block Photon. Built-in functions run natively and are much faster."
+  },
+  {
+    "q": "Stage metrics show large 'spill (disk)' values during an aggregation. Which change addresses spill directly?",
+    "o": ["Fewer, larger shuffle partitions", "More (smaller) partitions or more memory per task", "Disable AQE", "Add a ZORDER on the aggregation key"],
+    "c": 1,
+    "e": "Spill happens when a task's data doesn't fit in memory. Smaller tasks (more partitions) or memory-optimized nodes reduce it."
+  }
+]

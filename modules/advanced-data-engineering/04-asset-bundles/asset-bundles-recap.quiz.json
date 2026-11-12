@@ -1,0 +1,32 @@
+[
+  {
+    "q": "Which file defines a bundle's name, included resource files, variables and targets?",
+    "o": ["bundle.json", "databricks.yml", "pyproject.toml", "requirements.txt"],
+    "c": 1,
+    "e": "databricks.yml at the project root is the bundle configuration. Resources are usually split into files under resources/ and pulled in with include."
+  },
+  {
+    "q": "After `databricks bundle deploy -t dev`, the scheduled job doesn't start on its schedule. Why?",
+    "o": ["The deploy failed silently", "Development mode pauses schedules and triggers", "Schedules only work with job clusters", "The job must be run with bundle run first"],
+    "c": 1,
+    "e": "mode: development prefixes resource names with [dev user] and pauses schedules, so dev copies don't run on their own."
+  },
+  {
+    "q": "A CI pipeline must pass a database password to the bundle at deploy time without storing it in Git. What do you use?",
+    "o": ["Write it into databricks.yml under the prod target", "Set it as the BUNDLE_VAR_<name> environment variable from the CI secret store", "Hard-code it in the notebook", "Put it in the variable's default value"],
+    "c": 1,
+    "e": "BUNDLE_VAR_<name> environment variables override bundle variables, and their values can come from the CI system's secret store."
+  },
+  {
+    "q": "Production jobs must not run with the identity of the engineer who deployed them. Which bundle setting handles this?",
+    "o": ["`mode: development`", "`run_as` with a service principal on the prod target", "`permissions: CAN_VIEW`", "`--force` on deploy"],
+    "c": 1,
+    "e": "run_as sets the identity that jobs and pipelines run with. Production mode validates it, and a service principal is the recommended choice."
+  },
+  {
+    "q": "In which order should a CI/CD pipeline typically run the bundle commands for a staging deployment?",
+    "o": ["deploy → validate → run", "run → deploy → validate", "validate → deploy → run", "destroy → deploy → validate"],
+    "c": 2,
+    "e": "validate catches configuration errors, deploy creates or updates the resources, and run executes the job, e.g. integration tests, against the deployed version."
+  }
+]

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recap 3: Databricks Performance Optimization · dbxhelp</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<style>
+  :root { --accent: #FF3621; --navy: #1B3139; --blue: #2272B4; --bg: #F9F7F4; --text: #1F2328; --muted: #6B7280; --border: #E5E7EB; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); }
+  header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: var(--navy); color: #fff; }
+  header a.home { color: #fff; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  header .title { color: #CBD5E1; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+  .toggle { display: inline-flex; background: rgba(255,255,255,0.12); border-radius: 999px; padding: 3px; }
+  .toggle button { border: 0; background: transparent; color: #E2E8F0; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 0.9em; }
+  .toggle button.active { background: #fff; color: var(--navy); font-weight: 600; }
+  header .link { color: #E2E8F0; font-size: 0.85em; text-decoration: none; border: 1px solid rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 6px; }
+  header .link:hover { background: rgba(255,255,255,0.1); }
+
+  /* ---------- shared markdown styling ---------- */
+  .md h1 { font-size: 2em; color: var(--navy); margin: 0 0 0.5em; }
+  .md h2 { color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 0.3em; margin-top: 1.8em; }
+  .md h3 { color: var(--navy); }
+  .md a { color: var(--blue); }
+  .md code { background: #EEF2F6; padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.9em; }
+  .md pre { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow: auto; }
+  .md pre code { background: none; padding: 0; font-size: 0.88em; line-height: 1.5; }
+  .md blockquote { margin: 1em 0; padding: 10px 16px; border-left: 4px solid var(--blue); background: #E3F2FD; border-radius: 4px; color: #1F2937; }
+  .md blockquote p { margin: 0.3em 0; }
+  .md table { border-collapse: collapse; width: 100%; margin: 1em 0; background: #fff; font-size: 0.95em; }
+  .md th, .md td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  .md th { background: #F1F5F9; }
+  .md li { margin: 0.25em 0; line-height: 1.55; }
+  .md p { line-height: 1.6; }
+
+  /* ---------- document mode ---------- */
+  #doc { max-width: 920px; margin: 0 auto; padding: 32px 24px 80px; }
+  #doc .md { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 36px 44px; }
+
+  /* ---------- presentation mode ---------- */
+  #slides { display: none; height: calc(100vh - 52px); padding: 18px; }
+  body.present #doc { display: none; }
+  body.present #slides { display: flex; flex-direction: column; align-items: center; }
+  .stage { flex: 1; width: 100%; max-width: 1280px; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .slide { width: 100%; height: 100%; max-height: 760px; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-top: 6px solid var(--accent); padding: 40px 56px; overflow: auto; font-size: 1.22em; }
+  .slide.title-slide { display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, var(--navy), #24495A); color: #fff; }
+  .slide.title-slide h1 { color: #fff; font-size: 2.3em; }
+  .slide.title-slide blockquote { background: rgba(255,255,255,0.1); border-left-color: var(--accent); color: #fff; }
+  .slide.title-slide code { background: rgba(255,255,255,0.15); color: #fff; }
+  .slide.title-slide strong { color: #FFD7CF; }
+  .slide h2 { margin-top: 0; font-size: 1.6em; border-bottom-color: var(--accent); }
+  .controls { display: flex; align-items: center; gap: 14px; padding-top: 12px; color: var(--muted); font-size: 0.9em; }
+  .controls button { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 1em; }
+  .controls button:hover { border-color: var(--blue); }
+  .progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--accent); transition: width 0.2s; }
+  body:not(.present) .progress { display: none; }
+  :fullscreen #slides { height: 100vh; }
+  @media (max-width: 700px) { .slide { padding: 24px; font-size: 1em; } #doc .md { padding: 20px; } header .title { display: none; } }
+  @media print { header, .controls, .progress { display: none; } #doc .md { border: 0; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="../../../index.html" title="All topics"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</a>
+  <span class="title">Advanced Data Engineering with Databricks › Recap 3: Databricks Performance Optimization</span>
+  <div class="toggle" role="tablist">
+    <button id="btnDoc" class="active" title="Document view (D)">📄 Document</button>
+    <button id="btnSlides" title="Presentation view (P)">🎞️ Presentation</button>
+  </div>
+  <a class="link" href="performance-optimization-recap.md" download>⬇ .md</a>
+  <a class="link" href="https://github.com/misrori/dbxhelp/tree/main/modules/advanced-data-engineering/03-performance-optimization" target="_blank">GitHub</a>
+</header>
+
+<main id="doc"><article class="md" id="docBody"></article></main>
+
+<section id="slides">
+  <div class="stage"><div class="slide md" id="slide"></div></div>
+  <div class="controls">
+    <button id="prev" title="Previous (←)">←</button>
+    <span id="counter"></span>
+    <button id="next" title="Next (→ / Space)">→</button>
+    <button id="fs" title="Fullscreen (F)">⛶</button>
+    <span>← → navigate · F fullscreen · D document</span>
+  </div>
+</section>
+<div class="progress" id="progress"></div>
+
+<script type="text/markdown" id="source">
+# Recap: Databricks Performance Optimization
+
+> **Course 3 of 4 · Advanced Data Engineering with Databricks** · ⏱ ~9 minutes
+>
+> Why queries are slow and what to do about it: **file layout and data skipping**, the classic Spark problems (**skew, shuffle, spill, serialization**), and choosing **compute**.
+
+**The one idea to remember:** first **read less data** (good layout, data skipping), then **move less data** (avoid shuffles, broadcast small sides), and only then **add hardware**. The query profile and the Spark UI tell you which problem you have.
+
+## What we covered
+
+| Topic | Key takeaway |
+|---|---|
+| Spark architecture | Driver, executors, **jobs → stages → tasks**. Shuffles create stage boundaries |
+| File layout | Small files, **data skipping** with file statistics, partitioning vs Z-order vs **liquid clustering** |
+| Managed maintenance | `OPTIMIZE`, `VACUUM`, optimized writes, auto compaction, **predictive optimization** |
+| Skew | One task takes much longer than the rest. Fix it with AQE, salting, or filtering hot keys |
+| Shuffle | Wide transformations move data across the network. Broadcast joins avoid it |
+| Spill | Not enough memory per task, so data goes to disk. Fix it with more or smaller partitions or bigger nodes |
+| Serialization | Python UDFs are slow. Prefer **built-in functions**, then pandas UDFs |
+| Compute & diagnostics | Cluster sizing, **Photon**, serverless, **query profile**, **Spark UI**, caching |
+
+## How Spark executes a query
+
+```
+Query ─► Job ─► Stage 1 (scan, filter, project)  ─┐ shuffle (exchange)
+                                                  ├► Stage 2 (join / aggregate) ─► write
+                                                  │
+         one task per partition, run in parallel on executor cores
+```
+
+- **Narrow** transformations (`filter`, `select`, `withColumn`) stay in the same stage.
+- **Wide** transformations (`groupBy`, `join`, `distinct`, `orderBy`) need a **shuffle**, which starts a new stage.
+- **Adaptive Query Execution (AQE)**, on by default, re-plans at stage boundaries using real data sizes:
+  - switches to a **broadcast join**;
+  - **coalesces** small partitions;
+  - splits **skewed** partitions.
+
+## File layout and data skipping
+
+Delta stores **min/max statistics** per file, so a selective filter can **skip files**. That only works when similar values sit in the same files.
+
+| Technique | Use when | Notes |
+|---|---|---|
+| **Liquid clustering** `CLUSTER BY (cols)` | **Default for new tables**. Filter or join on 1–4 columns, any cardinality | Incremental, and keys can be changed without a rewrite |
+| **`CLUSTER BY AUTO`** | Managed tables with unknown or changing query patterns | Databricks picks the keys (needs predictive optimization) |
+| **Partitioning** | Very large tables (many TB) with a **low-cardinality** column used for lifecycle (e.g. date), partitions ≥ ~1 GB | Over-partitioning leads to millions of small files |
+| **Z-order** (legacy) | Existing partitioned tables | Not incremental. Must be re-run on all data |
+
+```sql
+CREATE TABLE sales (sale_ts TIMESTAMP, customer_id BIGINT, store_id INT, amount DOUBLE)
+CLUSTER BY (customer_id, sale_ts);
+
+OPTIMIZE sales;                     -- compacts small files and clusters new data
+ANALYZE TABLE sales COMPUTE STATISTICS FOR ALL COLUMNS;
+```
+
+- **Small-file problem:** many tiny files from streaming or over-partitioning mean slow listing and slow scans. Fix it with `OPTIMIZE`, auto compaction and optimized writes.
+- **Predictive optimization** on UC managed tables runs `OPTIMIZE`, `VACUUM` and `ANALYZE` for you.
+- Write predicates on the column itself (`sale_ts >= '2026-01-01'`), not on a function of it (`date(sale_ts) = …`), so that skipping works.
+
+## The four classic problems
+
+| Problem | Symptom in Spark UI / query profile | Fixes |
+|---|---|---|
+| **Skew** | One task runs far longer than the median. Rows per task are very uneven | AQE skew join (on by default), **salting** hot keys, filtering or handling NULL / "unknown" keys separately |
+| **Shuffle** | Large *shuffle read/write* bytes, many exchanges | **Broadcast** the small side, filter and select early, pre-aggregate, cluster on join keys |
+| **Spill** | *Spill (memory/disk)* > 0 in sort, aggregate or join stages | More partitions (smaller tasks), memory-optimized nodes, less data per key |
+| **Serialization** | Slow Python UDF stages, Photon falls back | Replace UDFs with **built-in functions**. Otherwise use **pandas (vectorized) UDFs** |
+
+```python
+from pyspark.sql import functions as F
+
+# ❌ row-by-row Python UDF: data shipped to Python one row at a time
+# clean = F.udf(lambda s: s.strip().lower())
+
+# ✅ built-in, runs in the JVM / Photon
+df = df.withColumn("email", F.lower(F.trim("email")))
+
+# ✅ broadcast a small dimension to avoid shuffling the big fact table
+result = facts.join(F.broadcast(stores), "store_id")
+```
+
+## Joins and shuffle partitions
+
+| Join strategy | When | Cost |
+|---|---|---|
+| **Broadcast hash join** | One side is small (under `spark.sql.autoBroadcastJoinThreshold`, or AQE decides at runtime) | **No shuffle** of the big side, the fastest option |
+| Shuffle hash join | Medium side fits in memory per partition | One shuffle |
+| **Sort-merge join** | Both sides large | Shuffle **and** sort on both sides |
+
+- `spark.sql.shuffle.partitions` (default 200): with AQE, set it high (or `auto`) and let coalescing shrink it.
+- Too few partitions give huge tasks and spill. Too many give scheduling overhead and tiny output files.
+- Missing statistics can hide a broadcast opportunity. Run `ANALYZE TABLE`, or add a `/*+ BROADCAST(dim) */` hint.
+
+## Compute choices
+
+| Choice | Guidance |
+|---|---|
+| **Serverless** | Default for jobs, pipelines and SQL: fast start, auto-scaling, no tuning |
+| **Photon** | Vectorized engine for SQL and DataFrame workloads. Big gains on scans, joins, aggregations and Delta writes |
+| Node type | Memory-optimized for large shuffles, joins and caching. Compute-optimized for CPU-heavy transforms. Storage-optimized (local SSD) for the **disk cache** |
+| Autoscaling | Good for variable load. Fixed size for steady streaming workloads |
+| Job clusters | Production jobs. All-purpose clusters are for interactive work |
+
+**Caching:**
+- **Disk cache**: automatic on SSD-backed nodes and SQL warehouses, and always consistent.
+- **Spark cache** (`df.cache()`): manual, uses executor memory, and can go stale.
+- **Query result cache**: repeated identical SQL queries.
+
+## Diagnosing a slow query
+
+1. Open the **query profile** (SQL / serverless) or the **Spark UI** (classic).
+2. **Files pruned ≈ 0** on a selective filter? → layout problem: clustering, statistics, predicate.
+3. **Sort-merge join** with a small side? → broadcast / statistics.
+4. **Shuffle bytes** huge? → filter early, broadcast, pre-aggregate.
+5. **Max task time ≫ median**? → skew.
+6. **Spill** > 0? → partitions or memory.
+7. Only then: bigger compute, or Photon if it isn't on yet.
+
+## Common mistakes
+
+- ❌ Scaling up the cluster when the profile shows **no data skipping**. Fix the layout first.
+- ❌ Partitioning a 200 GB table, or partitioning by a high-cardinality column. Use **liquid clustering**.
+- ❌ Scheduling `ZORDER` jobs on managed tables with liquid clustering and predictive optimization.
+- ❌ Row-by-row Python UDFs for logic that built-in functions already cover.
+- ❌ Forcing `spark.sql.shuffle.partitions = 2000` everywhere instead of letting AQE coalesce.
+- ❌ `df.cache()` for a dashboard read by many users. Rely on the disk cache or result cache.
+
+**Next course:** *Automated Deployment with Databricks Asset Bundles*.
+
+</script>
+<script>
+function dbxQuiz(root, questions) {
+  if (typeof root === 'string') root = document.getElementById(root);
+  var i = 0, score = 0, picked = null, shown = false;
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/`([^`]+)`/g, '<code>$1</code>'); }
+  function btn(label, primary) { return '<button style="margin-top:14px;padding:8px 18px;border-radius:4px;border:none;cursor:pointer;background:' + (primary ? '#2272B4' : '#E0E0E0') + ';color:' + (primary ? '#fff' : '#333') + ';font-size:0.95em">' + label + '</button>'; }
+  function render() {
+    if (i >= questions.length) {
+      root.innerHTML = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;text-align:center;background:#fff"><div style="font-size:1.3em;font-weight:bold;color:#333">Score: ' + score + ' / ' + questions.length + '</div>' + btn('Retake', true) + '</div>';
+      root.querySelector('button').onclick = function () { i = 0; score = 0; picked = null; shown = false; render(); };
+      return;
+    }
+    var Q = questions[i], h = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;background:#fff">';
+    h += '<div style="color:#999;font-size:0.85em;margin-bottom:6px">Question ' + (i + 1) + ' of ' + questions.length + '</div>';
+    h += '<div style="font-weight:bold;color:#333;margin-bottom:12px;line-height:1.5">' + esc(Q.q) + '</div>';
+    Q.o.forEach(function (t, k) {
+      var bg = '#fff', bd = '#e0e0e0';
+      if (shown && k === Q.c) { bg = '#E8F5E9'; bd = '#43A047'; }
+      else if (shown && k === picked) { bg = '#FFEBEE'; bd = '#E53935'; }
+      else if (!shown && k === picked) { bg = '#E3F2FD'; bd = '#2272B4'; }
+      h += '<div data-k="' + k + '" style="padding:10px 14px;margin:6px 0;border:2px solid ' + bd + ';background:' + bg + ';border-radius:6px;cursor:' + (shown ? 'default' : 'pointer') + ';color:#333">' + String.fromCharCode(97 + k) + ') ' + esc(t) + '</div>';
+    });
+    if (shown) {
+      h += '<div style="margin-top:12px;padding:12px;background:#F5F5F5;border-radius:6px;color:#333"><strong>' + (picked === Q.c ? '&#9989; Correct.' : '&#10060; Not quite.') + '</strong> ' + esc(Q.e) + '</div>' + btn(i + 1 < questions.length ? 'Next' : 'See score', true);
+    } else {
+      h += btn('Submit', picked !== null);
+    }
+    root.innerHTML = h + '</div>';
+    if (!shown) root.querySelectorAll('[data-k]').forEach(function (el) { el.onclick = function () { picked = +el.getAttribute('data-k'); render(); }; });
+    root.querySelector('button').onclick = function () {
+      if (!shown) { if (picked === null) return; if (picked === Q.c) score++; shown = true; }
+      else { i++; picked = null; shown = false; }
+      render();
+    };
+  }
+  render();
+}
+
+var QUIZ = [{"q": "A query filters a 5 TB table on customer_id, and the query profile shows almost no files pruned. What is the best first step?", "o": ["Double the cluster size", "Partition the table by customer_id", "Use liquid clustering on customer_id (then OPTIMIZE)", "Cache the table with df.cache()"], "c": 2, "e": "No pruning means a layout problem. Liquid clustering co-locates customer_id values so file statistics can skip files. Partitioning by a high-cardinality column creates millions of tiny files."}, {"q": "In the Spark UI, one task of a stage runs for 25 minutes while the median task takes 20 seconds. What is the most likely cause?", "o": ["Data skew on the join or grouping key", "Too many executors", "Missing Photon", "Disk cache disabled"], "c": 0, "e": "A single task far slower than the median is the classic sign of skew: one key holds much more data. AQE skew handling, salting, or treating hot keys separately helps."}, {"q": "A 2 TB fact table is joined to a 20 MB store dimension, and the plan shows a sort-merge join with a large shuffle. What do you do?", "o": ["Increase spark.sql.shuffle.partitions to 5000", "Broadcast the small dimension (fresh statistics or a BROADCAST hint)", "Convert the dimension to CSV", "Repartition the fact table by store_id before every query"], "c": 1, "e": "A broadcast hash join ships the small table to every executor, so the large side never needs to be shuffled."}, {"q": "A transformation trims and lower-cases emails using a Python UDF and is slow. What is the best fix?", "o": ["Rewrite it with built-in functions: lower(trim(email))", "Increase driver memory", "Cache the DataFrame before the UDF", "Run it on a single-node cluster"], "c": 0, "e": "Python UDFs serialize rows between the JVM and Python and block Photon. Built-in functions run natively and are much faster."}, {"q": "Stage metrics show large 'spill (disk)' values during an aggregation. Which change addresses spill directly?", "o": ["Fewer, larger shuffle partitions", "More (smaller) partitions or more memory per task", "Disable AQE", "Add a ZORDER on the aggregation key"], "c": 1, "e": "Spill happens when a task's data doesn't fit in memory. Smaller tasks (more partitions) or memory-optimized nodes reduce it."}];
+</script>
+<script>
+(function () {
+  var md = document.getElementById('source').textContent.replace(/<\\\/script/gi, '</script').trim();
+  marked.setOptions({ gfm: true, breaks: false });
+  function render(text) {
+    var div = document.createElement('div');
+    div.innerHTML = marked.parse(text);
+    div.querySelectorAll('pre code').forEach(function (el) { try { hljs.highlightElement(el); } catch (e) {} });
+    div.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; });
+    return div.innerHTML;
+  }
+
+  // Document view: the whole markdown file
+  var docBody = document.getElementById('docBody');
+  docBody.innerHTML = render(md);
+  if (QUIZ && QUIZ.length) {
+    docBody.insertAdjacentHTML('beforeend', '<h2>Check yourself</h2><div id="quizDoc"></div>');
+    dbxQuiz('quizDoc', QUIZ);
+  }
+
+  // Presentation view: split on "## " headings (outside fenced code blocks)
+  var slides = [], cur = [], fence = false;
+  md.split('\n').forEach(function (line) {
+    if (/^\s*```/.test(line)) fence = !fence;
+    if (!fence && /^## /.test(line) && cur.length) { slides.push(cur.join('\n')); cur = []; }
+    cur.push(line);
+  });
+  if (cur.length) slides.push(cur.join('\n'));
+  var html = slides.map(render), idx = 0;
+  if (QUIZ && QUIZ.length) { slides.push('quiz'); html.push('<h2>Check yourself</h2><div class="quiz-slot"></div>'); }
+
+  var slideEl = document.getElementById('slide'), counter = document.getElementById('counter'), progress = document.getElementById('progress');
+  function show(n) {
+    idx = Math.max(0, Math.min(slides.length - 1, n));
+    slideEl.innerHTML = html[idx];
+    slideEl.classList.toggle('title-slide', idx === 0);
+    slideEl.scrollTop = 0;
+    var slot = slideEl.querySelector('.quiz-slot');
+    if (slot) dbxQuiz(slot, QUIZ);
+    counter.textContent = (idx + 1) + ' / ' + slides.length;
+    progress.style.width = ((idx + 1) / slides.length * 100) + '%';
+    history.replaceState(null, '', '#slides/' + (idx + 1));
+  }
+  function mode(m) {
+    var present = m === 'slides';
+    document.body.classList.toggle('present', present);
+    document.getElementById('btnSlides').classList.toggle('active', present);
+    document.getElementById('btnDoc').classList.toggle('active', !present);
+    if (present) show(idx); else history.replaceState(null, '', '#doc');
+  }
+  document.getElementById('btnDoc').onclick = function () { mode('doc'); };
+  document.getElementById('btnSlides').onclick = function () { mode('slides'); };
+  document.getElementById('prev').onclick = function () { show(idx - 1); };
+  document.getElementById('next').onclick = function () { show(idx + 1); };
+  document.getElementById('fs').onclick = function () {
+    if (document.fullscreenElement) document.exitFullscreen(); else document.getElementById('slides').requestFullscreen();
+  };
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var present = document.body.classList.contains('present');
+    if (e.key === 'p' || e.key === 'P') return mode('slides');
+    if (e.key === 'd' || e.key === 'D') return mode('doc');
+    if (!present) return;
+    if (['ArrowRight', 'PageDown', ' '].indexOf(e.key) >= 0) { e.preventDefault(); show(idx + 1); }
+    else if (['ArrowLeft', 'PageUp'].indexOf(e.key) >= 0) { e.preventDefault(); show(idx - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'f' || e.key === 'F') document.getElementById('fs').click();
+  });
+
+  var m = location.hash.match(/^#slides(?:\/(\d+))?/);
+  if (m) { idx = (parseInt(m[1] || '1', 10) || 1) - 1; mode('slides'); }
+})();
+</script>
+</body>
+</html>

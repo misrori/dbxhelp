@@ -1,0 +1,32 @@
+[
+  {
+    "q": "Analysts must count distinct customers and join datasets by customer, but must never see email addresses. Which technique fits best?",
+    "o": ["Suppression (drop the email column)", "Salted (keyed) hashing of the email", "Generalization of the email domain", "Plain sha2(email) without a salt"],
+    "c": 1,
+    "e": "Salted hashing keeps a stable, joinable identifier without exposing the value. Unsalted hashes of guessable values can be brute-forced, and suppression removes the join key."
+  },
+  {
+    "q": "Is pseudonymized data (hashed or tokenized identifiers) still personal data under GDPR?",
+    "o": ["No, hashing makes it anonymous", "Yes, because re-identification is possible with additional information", "Only if the hash is SHA-1", "Only for tokenization, not for hashing"],
+    "c": 1,
+    "e": "Pseudonymization reduces risk, but the data can still be linked back to a person. Only properly anonymized data (e.g. generalized or aggregated) falls outside GDPR."
+  },
+  {
+    "q": "New tables with PII columns are added every week, and all of them must be masked automatically. What scales best?",
+    "o": ["A dynamic view per table", "ALTER TABLE ... SET MASK on every new table", "Data classification + governed tags + an ABAC column-mask policy on the catalog", "Masking logic inside every pipeline"],
+    "c": 2,
+    "e": "Classification tags PII columns, and an ABAC policy on the catalog masks every matching column, now and in the future, without code changes."
+  },
+  {
+    "q": "A table uses deletion vectors. After deleting a customer for a GDPR request, what must happen before VACUUM physically removes the data?",
+    "o": ["OPTIMIZE ZORDER BY customer_id", "REORG TABLE ... APPLY (PURGE)", "ANALYZE TABLE", "Nothing, DELETE rewrites the files immediately"],
+    "c": 1,
+    "e": "With deletion vectors, DELETE only marks rows. REORG ... APPLY (PURGE) rewrites the files, and VACUUM then removes the old files after the retention period."
+  },
+  {
+    "q": "After deleting rows in a silver table, the downstream streaming table that reads it starts failing. What is a correct fix?",
+    "o": ["Delete the streaming table's checkpoint", "Use skipChangeCommits (and delete in the target with DML), or read the change data feed", "Switch the source to complete output mode", "Disable deletion vectors"],
+    "c": 1,
+    "e": "A plain streaming read only supports appends. skipChangeCommits ignores non-append commits, so you apply the delete downstream yourself. The change data feed delivers the deletes as rows you can process."
+  }
+]

@@ -31,9 +31,13 @@ Or use a **Git folder** in the UI: *Workspace → Create → Git folder → `htt
 | Data Engineering with Databricks | [Recap 2: Lakeflow Jobs](modules/data-engineering/02-lakeflow-jobs/) | 8-min recap notebook, slides/document, 5-question check |
 | Data Engineering with Databricks | [Recap 3: Declarative Pipelines](modules/data-engineering/03-declarative-pipelines/) | 9-min recap notebook, slides/document, 5-question check |
 | Data Engineering with Databricks | [Recap 4: DevOps Essentials](modules/data-engineering/04-devops-essentials/) | 8-min recap notebook, slides/document, 5-question check |
+| Advanced Data Engineering with Databricks | [Recap 1: Streaming & Declarative Pipelines](modules/advanced-data-engineering/01-streaming-pipelines/) | 9-min recap notebook, slides/document, 5-question check |
+| Advanced Data Engineering with Databricks | [Recap 2: Data Privacy](modules/advanced-data-engineering/02-data-privacy/) | 8-min recap notebook, slides/document, 5-question check |
+| Advanced Data Engineering with Databricks | [Recap 3: Performance Optimization](modules/advanced-data-engineering/03-performance-optimization/) | 9-min recap notebook, slides/document, 5-question check |
+| Advanced Data Engineering with Databricks | [Recap 4: Asset Bundles](modules/advanced-data-engineering/04-asset-bundles/) | 9-min recap notebook, slides/document, 5-question check |
 | Building Reliable Conversational Agents with Genie | [Metric Views](modules/genie-conversational-agents/metric-views/) | Lecture notebook + knowledge check, Serverless hands-on demo, Markdown notes, HTML slides/document |
 
-`dbxhelp("de")` imports all four Data Engineering recaps into `dbxhelp/Data Engineering/Recaps/`.
+`dbxhelp("de")` / `dbxhelp("ade")` imports all four (Advanced) Data Engineering recaps into `dbxhelp/<module>/Recaps/`.
 
 ## Synthetic data for demos
 

@@ -1,0 +1,32 @@
+[
+  {
+    "q": "A streaming aggregation per 5-minute window must be written to a Delta table in append mode. What else is required?",
+    "o": ["Complete output mode", "A watermark on the event-time column", "A Spark cache on the source", "trigger(once=True)"],
+    "c": 1,
+    "e": "Append mode only emits final results. With an aggregation, Spark needs a watermark to know when a window is complete and its state can be dropped."
+  },
+  {
+    "q": "A job should process all newly arrived data every hour and then stop, to keep costs low. Which trigger fits?",
+    "o": ["processingTime='1 hour'", "availableNow=True, scheduled hourly by a job", "Continuous trigger", "Real-time mode"],
+    "c": 1,
+    "e": "availableNow processes everything available (possibly in several batches) and then stops. A scheduled job turns it into an incremental batch. processingTime would keep the cluster running."
+  },
+  {
+    "q": "Which statement about streaming checkpoints is TRUE?",
+    "o": ["Two queries writing to different tables can share one checkpoint", "Deleting the checkpoint is a safe way to recover from failures", "Each query needs its own checkpoint, which stores offsets and state", "Checkpoints are only needed for stateless queries"],
+    "c": 2,
+    "e": "The checkpoint holds source offsets, committed batches and state, giving exactly-once processing. Never share or delete it."
+  },
+  {
+    "q": "A stream of orders is joined to a customer dimension that changes, and gold results must always reflect the current customer data. What is the best choice?",
+    "o": ["A stream-static join into a streaming table", "A materialized view that joins orders and customers", "A stream-stream join without watermarks", "Complete output mode"],
+    "c": 1,
+    "e": "A stream-static join uses the dimension as of processing time and never revisits old rows. A materialized view recomputes correctly when either side changes."
+  },
+  {
+    "q": "Duplicate events with the same event_id can arrive up to 30 minutes apart. How do you deduplicate with bounded state?",
+    "o": ["`dropDuplicates(['event_id'])`", "`withWatermark('event_ts', '30 minutes').dropDuplicatesWithinWatermark(['event_id'])`", "`distinct()` in complete mode", "A MERGE in foreachBatch without dedup"],
+    "c": 1,
+    "e": "dropDuplicatesWithinWatermark keeps keys only as long as the watermark requires. dropDuplicates without a watermark stores every key forever."
+  }
+]

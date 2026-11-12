@@ -106,6 +106,110 @@
       ]
     },
     {
+      "id": "ade",
+      "title": "Advanced Data Engineering with Databricks",
+      "folder": "modules/advanced-data-engineering",
+      "workspace_folder": "Advanced Data Engineering",
+      "topics": [
+        {
+          "id": "streaming-pipelines",
+          "title": "Recap 1: Databricks Streaming and Lakeflow Spark Declarative Pipelines",
+          "summary": "9-minute recap: triggers, output modes and checkpoints, windows and watermarks, streaming joins and deduplication, Kafka/Auto Loader in pipelines, AUTO CDC with SCD Type 1/2, change data feed. Ends with a 5-question check.",
+          "tags": [
+            "Recap",
+            "Structured Streaming",
+            "Declarative Pipelines",
+            "CDC"
+          ],
+          "folder": "01-streaming-pipelines",
+          "workspace_folder": "Recaps",
+          "updated": "2026-11-12",
+          "notebooks": [
+            {
+              "file": "01_recap_streaming_pipelines.py",
+              "name": "01 Recap - Databricks Streaming and Lakeflow Spark Declarative Pipelines",
+              "from_doc": true
+            }
+          ],
+          "doc": "streaming-pipelines-recap.md",
+          "quiz": "streaming-pipelines-recap.quiz.json",
+          "html": "streaming-pipelines-recap.html"
+        },
+        {
+          "id": "data-privacy",
+          "title": "Recap 2: Databricks Data Privacy",
+          "summary": "8-minute recap: least privilege, dynamic views, row filters and column masks, ABAC with governed tags, hashing vs tokenization vs anonymization, PII classification, GDPR deletes with REORG and VACUUM. Ends with a 5-question check.",
+          "tags": [
+            "Recap",
+            "Privacy",
+            "Unity Catalog",
+            "GDPR"
+          ],
+          "folder": "02-data-privacy",
+          "workspace_folder": "Recaps",
+          "updated": "2026-11-12",
+          "notebooks": [
+            {
+              "file": "02_recap_data_privacy.py",
+              "name": "02 Recap - Databricks Data Privacy",
+              "from_doc": true
+            }
+          ],
+          "doc": "data-privacy-recap.md",
+          "quiz": "data-privacy-recap.quiz.json",
+          "html": "data-privacy-recap.html"
+        },
+        {
+          "id": "performance-optimization",
+          "title": "Recap 3: Databricks Performance Optimization",
+          "summary": "9-minute recap: stages and shuffles, data skipping and liquid clustering, skew/shuffle/spill/serialization, join strategies and AQE, Photon and compute choices, a step-by-step diagnosis. Ends with a 5-question check.",
+          "tags": [
+            "Recap",
+            "Performance",
+            "Spark UI",
+            "Liquid Clustering"
+          ],
+          "folder": "03-performance-optimization",
+          "workspace_folder": "Recaps",
+          "updated": "2026-11-12",
+          "notebooks": [
+            {
+              "file": "03_recap_performance_optimization.py",
+              "name": "03 Recap - Databricks Performance Optimization",
+              "from_doc": true
+            }
+          ],
+          "doc": "performance-optimization-recap.md",
+          "quiz": "performance-optimization-recap.quiz.json",
+          "html": "performance-optimization-recap.html"
+        },
+        {
+          "id": "asset-bundles",
+          "title": "Recap 4: Automated Deployment with Databricks Asset Bundles",
+          "summary": "9-minute recap: databricks.yml, resources, variables and precedence, deployment modes, the CLI lifecycle, wheel artifacts, CI/CD with GitHub Actions as a service principal. Ends with a 5-question check.",
+          "tags": [
+            "Recap",
+            "Bundles",
+            "CI/CD",
+            "CLI"
+          ],
+          "folder": "04-asset-bundles",
+          "workspace_folder": "Recaps",
+          "updated": "2026-11-12",
+          "notebooks": [
+            {
+              "file": "04_recap_asset_bundles.py",
+              "name": "04 Recap - Automated Deployment with Databricks Asset Bundles",
+              "from_doc": true
+            }
+          ],
+          "doc": "asset-bundles-recap.md",
+          "quiz": "asset-bundles-recap.quiz.json",
+          "html": "asset-bundles-recap.html"
+        }
+      ]
+    },
+    {
       "id": "genie",
       "title": "Building Reliable Conversational Agents with Genie",
       "folder": "modules/genie-conversational-agents",
