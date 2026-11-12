@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metric Views · dbxhelp</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<style>
+  :root { --accent: #FF3621; --navy: #1B3139; --blue: #2272B4; --bg: #F9F7F4; --text: #1F2328; --muted: #6B7280; --border: #E5E7EB; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); }
+  header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: var(--navy); color: #fff; }
+  header a.home { color: #fff; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  header .title { color: #CBD5E1; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+  .toggle { display: inline-flex; background: rgba(255,255,255,0.12); border-radius: 999px; padding: 3px; }
+  .toggle button { border: 0; background: transparent; color: #E2E8F0; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 0.9em; }
+  .toggle button.active { background: #fff; color: var(--navy); font-weight: 600; }
+  header .link { color: #E2E8F0; font-size: 0.85em; text-decoration: none; border: 1px solid rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 6px; }
+  header .link:hover { background: rgba(255,255,255,0.1); }
+
+  /* ---------- shared markdown styling ---------- */
+  .md h1 { font-size: 2em; color: var(--navy); margin: 0 0 0.5em; }
+  .md h2 { color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 0.3em; margin-top: 1.8em; }
+  .md h3 { color: var(--navy); }
+  .md a { color: var(--blue); }
+  .md code { background: #EEF2F6; padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.9em; }
+  .md pre { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow: auto; }
+  .md pre code { background: none; padding: 0; font-size: 0.88em; line-height: 1.5; }
+  .md blockquote { margin: 1em 0; padding: 10px 16px; border-left: 4px solid var(--blue); background: #E3F2FD; border-radius: 4px; color: #1F2937; }
+  .md blockquote p { margin: 0.3em 0; }
+  .md table { border-collapse: collapse; width: 100%; margin: 1em 0; background: #fff; font-size: 0.95em; }
+  .md th, .md td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  .md th { background: #F1F5F9; }
+  .md li { margin: 0.25em 0; line-height: 1.55; }
+  .md p { line-height: 1.6; }
+
+  /* ---------- document mode ---------- */
+  #doc { max-width: 920px; margin: 0 auto; padding: 32px 24px 80px; }
+  #doc .md { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 36px 44px; }
+
+  /* ---------- presentation mode ---------- */
+  #slides { display: none; height: calc(100vh - 52px); padding: 18px; }
+  body.present #doc { display: none; }
+  body.present #slides { display: flex; flex-direction: column; align-items: center; }
+  .stage { flex: 1; width: 100%; max-width: 1280px; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .slide { width: 100%; height: 100%; max-height: 760px; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-top: 6px solid var(--accent); padding: 40px 56px; overflow: auto; font-size: 1.22em; }
+  .slide.title-slide { display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, var(--navy), #24495A); color: #fff; }
+  .slide.title-slide h1 { color: #fff; font-size: 2.3em; }
+  .slide.title-slide blockquote { background: rgba(255,255,255,0.1); border-left-color: var(--accent); color: #fff; }
+  .slide.title-slide code { background: rgba(255,255,255,0.15); color: #fff; }
+  .slide.title-slide strong { color: #FFD7CF; }
+  .slide h2 { margin-top: 0; font-size: 1.6em; border-bottom-color: var(--accent); }
+  .controls { display: flex; align-items: center; gap: 14px; padding-top: 12px; color: var(--muted); font-size: 0.9em; }
+  .controls button { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 1em; }
+  .controls button:hover { border-color: var(--blue); }
+  .progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--accent); transition: width 0.2s; }
+  body:not(.present) .progress { display: none; }
+  :fullscreen #slides { height: 100vh; }
+  @media (max-width: 700px) { .slide { padding: 24px; font-size: 1em; } #doc .md { padding: 20px; } header .title { display: none; } }
+  @media print { header, .controls, .progress { display: none; } #doc .md { border: 0; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="../../../index.html" title="All topics"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</a>
+  <span class="title">Building Reliable Conversational Agents with Genie › Metric Views</span>
+  <div class="toggle" role="tablist">
+    <button id="btnDoc" class="active" title="Document view (D)">📄 Document</button>
+    <button id="btnSlides" title="Presentation view (P)">🎞️ Presentation</button>
+  </div>
+  <a class="link" href="metric-views.md" download>⬇ .md</a>
+  <a class="link" href="https://github.com/misrori/dbxhelp/tree/main/modules/genie-conversational-agents/metric-views" target="_blank">GitHub</a>
+</header>
+
+<main id="doc"><article class="md" id="docBody"></article></main>
+
+<section id="slides">
+  <div class="stage"><div class="slide md" id="slide"></div></div>
+  <div class="controls">
+    <button id="prev" title="Previous (←)">←</button>
+    <span id="counter"></span>
+    <button id="next" title="Next (→ / Space)">→</button>
+    <button id="fs" title="Fullscreen (F)">⛶</button>
+    <span>← → navigate · F fullscreen · D document</span>
+  </div>
+</section>
+<div class="progress" id="progress"></div>
+
+<script type="text/markdown" id="source">
+# Metric Views — the semantic layer behind reliable Genie answers
+
+> **Supplement for:** *Building Reliable Conversational Agents with Genie*
+> **Goal:** understand what a Unity Catalog metric view is, why Genie gets more reliable with it, and what's new in AI/BI Dashboards (local metric views, export to metric view).
+
+**In one sentence:** a metric view lets you define a business metric *once* (for example "net revenue ÷ completed orders") in Unity Catalog. Any tool, including Genie, dashboards, SQL, alerts and external BI, can then slice it by *any* dimension, and it always computes correctly.
+
+## Why this matters for Genie
+
+When Genie only sees raw tables, it has to **guess** your business logic each time someone asks a question:
+
+- *"What is revenue?"* Gross or net? Including cancelled orders? Including test orders?
+- *"Average order value"* means `SUM(revenue) / COUNT(orders)`, not `AVG(price)`.
+- *"Active customers"* is a `COUNT(DISTINCT …)`, which **cannot be summed** across months.
+
+Each guess is a chance for **two users asking the same question to get two different numbers**.
+
+A metric view moves that logic out of the LLM and into a **governed, versioned definition**:
+
+| Without metric view | With metric view |
+|---|---|
+| Genie writes the aggregation SQL itself | Genie picks a measure: `MEASURE(net_revenue)` |
+| Business rules live in instructions / examples | Business rules live in Unity Catalog (one place) |
+| Same KPI can differ between Genie, dashboards and Excel | Same definition everywhere |
+| Hard to review | Reviewable YAML, permissions, lineage |
+
+## What is a metric view?
+
+A **metric view** is a Unity Catalog object, defined in YAML, that separates:
+
+- **Source:** a table, view, SQL query, or another metric view (optionally with **joins** in a star or snowflake schema)
+- **Filter:** a condition applied to *every* query (e.g. `status <> 'TEST'`)
+- **Fields (dimensions):** the attributes you group and filter by (`region`, `order_month`, …)
+- **Measures:** aggregate expressions (`SUM(...)`, `COUNT(DISTINCT ...)`, ratios, window measures)
+
+The key difference from a normal view:
+
+- A **standard view** fixes the aggregation *and* the grouping when you create it.
+- A **metric view** fixes only the **definition** of the measure. The **grouping is chosen at query time**, and the engine generates the correct SQL for that grain.
+
+> Metric views are the core of the **Unity Catalog semantics layer** (docs: *UC Semantics → Metric views*).
+
+## The classic trap: average of averages
+
+Imagine a standard view pre-aggregated per **category × month**:
+
+```sql
+CREATE VIEW v_sales_by_category_month AS
+SELECT product_category, order_month,
+       SUM(net_revenue) / COUNT(*)  AS avg_order_value,
+       COUNT(DISTINCT customer_id)  AS unique_customers
+FROM orders GROUP BY ALL;
+```
+
+Now someone (or Genie) asks *"What was the average order value and number of customers in 2025?"*
+
+- `AVG(avg_order_value)` → **wrong** (averages of averages ignore the order volume behind each value)
+- `SUM(unique_customers)` → **wrong** (the same customer is counted in many months and categories)
+
+With a metric view, `MEASURE(avg_order_value)` and `MEASURE(unique_customers)` are **re-computed from the detail rows at whatever grain you ask for**: year, category, region, or nothing at all.
+
+> The hands-on demo notebook reproduces this with real numbers.
+
+## Anatomy of a metric view (YAML)
+
+```yaml
+version: 1.1
+comment: Sales KPIs for the retail demo
+source: main.retail.fact_orders
+filter: source.status <> 'TEST'          # applied to every query
+
+joins:                                    # star schema, LEFT OUTER, many-to-one by default
+  - name: customer
+    source: main.retail.dim_customer
+    'on': source.customer_id = customer.customer_id
+  - name: product
+    source: main.retail.dim_product
+    'on': source.product_id = product.product_id
+
+fields:                                   # a.k.a. dimensions
+  - name: order_month
+    expr: DATE_TRUNC('MONTH', source.order_date)
+  - name: region
+    expr: customer.region
+    synonyms: ['market', 'territory']
+
+measures:
+  - name: completed_orders
+    expr: COUNT(1) FILTER (WHERE source.status = 'COMPLETED')
+  - name: net_revenue
+    expr: SUM(source.quantity * product.unit_price * (1 - source.discount)) FILTER (WHERE source.status = 'COMPLETED')
+    format: {type: currency, currency_code: USD}
+  - name: avg_order_value                 # composed from other measures
+    expr: MEASURE(net_revenue) / MEASURE(completed_orders)
+```
+
+Tips:
+
+- Quote the `'on'` key, because plain YAML can parse `on` as a boolean.
+- `fields` and `dimensions` are synonyms (the UI editor writes `dimensions`).
+- Measures may reference earlier fields and measures, and use `MEASURE()` to reference a measure.
+
+## Creating a metric view
+
+Three ways to create one:
+
+1. **SQL DDL**: `CREATE OR REPLACE VIEW … WITH METRICS LANGUAGE YAML AS $$ … $$`
+2. **Catalog Explorer UI**: open a table → **Create → Metric view**. The visual editor offers joins, filters, fields, measures, *Preview*, and a `<>` YAML tab.
+3. **Genie Code**: describe the metric view in natural language, or import Tableau / Power BI definitions.
+
+```sql
+CREATE OR REPLACE VIEW sales_metrics
+WITH METRICS
+LANGUAGE YAML
+AS $$
+version: 1.1
+source: main.retail.fact_orders
+fields:
+  - name: order_month
+    expr: DATE_TRUNC('MONTH', order_date)
+measures:
+  - name: order_count
+    expr: COUNT(1)
+$$;
+```
+
+**Privileges needed:** `SELECT` on the sources, `USE CATALOG`, plus `USE SCHEMA` and `CREATE TABLE` on the target schema, and access to a SQL warehouse or compute on a supported runtime.
+
+## Querying with MEASURE()
+
+```sql
+SELECT region,
+       order_month,
+       MEASURE(net_revenue)      AS net_revenue,
+       MEASURE(avg_order_value)  AS aov
+FROM sales_metrics
+WHERE product_category = 'Electronics'
+GROUP BY ALL
+ORDER BY order_month;
+```
+
+Rules to remember:
+
+- Every measure **must** be wrapped in `MEASURE()` (on DBR 18.1+, `agg()` works as well).
+- **No `SELECT *`**: list fields explicitly.
+- **No direct joins** with other tables. Aggregate in a CTE first, then join the CTE.
+- `DESCRIBE TABLE EXTENDED sales_metrics AS JSON` shows the full YAML (*View Text*) and per-column metadata.
+- In AI/BI dashboards, `MEASURE()` is applied automatically.
+
+## Agent metadata: teach Genie your vocabulary
+
+YAML spec **1.1** (DBR 17.3+) adds metadata that downstream tools understand:
+
+| Property | What it does | Who uses it |
+|---|---|---|
+| `comment` | Business description of the view / field / measure | Genie, Catalog, BI tools |
+| `display_name` | Human-friendly label (≤ 255 chars) | Dashboards, BI tools |
+| `synonyms` | Up to 10 alternative names | **Genie imports them automatically** |
+| `format` | `number`, `currency`, `percentage`, `byte`, `date`, `date_time` | Dashboards (auto-applied) |
+
+```yaml
+measures:
+  - name: net_revenue
+    expr: SUM(source.amount)
+    comment: Revenue after discounts, completed orders only
+    display_name: Net Revenue
+    synonyms: ['revenue', 'sales', 'turnover']
+    format:
+      type: currency
+      currency_code: EUR
+      decimal_places: {type: exact, places: 2}
+```
+
+> YAML `#` comments are removed when the definition is saved. Use `comment:` for anything you want to keep.
+
+## Composability and window measures
+
+**Composability:** build measures on measures:
+
+```yaml
+  - name: revenue_per_customer
+    expr: MEASURE(net_revenue) / MEASURE(unique_customers)
+```
+
+**Window measures** cover trailing, cumulative, and period-over-period values:
+
+```yaml
+  - name: revenue_trailing_7d
+    expr: SUM(source.amount)
+    window:
+      - order: order_date        # a field of the metric view
+        range: trailing 7 day    # current | cumulative | trailing n unit | leading n unit | all
+        semiadditive: last
+```
+
+- `trailing` / `leading` are **exclusive** of the current row by default. `inclusive` needs DBR 18.1+ and spec 1.1.
+- `offset: -12 month` gives "same period last year" (DBR 18.1+, spec 1.1).
+
+## Advanced features (good to know)
+
+| Feature | What | Min. runtime |
+|---|---|---|
+| **Snowflake joins** | Nested `joins` (e.g. `customer.nation.n_name`) | DBR 17.3 |
+| **Materialization** | Pre-computed aggregates with automatic query rewrite, `schedule: every 6 hours` | DBR 17.3 |
+| **Parameters** | `sales_metrics(discount => 0.2)`, queried as a table-valued function | DBR 18.2 |
+| **Wildcards** | `- expr: source.* EXCEPT (comment)` | DBR 18.2 |
+| **One-to-many joins** | `cardinality: one_to_many` | DBR 18.1 |
+| **Relationships** (Beta) | Declare how metric views relate, so agents pick the right join path | DBR 19 |
+
+SQL warehouses and serverless compute update automatically, so they normally have the newest features.
+
+## What's new: metric views in AI/BI Dashboards
+
+There are three ways to use metric views in a dashboard (**Data** tab → **Add data**):
+
+1. **Unity Catalog metric view as a dataset.** You get every dimension and measure. You **can't** change the dataset query (no filters or column pruning), but you **can** add custom calculations.
+2. **SQL dataset that references a metric view.** Use this when you need filters or reshaping. Measures go through `MEASURE()`. Parameters can be passed, e.g. `sales_metrics(discount => :discount)` linked to a filter widget.
+3. **Local metric view (dashboard metric view).** Define dimensions, measures and joins **scoped to the dashboard**, without publishing anything to Unity Catalog. Picking a table or view as the source opens the local metric view editor.
+
+**Export as a metric view (Public Preview):** dataset kebab menu → *Create Metric View* → pick catalog and schema → optionally edit the YAML → **Save**. Measures and dimensions defined on the dataset are carried over. This **promotes** a dashboard-only definition into a governed UC metric view that Genie can use as well.
+
+## UC metric view vs local metric view vs custom calculation
+
+| | **UC metric view** | **Dashboard local metric view** | **Custom calculation** |
+|---|---|---|---|
+| Lives in | Unity Catalog | One dashboard | One dashboard dataset |
+| Reusable by Genie, SQL, BI, alerts | ✅ | ❌ (until exported) | ❌ |
+| Governed (permissions, lineage, tags) | ✅ | Dashboard permissions | Dashboard permissions |
+| Who creates it | Data / analytics engineers | Dashboard author | Dashboard author |
+| Best for | Company-wide KPIs | Prototyping, dashboard-specific logic | Quick one-off metric or LOD expression |
+
+**Typical lifecycle:** prototype as a *local metric view* → validate with stakeholders → **Export as metric view** → add to a **Genie Agent**.
+
+## Metric views + Genie Agents
+
+> **Naming:** *Genie Agents were formerly known as Genie Spaces.* The course may still say "Genie space".
+
+- Add a metric view to a Genie Agent exactly like a table: **up to 50 tables, views or metric views** per agent.
+- The Genie Agent needs a **pro or serverless SQL warehouse**.
+- Genie generates `MEASURE(...)` queries, and **synonyms are imported automatically**.
+- The reverse direction exists too: a **Genie Agent's context can be exported as a metric view** (kebab menu → *Export to metric view*). This turns tuned instructions and SQL expressions into a governed definition.
+
+**Recommended pattern for reliable agents:**
+
+1. Model the KPIs in a metric view (comments, synonyms, formats).
+2. Give the Genie Agent the **metric view** (and only the raw tables it really needs).
+3. Keep instructions short, focused on *business context*, not on SQL formulas.
+4. Add **benchmarks** with questions whose expected SQL uses `MEASURE()`.
+
+## Requirements and limitations
+
+- **Unity Catalog** is required. Metric views were introduced in **DBR 16.4**. Agent metadata (spec 1.1) needs **DBR 17.3+**.
+- Works on **SQL warehouses** and **serverless compute**, which always run a recent version.
+- Querying: `MEASURE()` is mandatory, `SELECT *` is not allowed, and direct joins are not allowed (use a CTE).
+- Joined tables can't contain `MAP` columns.
+- Star joins are `LEFT OUTER`. With `many_to_one`, a many-to-many match uses the **first** matching row, so model your keys carefully.
+- `rely.at_most_one_match: true` is an optimization that is **not validated**. A wrong value causes wrong `SUM`/`COUNT`.
+- Materialization can't be combined with parameters.
+
+## Best practices
+
+- **Name for humans and LLMs:** `net_revenue`, not `m_rev_2`, plus `display_name` and `synonyms`.
+- **Put business rules in the definition:** global `filter` for exclusions (test data), `FILTER (WHERE …)` for measure-level rules.
+- **Prefer ratio measures composed from base measures.** Never pre-aggregate ratios.
+- **Declare PK/FK constraints with `RELY`** on source tables. Genie and the optimizer both benefit.
+- **Comment everything:** comments are the cheapest accuracy boost for Genie.
+- **One metric view per business process** (sales, support tickets, inventory), not one giant view.
+- **Version control:** keep the YAML in Git and deploy with SQL / Databricks Asset Bundles.
+
+## Trainer notes: questions learners ask
+
+- **"Isn't this just a view?"** No. A view fixes the GROUP BY, while a metric view lets the query decide it and still computes non-additive measures correctly.
+- **"Do I still need Genie instructions?"** Yes, but fewer. Use them for business context and terminology, and put formulas in the metric view.
+- **"Can Power BI or Tableau use it?"** Yes: Tableau and Sigma through custom SQL or BI compatibility mode, Power BI through semantic models (Private Preview) or custom SQL. Excel and Google Sheets are supported too.
+- **"Performance?"** Materialization can pre-compute aggregations, and queries are rewritten automatically.
+- **"Local vs UC metric view?"** Local is a dashboard-only sandbox. UC is the governed, shared definition.
+
+## Further reading
+
+- Metric views overview: <https://docs.databricks.com/aws/en/metric-views/>
+- YAML reference: <https://docs.databricks.com/aws/en/uc-semantics/metric-views/yaml-reference>
+- Query metric views: <https://docs.databricks.com/aws/en/uc-semantics/metric-views/query>
+- Agent metadata: <https://docs.databricks.com/aws/en/uc-semantics/agent-metadata>
+- Feature availability: <https://docs.databricks.com/aws/en/uc-semantics/metric-views/feature-availability>
+- Dashboard datasets (local metric views, export): <https://docs.databricks.com/aws/en/dashboards/manage/data-modeling/datasets>
+- Genie Agents setup: <https://docs.databricks.com/aws/en/genie-agents/set-up>
+
+</script>
+<script>
+(function () {
+  var md = document.getElementById('source').textContent.replace(/<\\\/script/gi, '</script').trim();
+  marked.setOptions({ gfm: true, breaks: false });
+  function render(text) {
+    var div = document.createElement('div');
+    div.innerHTML = marked.parse(text);
+    div.querySelectorAll('pre code').forEach(function (el) { try { hljs.highlightElement(el); } catch (e) {} });
+    div.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; });
+    return div.innerHTML;
+  }
+
+  // Document view: the whole markdown file
+  document.getElementById('docBody').innerHTML = render(md);
+
+  // Presentation view: split on "## " headings (outside fenced code blocks)
+  var slides = [], cur = [], fence = false;
+  md.split('\n').forEach(function (line) {
+    if (/^\s*```/.test(line)) fence = !fence;
+    if (!fence && /^## /.test(line) && cur.length) { slides.push(cur.join('\n')); cur = []; }
+    cur.push(line);
+  });
+  if (cur.length) slides.push(cur.join('\n'));
+  var html = slides.map(render), idx = 0;
+
+  var slideEl = document.getElementById('slide'), counter = document.getElementById('counter'), progress = document.getElementById('progress');
+  function show(n) {
+    idx = Math.max(0, Math.min(slides.length - 1, n));
+    slideEl.innerHTML = html[idx];
+    slideEl.classList.toggle('title-slide', idx === 0);
+    slideEl.scrollTop = 0;
+    counter.textContent = (idx + 1) + ' / ' + slides.length;
+    progress.style.width = ((idx + 1) / slides.length * 100) + '%';
+    history.replaceState(null, '', '#slides/' + (idx + 1));
+  }
+  function mode(m) {
+    var present = m === 'slides';
+    document.body.classList.toggle('present', present);
+    document.getElementById('btnSlides').classList.toggle('active', present);
+    document.getElementById('btnDoc').classList.toggle('active', !present);
+    if (present) show(idx); else history.replaceState(null, '', '#doc');
+  }
+  document.getElementById('btnDoc').onclick = function () { mode('doc'); };
+  document.getElementById('btnSlides').onclick = function () { mode('slides'); };
+  document.getElementById('prev').onclick = function () { show(idx - 1); };
+  document.getElementById('next').onclick = function () { show(idx + 1); };
+  document.getElementById('fs').onclick = function () {
+    if (document.fullscreenElement) document.exitFullscreen(); else document.getElementById('slides').requestFullscreen();
+  };
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var present = document.body.classList.contains('present');
+    if (e.key === 'p' || e.key === 'P') return mode('slides');
+    if (e.key === 'd' || e.key === 'D') return mode('doc');
+    if (!present) return;
+    if (['ArrowRight', 'PageDown', ' '].indexOf(e.key) >= 0) { e.preventDefault(); show(idx + 1); }
+    else if (['ArrowLeft', 'PageUp'].indexOf(e.key) >= 0) { e.preventDefault(); show(idx - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'f' || e.key === 'F') document.getElementById('fs').click();
+  });
+
+  var m = location.hash.match(/^#slides(?:\/(\d+))?/);
+  if (m) { idx = (parseInt(m[1] || '1', 10) || 1) - 1; mode('slides'); }
+})();
+</script>
+</body>
+</html>

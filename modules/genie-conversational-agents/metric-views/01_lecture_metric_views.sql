@@ -1,0 +1,391 @@
+-- Databricks notebook source
+-- MAGIC %md-sandbox
+-- MAGIC <div style="font-size: 1em; display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: #F8F9FA; border-bottom: 2px solid #E0E0E0; margin: 0; line-height: 1">
+-- MAGIC     <img src="https://cdn.simpleicons.org/databricks/FF3621" width="24" height="24"/>
+-- MAGIC     <div style="color: #666">
+-- MAGIC         <span style="font-weight: bold; color: #333">Building Reliable Conversational Agents with Genie</span>
+-- MAGIC         <span style="margin-left: 8px; color: #999">|</span>
+-- MAGIC         <span style="margin-left: 8px">Supplement: Metric Views</span>
+-- MAGIC     </div>
+-- MAGIC </div>
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC # 01 Lecture - Metric Views Explained
+-- MAGIC ### Duration - ~15 Minutes
+-- MAGIC
+-- MAGIC > *Define a metric once, so Genie never has to guess.*
+-- MAGIC
+-- MAGIC This lecture explains what Unity Catalog **metric views** are, why they make Genie answers more reliable, how they are defined in YAML and queried with `MEASURE()`, and what's new in **AI/BI Dashboards** (local metric views, export as metric view).
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Learning Objectives
+-- MAGIC
+-- MAGIC **By the end of this lecture, you will be able to:**
+-- MAGIC
+-- MAGIC - Explain the difference between a standard view and a metric view
+-- MAGIC - Describe the building blocks of a metric view: source, filter, joins, fields, measures
+-- MAGIC - Query metric views with `MEASURE()` and know the query restrictions
+-- MAGIC - Use agent metadata (comments, display names, synonyms, formats) to improve Genie accuracy
+-- MAGIC - Choose between a UC metric view, a dashboard local metric view and a custom calculation
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC ## A. Why Genie Needs a Semantic Layer
+-- MAGIC
+-- MAGIC <p style="font-size: 1em; line-height: 1.6; color: #333">When Genie only sees raw tables, it has to <strong>guess</strong> the business logic for every question:</p>
+-- MAGIC
+-- MAGIC - *"Revenue"*: gross or net? Including cancelled orders? Including test orders?
+-- MAGIC - *"Average order value"* is `SUM(revenue) / COUNT(orders)`, not `AVG(price)`
+-- MAGIC - *"Active customers"* is a `COUNT(DISTINCT …)`, which **can't be summed** across months
+-- MAGIC
+-- MAGIC <p style="font-size: 1em; line-height: 1.6; color: #333">Every guess is a chance for two people asking the same question to get two different numbers. A metric view moves that logic <strong>out of the LLM</strong> and into a governed definition in Unity Catalog.</p>
+-- MAGIC
+-- MAGIC <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.95em">
+-- MAGIC <tr style="background: #F5F5F5"><th style="text-align: left; padding: 8px; border-bottom: 2px solid #E0E0E0">Without metric view</th><th style="text-align: left; padding: 8px; border-bottom: 2px solid #E0E0E0">With metric view</th></tr>
+-- MAGIC <tr><td style="padding: 8px; border-bottom: 1px solid #EEE">Genie writes the aggregation SQL itself</td><td style="padding: 8px; border-bottom: 1px solid #EEE">Genie picks a measure: <code>MEASURE(net_revenue)</code></td></tr>
+-- MAGIC <tr><td style="padding: 8px; border-bottom: 1px solid #EEE">Business rules hidden in instructions and examples</td><td style="padding: 8px; border-bottom: 1px solid #EEE">Business rules in Unity Catalog, in one place</td></tr>
+-- MAGIC <tr><td style="padding: 8px; border-bottom: 1px solid #EEE">The same KPI differs between Genie, dashboards and Excel</td><td style="padding: 8px; border-bottom: 1px solid #EEE">The same definition everywhere</td></tr>
+-- MAGIC <tr><td style="padding: 8px">Hard to review</td><td style="padding: 8px">Reviewable YAML, permissions, lineage</td></tr>
+-- MAGIC </table>
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC ## B. What Is a Metric View?
+-- MAGIC
+-- MAGIC <p style="font-size: 1em; line-height: 1.6; color: #333">A <strong>metric view</strong> is a Unity Catalog object, defined in YAML, and it is the core of the <strong>UC semantics layer</strong>. It has four parts:</p>
+-- MAGIC
+-- MAGIC <div style="display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap">
+-- MAGIC <div style="flex: 1; min-width: 160px; background: #E3F2FD; border: 1px solid #2272B4; border-radius: 6px; padding: 12px"><strong style="color: #0D47A1">Source</strong><br/><span style="color: #333; font-size: 0.9em">Table, view, SQL query or another metric view, plus optional <strong>joins</strong> (star or snowflake schema)</span></div>
+-- MAGIC <div style="flex: 1; min-width: 160px; background: #FFF3E0; border: 1px solid #FB8C00; border-radius: 6px; padding: 12px"><strong style="color: #BF360C">Filter</strong><br/><span style="color: #333; font-size: 0.9em">A condition applied to <em>every</em> query, e.g. exclude test orders</span></div>
+-- MAGIC <div style="flex: 1; min-width: 160px; background: #E8F5E9; border: 1px solid #43A047; border-radius: 6px; padding: 12px"><strong style="color: #1B5E20">Fields (dimensions)</strong><br/><span style="color: #333; font-size: 0.9em">What you group and filter by: region, month, category</span></div>
+-- MAGIC <div style="flex: 1; min-width: 160px; background: #F3E5F5; border: 1px solid #8E24AA; border-radius: 6px; padding: 12px"><strong style="color: #4A148C">Measures</strong><br/><span style="color: #333; font-size: 0.9em">Aggregations: SUM, COUNT DISTINCT, ratios, window measures</span></div>
+-- MAGIC </div>
+-- MAGIC
+-- MAGIC <div style="font-size: 1em; border-left: 4px solid #009688; background: #e0f2f1; padding: 16px 20px; border-radius: 4px; margin: 16px 0">
+-- MAGIC <div style="display: flex; align-items: flex-start; gap: 12px">
+-- MAGIC <span style="font-size: 24px">&#128161;</span>
+-- MAGIC <div>
+-- MAGIC <strong style="color: #00695c; font-size: 1.1em">The key difference</strong>
+-- MAGIC <p style="margin: 8px 0 0 0; color: #333">A <strong>standard view</strong> fixes the aggregation <em>and</em> the GROUP BY when it is created. A <strong>metric view</strong> fixes only the <strong>definition</strong> of the measure. The grouping is chosen <strong>at query time</strong>, and the engine generates the correct computation for that grain.</p>
+-- MAGIC </div>
+-- MAGIC </div>
+-- MAGIC </div>
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC ## C. The Classic Trap: Average of Averages
+-- MAGIC
+-- MAGIC <p style="font-size: 1em; line-height: 1.6; color: #333">A reporting view pre-aggregated at <strong>category &times; month</strong> grain holds <code>avg_order_value</code> and <code>unique_customers</code>. Then someone asks: <em>"What were the AOV and the number of customers in 2025?"</em></p>
+-- MAGIC
+-- MAGIC - `AVG(avg_order_value)` is **wrong**: it gives a few large orders the same weight as many small ones
+-- MAGIC - `SUM(unique_customers)` is **wrong**: the same customer is counted in every month and category
+-- MAGIC
+-- MAGIC <p style="font-size: 1em; line-height: 1.6; color: #333">In a metric view, <code>MEASURE(avg_order_value)</code> and <code>MEASURE(unique_customers)</code> are recomputed from the detail rows at <strong>whatever grain the query asks for</strong>.</p>
+-- MAGIC
+-- MAGIC <div style="font-size: 1em; border-left: 4px solid #1976d2; background: #e3f2fd; padding: 16px 20px; border-radius: 4px; margin: 16px 0">
+-- MAGIC <div style="display: flex; align-items: flex-start; gap: 12px">
+-- MAGIC <span style="font-size: 24px">&#8505;&#65039;</span>
+-- MAGIC <div>
+-- MAGIC <strong style="color: #0d47a1; font-size: 1.1em">See it with real numbers</strong>
+-- MAGIC <p style="margin: 8px 0 0 0; color: #333">The <strong>02 Demo - Metric Views Hands-on</strong> notebook reproduces this trap step by step on Serverless.</p>
+-- MAGIC </div>
+-- MAGIC </div>
+-- MAGIC </div>
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## D. Anatomy of a Metric View
+-- MAGIC
+-- MAGIC ```sql
+-- MAGIC CREATE OR REPLACE VIEW main.retail.sales_metrics
+-- MAGIC WITH METRICS
+-- MAGIC LANGUAGE YAML
+-- MAGIC AS $$
+-- MAGIC version: 1.1
+-- MAGIC comment: Sales KPIs for the retail demo
+-- MAGIC source: main.retail.fact_orders
+-- MAGIC filter: source.status <> 'TEST'           # applied to every query
+-- MAGIC
+-- MAGIC joins:                                     # LEFT OUTER, many-to-one by default
+-- MAGIC   - name: customer
+-- MAGIC     source: main.retail.dim_customer
+-- MAGIC     'on': source.customer_id = customer.customer_id
+-- MAGIC   - name: product
+-- MAGIC     source: main.retail.dim_product
+-- MAGIC     'on': source.product_id = product.product_id
+-- MAGIC
+-- MAGIC fields:                                    # a.k.a. dimensions
+-- MAGIC   - name: order_month
+-- MAGIC     expr: DATE_TRUNC('MONTH', source.order_date)
+-- MAGIC   - name: region
+-- MAGIC     expr: customer.region
+-- MAGIC     synonyms: ['market', 'territory']
+-- MAGIC
+-- MAGIC measures:
+-- MAGIC   - name: completed_orders
+-- MAGIC     expr: COUNT(1) FILTER (WHERE source.status = 'COMPLETED')
+-- MAGIC   - name: net_revenue
+-- MAGIC     expr: SUM(source.quantity * product.unit_price * (1 - source.discount)) FILTER (WHERE source.status = 'COMPLETED')
+-- MAGIC   - name: avg_order_value                  # composed from other measures
+-- MAGIC     expr: MEASURE(net_revenue) / MEASURE(completed_orders)
+-- MAGIC $$;
+-- MAGIC ```
+-- MAGIC
+-- MAGIC - Quote the `'on'` key, because plain YAML may read `on` as a boolean
+-- MAGIC - `fields` and `dimensions` are synonyms (the UI editor writes `dimensions`)
+-- MAGIC - Measures can reference earlier fields and measures, and use `MEASURE()` to reference a measure
+-- MAGIC - Other ways to create one: **Catalog Explorer** (table → *Create → Metric view*) or **Genie Code** (natural language, or import from Tableau / Power BI)
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC ## E. Querying with MEASURE()
+-- MAGIC
+-- MAGIC ```sql
+-- MAGIC SELECT region, order_month,
+-- MAGIC        MEASURE(net_revenue)     AS net_revenue,
+-- MAGIC        MEASURE(avg_order_value) AS aov
+-- MAGIC FROM sales_metrics
+-- MAGIC WHERE product_category = 'Electronics'
+-- MAGIC GROUP BY ALL
+-- MAGIC ORDER BY order_month;
+-- MAGIC ```
+-- MAGIC
+-- MAGIC - Every measure **must** be wrapped in `MEASURE()` (on DBR 18.1+, `agg()` works too)
+-- MAGIC - **No `SELECT *`**: list fields explicitly
+-- MAGIC - **No direct joins**: aggregate in a CTE, then join the CTE
+-- MAGIC - `DESCRIBE TABLE EXTENDED sales_metrics AS JSON` shows the YAML and per-column metadata
+-- MAGIC - In AI/BI dashboards, `MEASURE()` is applied automatically
+-- MAGIC
+-- MAGIC <div style="font-size: 1em; border-left: 4px solid #ff9800; background: #fff3e0; padding: 16px 20px; border-radius: 4px; margin: 16px 0">
+-- MAGIC <div style="display: flex; align-items: flex-start; gap: 12px">
+-- MAGIC <span style="font-size: 24px">&#9888;&#65039;</span>
+-- MAGIC <div>
+-- MAGIC <strong style="color: #e65100; font-size: 1.1em">The restrictions are a feature</strong>
+-- MAGIC <p style="margin: 8px 0 0 0; color: #333">Because a measure can only be read through <code>MEASURE()</code>, nobody (human or LLM) can accidentally re-aggregate a ratio with <code>SUM()</code> or <code>AVG()</code>.</p>
+-- MAGIC </div>
+-- MAGIC </div>
+-- MAGIC </div>
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## F. Agent Metadata: Teach Genie Your Vocabulary
+-- MAGIC
+-- MAGIC YAML spec **1.1** (DBR 17.3+) adds metadata that downstream tools understand:
+-- MAGIC
+-- MAGIC | Property | What it does | Used by |
+-- MAGIC |---|---|---|
+-- MAGIC | `comment` | Business description of the view / field / measure | Genie, Catalog, BI tools |
+-- MAGIC | `display_name` | Human-friendly label (≤ 255 chars) | Dashboards, BI tools |
+-- MAGIC | `synonyms` | Up to 10 alternative names | **Genie imports them automatically** |
+-- MAGIC | `format` | `number`, `currency`, `percentage`, `byte`, `date`, `date_time` | Dashboards (auto-applied) |
+-- MAGIC
+-- MAGIC ```yaml
+-- MAGIC measures:
+-- MAGIC   - name: net_revenue
+-- MAGIC     expr: SUM(source.amount)
+-- MAGIC     comment: Revenue after discounts, completed orders only
+-- MAGIC     display_name: Net Revenue
+-- MAGIC     synonyms: ['revenue', 'sales', 'turnover']
+-- MAGIC     format:
+-- MAGIC       type: currency
+-- MAGIC       currency_code: EUR
+-- MAGIC       decimal_places: {type: exact, places: 2}
+-- MAGIC ```
+-- MAGIC
+-- MAGIC > YAML `#` comments are removed when the definition is saved. Use `comment:` for anything you want to keep.
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## G. Composability, Window Measures and Advanced Features
+-- MAGIC
+-- MAGIC **Window measures** cover trailing, cumulative and period-over-period values:
+-- MAGIC
+-- MAGIC ```yaml
+-- MAGIC   - name: revenue_trailing_7d
+-- MAGIC     expr: SUM(source.amount)
+-- MAGIC     window:
+-- MAGIC       - order: order_date       # a field of the metric view
+-- MAGIC         range: trailing 7 day   # current | cumulative | trailing n unit | leading n unit | all
+-- MAGIC         semiadditive: last
+-- MAGIC ```
+-- MAGIC
+-- MAGIC | Feature | What | Min. runtime |
+-- MAGIC |---|---|---|
+-- MAGIC | Snowflake joins | Nested `joins` (e.g. `customer.nation.n_name`) | DBR 17.3 |
+-- MAGIC | Materialization | Pre-computed aggregates with automatic query rewrite | DBR 17.3 |
+-- MAGIC | Window `offset` | e.g. `offset: -12 month` for same period last year | DBR 18.1 |
+-- MAGIC | One-to-many joins | `cardinality: one_to_many` | DBR 18.1 |
+-- MAGIC | Parameters | `sales_metrics(discount => 0.2)` as a table-valued function | DBR 18.2 |
+-- MAGIC | Wildcards | `- expr: source.* EXCEPT (comment)` | DBR 18.2 |
+-- MAGIC | Relationships (Beta) | Declare how metric views relate, so agents pick the right join path | DBR 19 |
+-- MAGIC
+-- MAGIC SQL warehouses and Serverless update automatically, so they normally have all of these.
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC ## H. What's New: Metric Views in AI/BI Dashboards
+-- MAGIC
+-- MAGIC <p style="font-size: 1em; line-height: 1.6; color: #333">A dashboard (<strong>Data</strong> tab &rarr; <strong>Add data</strong>) can use metric views in three ways:</p>
+-- MAGIC
+-- MAGIC 1. **UC metric view as a dataset:** all dimensions and measures are included. You can't change the dataset query, but you can add custom calculations.
+-- MAGIC 2. **SQL dataset over a metric view:** for filtering or reshaping, with `MEASURE()`. Parameters work too, e.g. `sales_metrics(discount => :discount)` linked to a filter widget.
+-- MAGIC 3. **Local metric view (dashboard metric view):** dimensions, measures and joins **scoped to the dashboard**, without publishing to Unity Catalog. It opens when you pick a table or view as the source.
+-- MAGIC
+-- MAGIC <div style="font-size: 1em; border-left: 4px solid #009688; background: #e0f2f1; padding: 16px 20px; border-radius: 4px; margin: 16px 0">
+-- MAGIC <div style="display: flex; align-items: flex-start; gap: 12px">
+-- MAGIC <span style="font-size: 24px">&#128161;</span>
+-- MAGIC <div>
+-- MAGIC <strong style="color: #00695c; font-size: 1.1em">Export as a metric view (Public Preview)</strong>
+-- MAGIC <p style="margin: 8px 0 0 0; color: #333">Dataset kebab menu &rarr; <strong>Create Metric View</strong> &rarr; pick catalog and schema &rarr; optionally edit the YAML &rarr; <strong>Save</strong>. Measures and dimensions defined on the dataset carry over. This promotes a dashboard-only definition into a governed UC metric view that <strong>Genie can use too</strong>.</p>
+-- MAGIC </div>
+-- MAGIC </div>
+-- MAGIC </div>
+-- MAGIC
+-- MAGIC <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.95em">
+-- MAGIC <tr style="background: #F5F5F5"><th style="text-align: left; padding: 8px; border-bottom: 2px solid #E0E0E0"></th><th style="text-align: left; padding: 8px; border-bottom: 2px solid #E0E0E0">UC metric view</th><th style="text-align: left; padding: 8px; border-bottom: 2px solid #E0E0E0">Local metric view</th><th style="text-align: left; padding: 8px; border-bottom: 2px solid #E0E0E0">Custom calculation</th></tr>
+-- MAGIC <tr><td style="padding: 8px; border-bottom: 1px solid #EEE"><strong>Lives in</strong></td><td style="padding: 8px; border-bottom: 1px solid #EEE">Unity Catalog</td><td style="padding: 8px; border-bottom: 1px solid #EEE">One dashboard</td><td style="padding: 8px; border-bottom: 1px solid #EEE">One dataset</td></tr>
+-- MAGIC <tr><td style="padding: 8px; border-bottom: 1px solid #EEE"><strong>Reusable by Genie, SQL, BI</strong></td><td style="padding: 8px; border-bottom: 1px solid #EEE">&#9989;</td><td style="padding: 8px; border-bottom: 1px solid #EEE">&#10060; (until exported)</td><td style="padding: 8px; border-bottom: 1px solid #EEE">&#10060;</td></tr>
+-- MAGIC <tr><td style="padding: 8px; border-bottom: 1px solid #EEE"><strong>Best for</strong></td><td style="padding: 8px; border-bottom: 1px solid #EEE">Company-wide KPIs</td><td style="padding: 8px; border-bottom: 1px solid #EEE">Prototyping, dashboard-specific logic</td><td style="padding: 8px; border-bottom: 1px solid #EEE">Quick one-off metric</td></tr>
+-- MAGIC </table>
+-- MAGIC
+-- MAGIC **Typical lifecycle:** prototype as a local metric view → validate with stakeholders → **Export as metric view** → add it to a **Genie Agent**.
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC ## I. Metric Views + Genie Agents
+-- MAGIC
+-- MAGIC <div style="font-size: 1em; border-left: 4px solid #1976d2; background: #e3f2fd; padding: 16px 20px; border-radius: 4px; margin: 16px 0">
+-- MAGIC <div style="display: flex; align-items: flex-start; gap: 12px">
+-- MAGIC <span style="font-size: 24px">&#8505;&#65039;</span>
+-- MAGIC <div>
+-- MAGIC <strong style="color: #0d47a1; font-size: 1.1em">Naming</strong>
+-- MAGIC <p style="margin: 8px 0 0 0; color: #333"><strong>Genie Agents</strong> were formerly known as <strong>Genie Spaces</strong>.</p>
+-- MAGIC </div>
+-- MAGIC </div>
+-- MAGIC </div>
+-- MAGIC
+-- MAGIC - Add a metric view to a Genie Agent like a table: up to **50 tables, views or metric views** per agent
+-- MAGIC - The agent needs a **pro or serverless SQL warehouse**
+-- MAGIC - Genie generates `MEASURE(...)` SQL, and **synonyms are imported automatically**
+-- MAGIC - Reverse direction: a Genie Agent's context can be **exported as a metric view** (kebab menu → *Export to metric view*)
+-- MAGIC
+-- MAGIC **Recommended pattern for reliable agents**
+-- MAGIC 1. Model the KPIs in a metric view, with comments, synonyms and formats
+-- MAGIC 2. Give the agent the **metric view**, plus only the raw tables it really needs
+-- MAGIC 3. Keep instructions about **business context**. Formulas belong in the metric view
+-- MAGIC 4. Add **benchmarks** whose expected SQL uses `MEASURE()`
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## J. Requirements, Limitations and Best Practices
+-- MAGIC
+-- MAGIC **Requirements and limitations**
+-- MAGIC - Unity Catalog is required. Metric views need **DBR 16.4+**, and agent metadata (spec 1.1) needs **DBR 17.3+**. Serverless and SQL warehouses are always current
+-- MAGIC - Privileges: `SELECT` on sources, `USE CATALOG`, plus `USE SCHEMA` and `CREATE TABLE` on the target schema
+-- MAGIC - `MEASURE()` is mandatory. `SELECT *` and direct joins are not allowed
+-- MAGIC - Star joins are `LEFT OUTER`. With many-to-one, a many-to-many match uses the **first** matching row
+-- MAGIC - `rely.at_most_one_match: true` is **not validated**: a wrong value gives wrong SUM / COUNT
+-- MAGIC - Materialization can't be combined with parameters
+-- MAGIC
+-- MAGIC **Best practices**
+-- MAGIC - Name for humans and LLMs (`net_revenue`, not `m_rev_2`) and add `display_name` + `synonyms`
+-- MAGIC - Put business rules in the definition: global `filter`, measure-level `FILTER (WHERE …)`
+-- MAGIC - Compose ratios from base measures. Never pre-aggregate ratios
+-- MAGIC - Declare PK/FK constraints with `RELY` on source tables
+-- MAGIC - One metric view per business process (sales, support, inventory)
+-- MAGIC - Keep the YAML in Git, and deploy with SQL or Databricks Asset Bundles
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Knowledge Check
+-- MAGIC
+-- MAGIC Answer the questions below to check your understanding of this lecture.
+
+-- COMMAND ----------
+
+-- MAGIC %md-sandbox
+-- MAGIC <div id="mvQuiz" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 760px"></div>
+-- MAGIC <script>
+-- MAGIC (function() {
+-- MAGIC   var questions = [
+-- MAGIC     { q: "What is the main difference between a standard view and a metric view?",
+-- MAGIC       o: ["A metric view is always materialized", "A metric view fixes the measure definition, while the grouping is chosen at query time", "A metric view can only be queried from dashboards", "A metric view does not support joins"],
+-- MAGIC       c: 1, e: "A standard view fixes both aggregation and GROUP BY. A metric view stores only the definitions, and the engine computes the measure correctly at whatever grain the query asks for." },
+-- MAGIC     { q: "A view stores unique_customers per month. Why is SUM(unique_customers) over a year wrong?",
+-- MAGIC       o: ["SUM is not allowed on views", "Distinct counts are not additive: the same customer is counted in many months", "Because of NULL values", "It is correct"],
+-- MAGIC       c: 1, e: "COUNT(DISTINCT) is non-additive. A metric view recomputes it from detail rows for the requested grain." },
+-- MAGIC     { q: "Which query against a metric view is valid?",
+-- MAGIC       o: ["SELECT * FROM sales_metrics", "SELECT region, SUM(net_revenue) FROM sales_metrics GROUP BY region", "SELECT region, MEASURE(net_revenue) FROM sales_metrics GROUP BY region", "SELECT m.*, c.name FROM sales_metrics m JOIN customers c ON ..."],
+-- MAGIC       c: 2, e: "Measures must be wrapped in MEASURE(). SELECT * and direct joins are not allowed (use a CTE for joins)." },
+-- MAGIC     { q: "Which agent metadata property does Genie import automatically to match user wording to fields and measures?",
+-- MAGIC       o: ["format", "synonyms", "display_name", "materialization"],
+-- MAGIC       c: 1, e: "Synonyms (up to 10 per field or measure) are imported by Genie automatically. Formats and display names are mainly used by dashboards and BI tools." },
+-- MAGIC     { q: "You prototyped KPIs as a local metric view in an AI/BI dashboard. How do you make them available to a Genie Agent?",
+-- MAGIC       o: ["Copy the dashboard", "Use 'Export as a metric view' to create a Unity Catalog metric view", "Genie can read local metric views directly", "It is not possible"],
+-- MAGIC       c: 1, e: "Local metric views are scoped to one dashboard. Exporting creates a governed UC metric view that Genie, SQL and BI tools can use." }
+-- MAGIC   ];
+-- MAGIC   var root = document.getElementById('mvQuiz'), i = 0, score = 0, picked = null, shown = false;
+-- MAGIC   function btn(label, primary) { return '<button data-act="' + label + '" style="margin-top:14px;padding:8px 18px;border-radius:4px;border:none;cursor:pointer;background:' + (primary ? '#2272B4' : '#E0E0E0') + ';color:' + (primary ? '#fff' : '#333') + ';font-size:0.95em">' + label + '</button>'; }
+-- MAGIC   function render() {
+-- MAGIC     if (i >= questions.length) {
+-- MAGIC       root.innerHTML = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;text-align:center"><div style="font-size:1.3em;font-weight:bold;color:#333">Score: ' + score + ' / ' + questions.length + '</div>' + btn('Retake', true) + '</div>';
+-- MAGIC       root.querySelector('button').onclick = function() { i = 0; score = 0; picked = null; shown = false; render(); };
+-- MAGIC       return;
+-- MAGIC     }
+-- MAGIC     var Q = questions[i], h = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px">';
+-- MAGIC     h += '<div style="color:#999;font-size:0.85em;margin-bottom:6px">Question ' + (i + 1) + ' of ' + questions.length + '</div>';
+-- MAGIC     h += '<div style="font-weight:bold;color:#333;margin-bottom:12px;line-height:1.5">' + Q.q + '</div>';
+-- MAGIC     Q.o.forEach(function(t, k) {
+-- MAGIC       var bg = '#fff', bd = '#e0e0e0';
+-- MAGIC       if (shown && k === Q.c) { bg = '#E8F5E9'; bd = '#43A047'; }
+-- MAGIC       else if (shown && k === picked) { bg = '#FFEBEE'; bd = '#E53935'; }
+-- MAGIC       else if (!shown && k === picked) { bg = '#E3F2FD'; bd = '#2272B4'; }
+-- MAGIC       h += '<div data-k="' + k + '" style="padding:10px 14px;margin:6px 0;border:2px solid ' + bd + ';background:' + bg + ';border-radius:6px;cursor:' + (shown ? 'default' : 'pointer') + ';color:#333">' + String.fromCharCode(97 + k) + ') ' + t + '</div>';
+-- MAGIC     });
+-- MAGIC     if (shown) {
+-- MAGIC       h += '<div style="margin-top:12px;padding:12px;background:#F5F5F5;border-radius:6px;color:#333"><strong>' + (picked === Q.c ? '&#9989; Correct.' : '&#10060; Not quite.') + '</strong> ' + Q.e + '</div>' + btn(i + 1 < questions.length ? 'Next' : 'See score', true);
+-- MAGIC     } else {
+-- MAGIC       h += btn('Submit', picked !== null);
+-- MAGIC     }
+-- MAGIC     root.innerHTML = h + '</div>';
+-- MAGIC     if (!shown) root.querySelectorAll('[data-k]').forEach(function(el) { el.onclick = function() { picked = +el.getAttribute('data-k'); render(); }; });
+-- MAGIC     var b = root.querySelector('button');
+-- MAGIC     b.onclick = function() {
+-- MAGIC       if (!shown) { if (picked === null) return; if (picked === Q.c) score++; shown = true; }
+-- MAGIC       else { i++; picked = null; shown = false; }
+-- MAGIC       render();
+-- MAGIC     };
+-- MAGIC   }
+-- MAGIC   render();
+-- MAGIC })();
+-- MAGIC </script>
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Further Reading
+-- MAGIC
+-- MAGIC - [Metric views overview](https://docs.databricks.com/aws/en/metric-views/)
+-- MAGIC - [YAML reference](https://docs.databricks.com/aws/en/uc-semantics/metric-views/yaml-reference)
+-- MAGIC - [Query metric views](https://docs.databricks.com/aws/en/uc-semantics/metric-views/query)
+-- MAGIC - [Agent metadata](https://docs.databricks.com/aws/en/uc-semantics/agent-metadata)
+-- MAGIC - [Feature availability](https://docs.databricks.com/aws/en/uc-semantics/metric-views/feature-availability)
+-- MAGIC - [Dashboard datasets: local metric views, export](https://docs.databricks.com/aws/en/dashboards/manage/data-modeling/datasets)
+-- MAGIC - [Genie Agents setup](https://docs.databricks.com/aws/en/genie-agents/set-up)
+-- MAGIC
+-- MAGIC **Next:** open **02 Demo - Metric Views Hands-on** and run it on Serverless.

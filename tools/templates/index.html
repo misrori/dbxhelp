@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dbxhelp · Databricks course supplements</title>
+<style>
+  :root { --accent: #FF3621; --navy: #1B3139; --blue: #2272B4; --bg: #F9F7F4; --text: #1F2328; --muted: #6B7280; --border: #E5E7EB; --green: #2E7D32; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); }
+  .hero { background: linear-gradient(135deg, var(--navy), #24495A); color: #fff; padding: 48px 24px 40px; }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  .hero h1 { margin: 0 0 8px; font-size: 2.2em; display: flex; align-items: center; gap: 12px; }
+  .hero p { margin: 0; color: #CBD5E1; font-size: 1.1em; max-width: 720px; line-height: 1.5; }
+  main { padding: 28px 24px 80px; }
+  h2 { color: var(--navy); margin: 36px 0 12px; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin: 14px 0; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .step { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .step b { color: var(--navy); }
+  .num { display: inline-flex; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; align-items: center; justify-content: center; font-weight: 700; margin-right: 8px; font-size: 0.9em; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+  .tabs button { border: 1px solid var(--border); background: #F8FAFC; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.9em; color: var(--text); }
+  .tabs button.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .pane { display: none; margin-top: 12px; }
+  .pane.active { display: block; }
+  .pane ol { margin: 8px 0 0 0; padding-left: 20px; line-height: 1.7; }
+  .cmd { position: relative; background: #0F172A; color: #E2E8F0; border-radius: 8px; padding: 14px 92px 14px 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.85em; line-height: 1.55; white-space: pre-wrap; word-break: break-all; margin: 10px 0; }
+  .cmd button { position: absolute; top: 8px; right: 8px; border: 0; background: var(--accent); color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85em; font-family: inherit; }
+  .cmd button.ok { background: var(--green); }
+  .topic h3 { margin: 0 0 6px; color: var(--navy); font-size: 1.3em; }
+  .topic .summary { color: #374151; line-height: 1.55; margin: 0 0 10px; }
+  .tags span { display: inline-block; font-size: 0.75em; background: #EEF2F6; color: #334155; padding: 3px 9px; border-radius: 999px; margin: 0 6px 6px 0; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 4px; }
+  .actions a { text-decoration: none; font-size: 0.9em; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); color: var(--navy); background: #fff; }
+  .actions a.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .module-title { font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 28px 0 4px; }
+  .files { font-size: 0.85em; color: var(--muted); margin-top: 6px; }
+  label.user { display: flex; gap: 10px; align-items: center; font-size: 0.9em; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+  label.user input { flex: 1; min-width: 240px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 1em; }
+  .note { font-size: 0.88em; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  code { background: #EEF2F6; padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.92em; }
+  footer { text-align: center; color: var(--muted); font-size: 0.85em; padding: 30px; }
+</style>
+</head>
+<body>
+<section class="hero"><div class="wrap">
+  <h1><svg width="34" height="34" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</h1>
+  <p>Supplementary notebooks, slides and notes for Databricks courses. Pull any topic into your workspace with <b>one line</b>, straight from a notebook running on <b>Serverless</b>.</p>
+</div></section>
+
+<main><div class="wrap">
+
+  <h2>How to load a topic into Databricks</h2>
+  <div class="steps">
+    <div class="step"><span class="num">1</span><b>Open any notebook</b><br><span class="note">In the lab workspace: <i>New → Notebook</i>, keep <b>Serverless</b> selected, language <b>Python</b>.</span></div>
+    <div class="step"><span class="num">2</span><b>Paste the command</b><br><span class="note">Click <b>Copy</b> next to a topic below, paste it into a cell and press <kbd>Shift</kbd>+<kbd>Enter</kbd>.</span></div>
+    <div class="step"><span class="num">3</span><b>Open the link</b><br><span class="note">The notebooks land in <code>/Workspace/Users/&lt;you&gt;/dbxhelp/…</code>. Click the printed link to open them.</span></div>
+  </div>
+
+  <div class="card">
+    <b>Other ways to load</b>
+    <div class="tabs" id="methodTabs">
+      <button data-pane="m-notebook" class="active">Notebook cell (recommended)</button>
+      <button data-pane="m-terminal">Local terminal: git + Databricks CLI</button>
+      <button data-pane="m-gitfolder">Git folder (UI)</button>
+    </div>
+    <div class="pane active" id="m-notebook">
+      <p class="note">Works on Serverless with nothing to install: it uses the pre-installed <code>databricks-sdk</code> and imports the notebooks of one topic. List everything that's available:</p>
+      <div class="cmd" data-tpl="list"></div>
+      <p class="note">Optional arguments: <code>target="/Workspace/Shared/dbxhelp"</code>, <code>overwrite=False</code>, <code>include_docs=False</code>, <code>branch="dev"</code>.</p>
+    </div>
+    <div class="pane" id="m-terminal">
+      <p class="note">On your laptop, with the <a href="https://docs.databricks.com/aws/en/dev-tools/cli/install" target="_blank">Databricks CLI</a> authenticated to the lab workspace (<code>databricks auth login --host https://&lt;workspace-url&gt;</code>). The command clones (or updates) the repo and uploads one topic folder.</p>
+      <label class="user">Your workspace user name (email): <input id="userEmail" placeholder="you@company.com"></label>
+      <div class="cmd" data-tpl="terminal-generic"></div>
+      <p class="note">Each topic below also has its own terminal command.</p>
+    </div>
+    <div class="pane" id="m-gitfolder">
+      <ol>
+        <li>In the workspace: <b>Workspace → your home folder → Create → Git folder</b>.</li>
+        <li>Git repository URL: <code>https://github.com/{{REPO}}</code> (provider: GitHub, public repo, no token needed).</li>
+        <li>Optional: <b>Advanced → Sparse checkout mode</b> with a cone pattern like <code>modules/genie-conversational-agents</code> to pull just one module.</li>
+        <li>Click <b>Create Git folder</b>. Later you can use <b>⋮ → Git… → Pull</b> to get updates.</li>
+      </ol>
+    </div>
+  </div>
+
+  <h2>Topics</h2>
+  <div id="topics"></div>
+
+</div></main>
+<footer>Source: <a href="https://github.com/{{REPO}}" target="_blank">github.com/{{REPO}}</a> · Not affiliated with Databricks, Inc.</footer>
+
+<script>
+window.CATALOG = {{CATALOG_JSON}};
+(function () {
+  var C = window.CATALOG, repo = C.repo, branch = C.branch;
+  var loader = 'import urllib.request as u; exec(u.urlopen("https://raw.githubusercontent.com/' + repo + '/' + branch + '/dbxhelp.py").read().decode()); ';
+  var emailInput = document.getElementById('userEmail');
+  emailInput.value = localStorage.getItem('dbxhelp-email') || '';
+
+  function user() { return emailInput.value.trim() || '<you@company.com>'; }
+  function terminalCmd(src, dest) {
+    return 'D="${TMPDIR:-/tmp}/dbxhelp"; (git -C "$D" pull -q 2>/dev/null || git clone -q --depth 1 https://github.com/' + repo + '.git "$D") && \\\n' +
+           'databricks workspace import-dir "$D/' + src + '" "/Workspace/Users/' + user() + '/dbxhelp/' + dest + '" --overwrite';
+  }
+  var templates = {
+    'list': function () { return loader + 'dbxhelp()'; },
+    'terminal-generic': function () { return terminalCmd('modules', 'modules'); }
+  };
+
+  var host = document.getElementById('topics'), html = '';
+  C.modules.forEach(function (m) {
+    html += '<div class="module-title">' + m.title + '</div>';
+    m.topics.forEach(function (t) {
+      var key = m.id + '/' + t.id, src = m.folder + '/' + t.folder;
+      templates['nb:' + key] = function () { return loader + 'dbxhelp("' + key + '")'; };
+      templates['tm:' + key] = function () { return terminalCmd(src, m.workspace_folder + '/' + t.workspace_folder); };
+      html += '<div class="card topic"><h3>' + t.title + '</h3><p class="summary">' + t.summary + '</p>' +
+        '<div class="tags">' + (t.tags || []).map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>' +
+        '<div class="actions">' +
+          (t.html ? '<a class="primary" href="' + src + '/' + t.html + '#slides">🎞️ Presentation</a><a href="' + src + '/' + t.html + '#doc">📄 Document</a>' : '') +
+          (t.doc ? '<a href="https://github.com/' + repo + '/blob/' + branch + '/' + src + '/' + t.doc + '" target="_blank">Markdown</a>' : '') +
+          '<a href="https://github.com/' + repo + '/tree/' + branch + '/' + src + '" target="_blank">Files on GitHub</a>' +
+        '</div>' +
+        '<div class="tabs"><button class="active" data-pane="p-nb-' + t.id + '">Notebook cell</button><button data-pane="p-tm-' + t.id + '">Local terminal</button></div>' +
+        '<div class="pane active" id="p-nb-' + t.id + '"><div class="cmd" data-tpl="nb:' + key + '"></div></div>' +
+        '<div class="pane" id="p-tm-' + t.id + '"><div class="cmd" data-tpl="tm:' + key + '"></div><p class="note">Set your user name in “Other ways to load → Local terminal” above.</p></div>' +
+        '<div class="files">Notebooks: ' + t.notebooks.map(function (n) { return n.name; }).join(' · ') + (t.updated ? ' · updated ' + t.updated : '') + '</div>' +
+        '</div>';
+    });
+  });
+  host.innerHTML = html;
+
+  function paint() {
+    document.querySelectorAll('.cmd[data-tpl]').forEach(function (el) {
+      var text = templates[el.getAttribute('data-tpl')]();
+      el.textContent = text;
+      var b = document.createElement('button');
+      b.textContent = 'Copy';
+      b.onclick = function () {
+        navigator.clipboard.writeText(text).then(function () {
+          b.textContent = 'Copied ✓'; b.classList.add('ok');
+          setTimeout(function () { b.textContent = 'Copy'; b.classList.remove('ok'); }, 1600);
+        });
+      };
+      el.appendChild(b);
+    });
+  }
+  emailInput.addEventListener('input', function () { localStorage.setItem('dbxhelp-email', emailInput.value.trim()); paint(); });
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.tabs button');
+    if (!btn) return;
+    var group = btn.parentElement;
+    group.querySelectorAll('button').forEach(function (b) {
+      b.classList.toggle('active', b === btn);
+      document.getElementById(b.getAttribute('data-pane')).classList.toggle('active', b === btn);
+    });
+  });
+  paint();
+})();
+</script>
+</body>
+</html>

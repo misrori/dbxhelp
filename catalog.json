@@ -1,0 +1,29 @@
+{
+  "repo": "misrori/dbxhelp",
+  "branch": "main",
+  "modules": [
+    {
+      "id": "genie",
+      "title": "Building Reliable Conversational Agents with Genie",
+      "folder": "modules/genie-conversational-agents",
+      "workspace_folder": "Genie - Conversational Agents",
+      "topics": [
+        {
+          "id": "metric-views",
+          "title": "Metric Views",
+          "summary": "What Unity Catalog metric views are, why Genie gets more reliable with them, MEASURE() queries, agent metadata, and what's new in AI/BI dashboards (local metric views, export as metric view). Hands-on demo runs on Serverless.",
+          "tags": ["Unity Catalog", "Genie", "AI/BI Dashboards", "Serverless"],
+          "folder": "metric-views",
+          "workspace_folder": "Metric Views",
+          "updated": "2026-11-12",
+          "notebooks": [
+            { "file": "01_lecture_metric_views.sql", "name": "01 Lecture - Metric Views Explained" },
+            { "file": "02_demo_metric_views.py", "name": "02 Demo - Metric Views Hands-on" }
+          ],
+          "doc": "metric-views.md",
+          "html": "metric-views.html"
+        }
+      ]
+    }
+  ]
+}
