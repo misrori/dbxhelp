@@ -148,6 +148,59 @@ WHEN NOT MATCHED THEN INSERT *;
 - Atomic insert, update and delete in a single statement.
 - **Schema enforcement** by default: new source columns cause an error. Use `WITH SCHEMA EVOLUTION` to add them to the target.
 
+## Try it: three ways to ingest, in two minutes
+
+> Lands the synthetic **retail** CSV files from GitHub in a volume in your schema, then loads them three ways. Only one value to fill in.
+
+```python run
+# ✏️ FILL IN: the catalog.schema you can write to
+WORK_SCHEMA = "FILL_IN"   # e.g. "dbacademy.labuser1234567_1700000000"
+```
+
+```python run
+# Land raw CSV files from GitHub in a volume (2 of the 3 order files for now)
+import urllib.request as u; exec(u.urlopen("https://raw.githubusercontent.com/misrori/dbxhelp/main/dbxdata.py").read().decode())
+LANDING = land_files("retail", WORK_SCHEMA, upto=2)
+```
+
+```python run
+# 1) Batch: CTAS + read_files() with metadata columns
+spark.sql(f"""
+CREATE OR REPLACE TABLE bronze_orders_ctas AS
+SELECT *, _metadata.file_name AS source_file, current_timestamp() AS ingested_at
+FROM read_files('{LANDING}/fact_orders/', format => 'csv', header => true)
+""")
+display(spark.sql("SELECT source_file, count(*) AS rows, max(ingested_at) AS ingested_at FROM bronze_orders_ctas GROUP BY ALL"))
+```
+
+```python run
+# 2) Incremental: COPY INTO is idempotent. Run this cell twice and watch num_inserted_rows
+COPY = f"""
+COPY INTO bronze_orders_copy
+FROM '{LANDING}/fact_orders/'
+FILEFORMAT = CSV
+FORMAT_OPTIONS ('header' = 'true', 'inferSchema' = 'true')
+COPY_OPTIONS ('mergeSchema' = 'true')
+"""
+spark.sql("CREATE TABLE IF NOT EXISTS bronze_orders_copy")
+display(spark.sql(COPY))
+```
+
+```python run
+# 3) A new file arrives: COPY INTO loads only that one
+land_files("retail", WORK_SCHEMA, upto=3)
+display(spark.sql(COPY))
+```
+
+```python run
+# 4) Rescued data: malformed values are kept in _rescued_data instead of being lost
+display(spark.sql(f"""
+SELECT * FROM read_files('{LANDING}/fact_orders_bad/', format => 'csv', header => true,
+  schema => 'order_id INT, order_date DATE, customer_id INT, product_id INT, quantity INT, discount DOUBLE, status STRING',
+  rescuedDataColumn => '_rescued_data')
+"""))
+```
+
 ## Decision cheat sheet
 
 | Situation | Choose |

@@ -4,243 +4,199 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Recap 2: Deploy Workloads with Lakeflow Jobs · dbxhelp</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css">
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 <style>
-  :root { --accent: #FF3621; --navy: #1B3139; --blue: #2272B4; --bg: #F9F7F4; --text: #1F2328; --muted: #6B7280; --border: #E5E7EB; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); }
-  header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: var(--navy); color: #fff; }
-  header a.home { color: #fff; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-  header .title { color: #CBD5E1; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-  .toggle { display: inline-flex; background: rgba(255,255,255,0.12); border-radius: 999px; padding: 3px; }
-  .toggle button { border: 0; background: transparent; color: #E2E8F0; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 0.9em; }
-  .toggle button.active { background: #fff; color: var(--navy); font-weight: 600; }
-  header .link { color: #E2E8F0; font-size: 0.85em; text-decoration: none; border: 1px solid rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 6px; }
-  header .link:hover { background: rgba(255,255,255,0.1); }
-
-  /* ---------- shared markdown styling ---------- */
-  .md h1 { font-size: 2em; color: var(--navy); margin: 0 0 0.5em; }
-  .md h2 { color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 0.3em; margin-top: 1.8em; }
-  .md h3 { color: var(--navy); }
-  .md a { color: var(--blue); }
-  .md code { background: #EEF2F6; padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.9em; }
-  .md pre { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow: auto; }
-  .md pre code { background: none; padding: 0; font-size: 0.88em; line-height: 1.5; }
-  .md blockquote { margin: 1em 0; padding: 10px 16px; border-left: 4px solid var(--blue); background: #E3F2FD; border-radius: 4px; color: #1F2937; }
-  .md blockquote p { margin: 0.3em 0; }
-  .md table { border-collapse: collapse; width: 100%; margin: 1em 0; background: #fff; font-size: 0.95em; }
-  .md th, .md td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
-  .md th { background: #F1F5F9; }
-  .md li { margin: 0.25em 0; line-height: 1.55; }
-  .md p { line-height: 1.6; }
-
-  /* ---------- document mode ---------- */
-  #doc { max-width: 920px; margin: 0 auto; padding: 32px 24px 80px; }
-  #doc .md { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 36px 44px; }
-
-  /* ---------- presentation mode ---------- */
-  #slides { display: none; height: calc(100vh - 52px); padding: 18px; }
-  body.present #doc { display: none; }
-  body.present #slides { display: flex; flex-direction: column; align-items: center; }
-  .stage { flex: 1; width: 100%; max-width: 1280px; display: flex; align-items: center; justify-content: center; min-height: 0; }
-  .slide { width: 100%; height: 100%; max-height: 760px; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-top: 6px solid var(--accent); padding: 40px 56px; overflow: auto; font-size: 1.22em; }
-  .slide.title-slide { display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, var(--navy), #24495A); color: #fff; }
-  .slide.title-slide h1 { color: #fff; font-size: 2.3em; }
-  .slide.title-slide blockquote { background: rgba(255,255,255,0.1); border-left-color: var(--accent); color: #fff; }
-  .slide.title-slide code { background: rgba(255,255,255,0.15); color: #fff; }
-  .slide.title-slide strong { color: #FFD7CF; }
-  .slide h2 { margin-top: 0; font-size: 1.6em; border-bottom-color: var(--accent); }
-  .controls { display: flex; align-items: center; gap: 14px; padding-top: 12px; color: var(--muted); font-size: 0.9em; }
-  .controls button { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 1em; }
-  .controls button:hover { border-color: var(--blue); }
-  .progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--accent); transition: width 0.2s; }
-  body:not(.present) .progress { display: none; }
-  :fullscreen #slides { height: 100vh; }
-  @media (max-width: 700px) { .slide { padding: 24px; font-size: 1em; } #doc .md { padding: 20px; } header .title { display: none; } }
-  @media print { header, .controls, .progress { display: none; } #doc .md { border: 0; } }
+.dbx{--navy:#1B3139;--accent:#FF3621;--blue:#2272B4;--teal:#00A3A1;--purple:#7C4DFF;--amber:#FFAB00;--ink:#1F2937;--muted:#6B7280;--line:#E5E7EB;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);font-size:15px;line-height:1.6;max-width:1100px}
+.dbx *{box-sizing:border-box}
+.dbx>*{animation:dbxRise .55s cubic-bezier(.2,.7,.2,1) both}
+.dbx>*:nth-child(2){animation-delay:.06s}.dbx>*:nth-child(3){animation-delay:.12s}.dbx>*:nth-child(4){animation-delay:.18s}.dbx>*:nth-child(5){animation-delay:.24s}.dbx>*:nth-child(6){animation-delay:.3s}.dbx>*:nth-child(n+7){animation-delay:.36s}
+@keyframes dbxRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes dbxGrad{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes dbxFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,-14px) scale(1.08)}}
+@keyframes dbxLine{from{width:0}to{width:100%}}
+@keyframes dbxPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,54,33,.25)}50%{box-shadow:0 0 0 8px rgba(255,54,33,0)}}
+.dbx .hero{position:relative;overflow:hidden;border-radius:18px;padding:38px 40px 34px;margin:4px 0 18px;color:#fff;background:linear-gradient(120deg,#1B3139,#22425a,#2a2f6b,#1B3139);background-size:300% 300%;animation:dbxGrad 14s ease infinite,dbxRise .6s both}
+.dbx .blob{position:absolute;border-radius:50%;filter:blur(30px);opacity:.55;animation:dbxFloat 9s ease-in-out infinite}
+.dbx .b1{width:220px;height:220px;background:#FF3621;right:-40px;top:-60px}
+.dbx .b2{width:180px;height:180px;background:#7C4DFF;right:160px;bottom:-90px;animation-delay:-3s}
+.dbx .b3{width:140px;height:140px;background:#00A3A1;left:-40px;bottom:-50px;animation-delay:-6s}
+.dbx .hero-in{position:relative}
+.dbx .kicker{text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:#FFC4BA;font-weight:700}
+.dbx .hero h1{font-size:34px;line-height:1.15;margin:8px 0 14px;color:#fff;font-weight:800}
+.dbx .kicker-inline{display:inline-block;font-size:.5em;vertical-align:middle;background:var(--accent);padding:4px 10px;border-radius:999px;margin-right:10px;letter-spacing:.08em;text-transform:uppercase}
+.dbx .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.dbx .chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:4px 12px;border-radius:999px;font-size:13px;color:#fff}
+.dbx .chip strong{color:#fff}
+.dbx .sub{color:#E2E8F0;font-size:16px;margin:0;max-width:820px}
+.dbx .sub strong,.dbx .sub b{color:#FFD7CF}
+.dbx .sub code{background:rgba(255,255,255,.16);color:#fff}
+.dbx .idea{display:flex;gap:14px;align-items:flex-start;background:linear-gradient(135deg,#FFF4F1,#FFF);border:1px solid #FFD0C7;border-left:5px solid var(--accent);border-radius:14px;padding:16px 18px;margin:14px 0;animation:dbxRise .55s both,dbxPulse 3s ease-in-out 1s 2}
+.dbx .idea-icon{font-size:26px;line-height:1}
+.dbx .idea b{color:#C62D1A}
+.dbx .sec-head{display:flex;align-items:center;gap:12px;margin:6px 0 14px;position:relative;padding-bottom:10px}
+.dbx .sec-head:after{content:"";position:absolute;left:0;bottom:0;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--purple),var(--teal));animation:dbxLine .9s ease-out both}
+.dbx .sec-num{font-weight:800;font-size:13px;color:#fff;background:linear-gradient(135deg,var(--accent),#ff7a59);padding:5px 10px;border-radius:9px;letter-spacing:.05em}
+.dbx .sec-icon{font-size:26px;line-height:1}
+.dbx .sec-head h2{margin:0;font-size:25px;color:var(--navy);font-weight:800;border:0}
+.dbx h3{color:var(--navy);margin:18px 0 8px}
+.dbx p{margin:8px 0}
+.dbx a{color:var(--blue)}
+.dbx code{background:#EEF2FF;color:#3730A3;padding:1px 6px;border-radius:6px;font-size:.88em;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.dbx .tbl{overflow-x:auto;border-radius:12px;border:1px solid var(--line);box-shadow:0 2px 10px rgba(27,49,57,.06);margin:12px 0;background:#fff}
+.dbx table{border-collapse:collapse;width:100%;font-size:14px}
+.dbx th{background:linear-gradient(135deg,#1B3139,#2B4F63);color:#fff;text-align:left;padding:10px 12px;font-weight:600}
+.dbx td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}
+.dbx tr:nth-child(even) td{background:#F8FAFC}
+.dbx tr:hover td{background:#FFF4F1}
+.dbx td:first-child{font-weight:600;color:var(--navy)}
+.dbx ul,.dbx ol{padding-left:22px;margin:8px 0}
+.dbx li{margin:5px 0}
+.dbx li::marker{color:var(--accent)}
+.dbx li.bad,.dbx li.good{list-style:none;margin:8px 0 8px -22px;padding:10px 14px;border-radius:10px}
+.dbx li.bad{background:#FFF1F0;border:1px solid #FFCDC7}
+.dbx li.good{background:#ECFDF3;border:1px solid #B7EBC9}
+.dbx blockquote.callout{margin:14px 0;padding:12px 16px 12px 46px;border-radius:12px;background:linear-gradient(135deg,#E8F1FF,#F5F9FF);border:1px solid #C7DBFF;position:relative;color:#1E3A5F}
+.dbx blockquote.callout:before{content:"ℹ️";position:absolute;left:14px;top:11px;font-size:18px}
+.dbx blockquote.callout p{margin:4px 0}
+.dbx .code{border-radius:12px;overflow:hidden;margin:12px 0;box-shadow:0 8px 24px rgba(15,23,42,.18);background:#0D1117}
+.dbx .code-bar{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#161B22;border-bottom:1px solid #30363D}
+.dbx .code-bar i{width:11px;height:11px;border-radius:50%;background:#FF5F57;display:inline-block}
+.dbx .code-bar i:nth-child(2){background:#FEBC2E}.dbx .code-bar i:nth-child(3){background:#28C840}
+.dbx .lang{margin-left:8px;color:#8B949E;font-size:11px;letter-spacing:.1em;font-weight:700}
+.dbx .run{margin-left:auto;color:#3FB950;font-size:11px;font-weight:700}
+.dbx .copy{display:none}
+.dbx .code pre{margin:0;padding:14px 16px;color:#E6EDF3;font-size:13px;line-height:1.55;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:transparent}
+.dbx pre.diagram{background:linear-gradient(135deg,#F8FAFC,#EEF2FF);border:1px dashed #A5B4FC;border-radius:12px;padding:14px 16px;font-size:13px;color:#312E81;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.dbx .tryit{display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,#ECFDF3,#F0FDFA);border:1px solid #A7F3D0;border-radius:12px;padding:12px 16px;margin:12px 0}
+.dbx .tryit b{color:#047857}
+.dbx .present{display:flex;gap:16px;align-items:center;border-radius:14px;padding:16px 20px;background:linear-gradient(120deg,#2a2f6b,#7C4DFF);color:#fff;box-shadow:0 10px 30px rgba(124,77,255,.3)}
+.dbx .present b{font-size:17px}
+.dbx .present span{color:#E9E5FF}
+.dbx .present .big{font-size:34px}
+.dbx .footer{margin-top:10px;padding:14px 18px;border-radius:12px;background:#F8FAFC;border:1px solid var(--line);color:var(--muted);font-size:13px}
+:root{--navy:#1B3139;--accent:#FF3621;--blue:#2272B4;--purple:#7C4DFF;--teal:#00A3A1;--bg:#F4F2EE;--muted:#6B7280;--line:#E5E7EB}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:#1F2937;overflow:hidden}
+body.embedded{height:760px}
+#app{display:flex;flex-direction:column;height:100%}
+header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--navy);color:#fff;flex:none;z-index:5}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:.02em}
+.crumb{color:#94A3B8;font-size:.9em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.seg{display:inline-flex;background:rgba(255,255,255,.1);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;color:#CBD5E1;padding:6px 14px;border-radius:999px;cursor:pointer;font-size:.88em;font-family:inherit}
+.seg button.on{background:#fff;color:var(--navy);font-weight:700}
+.hbtn{border:1px solid rgba(255,255,255,.25);background:transparent;color:#E2E8F0;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.85em;font-family:inherit}
+.hbtn:hover{background:rgba(255,255,255,.1)}
+#bar{height:3px;background:linear-gradient(90deg,var(--accent),var(--purple),var(--teal));width:0;transition:width .35s ease;flex:none}
+#slides{flex:1;display:flex;flex-direction:column;min-height:0;padding:18px 22px 10px;position:relative}
+.stage{flex:1;position:relative;min-height:0;perspective:1400px}
+.slide{position:absolute;inset:0;background:#fff;border-radius:20px;box-shadow:0 18px 50px rgba(27,49,57,.14);overflow:auto;padding:34px 52px 40px}
+.slide.enter-r{animation:inR .5s cubic-bezier(.2,.8,.2,1) both}
+.slide.enter-l{animation:inL .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes inR{from{opacity:0;transform:translateX(60px) rotateY(-6deg)}to{opacity:1;transform:none}}
+@keyframes inL{from{opacity:0;transform:translateX(-60px) rotateY(6deg)}to{opacity:1;transform:none}}
+.slide .dbx{max-width:none;font-size:18px}
+.slide .dbx .sec-head h2{font-size:32px}
+.slide .dbx table{font-size:16px}
+.slide .dbx .code pre{font-size:14.5px}
+.slide .dbx>*{animation:dbxRise .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0) * 90ms + 120ms)}
+.slide.title{padding:0;overflow:hidden;background:transparent;box-shadow:0 18px 50px rgba(27,49,57,.25)}
+.slide.title .dbx{height:100%;display:flex;flex-direction:column;position:relative}
+.slide.title .hero{flex:1;margin:0;border-radius:20px;display:flex;align-items:center;padding:60px 70px 150px}
+.slide.title .hero h1{font-size:54px}
+.slide.title .sub{font-size:20px}
+.slide.title .b1{width:420px;height:420px}.slide.title .b2{width:340px;height:340px}.slide.title .b3{width:300px;height:300px}
+.slide.title .idea{position:absolute;left:70px;right:70px;bottom:40px;font-size:18px;background:rgba(255,255,255,.96)}
+.slide.title .dbx>:not(.hero):not(.idea){display:none}
+.controls{display:flex;align-items:center;gap:12px;padding-top:12px;flex:none}
+.controls .nav{border:1px solid var(--line);background:#fff;border-radius:10px;width:40px;height:36px;cursor:pointer;font-size:16px}
+.controls .nav:hover{border-color:var(--accent);color:var(--accent)}
+.dots{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}
+.dots button{width:10px;height:10px;border-radius:50%;border:0;background:#CBD5E1;cursor:pointer;padding:0;transition:all .25s}
+.dots button.on{background:var(--accent);width:28px;border-radius:6px}
+.count{color:var(--muted);font-size:.85em;min-width:60px;text-align:right}
+.hint{color:#94A3B8;font-size:.78em;white-space:nowrap}
+#overview{position:absolute;inset:0;background:rgba(244,242,238,.97);z-index:4;display:none;overflow:auto;padding:26px}
+#overview.on{display:block;animation:dbxRise .3s both}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.card{background:#fff;border-radius:14px;padding:16px;cursor:pointer;border:2px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.06);transition:all .2s}
+.card:hover{transform:translateY(-3px);border-color:var(--accent)}
+.card .n{font-size:.75em;color:var(--muted);font-weight:700}
+.card .i{font-size:28px;margin:6px 0}
+.card .t{font-weight:700;color:var(--navy)}
+#doc{flex:1;display:none;min-height:0}
+body.docmode #slides{display:none}
+body.docmode #doc{display:flex}
+#toc{width:270px;flex:none;overflow:auto;padding:22px 14px;border-right:1px solid var(--line);background:#fff}
+#toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:9px;color:#334155;text-decoration:none;font-size:.9em;margin:2px 0}
+#toc a:hover{background:#F1F5F9}
+#toc a.on{background:#FFF1EE;color:#C62D1A;font-weight:700}
+#docScroll{flex:1;overflow:auto;padding:26px 34px 80px}
+.dsec{background:#fff;border-radius:18px;padding:26px 32px;margin:0 auto 18px;max-width:1000px;box-shadow:0 4px 18px rgba(27,49,57,.06);opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s cubic-bezier(.2,.7,.2,1)}
+.dsec.seen{opacity:1;transform:none}
+.dsec.herosec{padding:0;background:transparent;box-shadow:none}
+.dsec .dbx>*{animation:none}
+.quiz{max-width:820px}
+.confetti{position:fixed;top:-20px;font-size:22px;z-index:9;animation:fall 2.6s linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.7}}
+.dbx .code .copy{display:inline-block;margin-left:auto;border:1px solid #30363D;background:#21262D;color:#C9D1D9;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer}
+.dbx .code .run+.copy{margin-left:10px}
+@media (max-width:760px){.slide{padding:22px}.slide.title .hero{padding:30px 30px 160px}.slide.title .hero h1{font-size:32px}.slide.title .idea{left:16px;right:16px}#toc{display:none}.crumb{display:none}.hint{display:none}}
+@media print{header,.controls,#bar,#toc{display:none}body{overflow:visible}#doc{display:block}#slides{display:none}.dsec{opacity:1;transform:none;box-shadow:none}}
 </style>
 </head>
 <body>
+<div id="app">
 <header>
-  <a class="home" href="../../../index.html" title="All topics"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</a>
-  <span class="title">Data Engineering with Databricks › Recap 2: Deploy Workloads with Lakeflow Jobs</span>
-  <div class="toggle" role="tablist">
-    <button id="btnDoc" class="active" title="Document view (D)">📄 Document</button>
-    <button id="btnSlides" title="Presentation view (P)">🎞️ Presentation</button>
-  </div>
-  <a class="link" href="lakeflow-jobs-recap.md" download>⬇ .md</a>
-  <a class="link" href="https://github.com/misrori/dbxhelp/tree/main/modules/data-engineering/02-lakeflow-jobs" target="_blank">GitHub</a>
+  <div class="brand"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</div>
+  <div class="crumb">Data Engineering with Databricks › Recap 2: Deploy Workloads with Lakeflow Jobs</div>
+  <div class="seg"><button id="bSlides" class="on">🎞️ Slides</button><button id="bDoc">📄 Document</button></div>
+  <button class="hbtn" id="bOver" title="Overview (O)">▦</button>
+  <button class="hbtn" id="bFull" title="Fullscreen (F)">⛶</button>
 </header>
-
-<main id="doc"><article class="md" id="docBody"></article></main>
-
+<div id="bar"></div>
 <section id="slides">
-  <div class="stage"><div class="slide md" id="slide"></div></div>
-  <div class="controls">
-    <button id="prev" title="Previous (←)">←</button>
-    <span id="counter"></span>
-    <button id="next" title="Next (→ / Space)">→</button>
-    <button id="fs" title="Fullscreen (F)">⛶</button>
-    <span>← → navigate · F fullscreen · D document</span>
-  </div>
+  <div class="stage" id="stage"></div>
+  <div class="controls"><button class="nav" id="prev" title="Previous (←)">←</button><div class="dots" id="dots"></div><span class="hint">← → navigate · O overview · F fullscreen · D document</span><span class="count" id="count"></span><button class="nav" id="next" title="Next (→)">→</button></div>
+  <div id="overview"><div class="grid" id="grid"></div></div>
 </section>
-<div class="progress" id="progress"></div>
-
-<script type="text/markdown" id="source">
-# Recap: Deploy Workloads with Lakeflow Jobs
-
-> **Course 2 of 4 · Data Engineering with Databricks** · ⏱ ~8 minutes
->
-> Turning notebooks, SQL and pipelines into **reliable, scheduled, observable** production workloads.
-
-**The one idea to remember:** a job is a **DAG of tasks**. Dependencies, triggers, parameters and conditions decide *what* runs and *when*. Repair runs and notifications keep it healthy.
-
-## What we covered
-
-| Lesson | Key takeaway |
-|---|---|
-| 1 Creating a job | Single notebook task in the **Jobs UI**: configure, run, review the run |
-| 2 Lab: multiple tasks | Several tasks with **dependencies**, building a DAG |
-| 3 Scheduling options | **Scheduled**, **file arrival**, **continuous** triggers, plus **task parameters** |
-| 4 Controlling the flow | **Run if** conditions, **repair runs**, **task values**, the **If/else** task |
-| 5 Lab: modular orchestration | **Run Job** task: a parent ("master") job calling other jobs |
-
-## Jobs, tasks and the DAG
-
-```
-Ingest_Source_1 ─┐
-Ingest_Source_2 ─┼─► Clean_Data ─► If/else: bad_records > 0 ─true──► Fix_Bad_Records
-Ingest_Source_3 ─┘                                           └false─► Aggregate_Records
-```
-
-| Building block | What it is |
-|---|---|
-| **Job** | A named workflow with triggers, parameters, notifications and permissions |
-| **Task** | One unit of work: notebook, Python script/wheel, **SQL**, **dashboard**, **pipeline**, dbt, **Run Job**, **If/else**, **For each** |
-| **Dependency** | "Depends on" edges between tasks. Tasks without dependencies run **in parallel** |
-| **Compute** | **Serverless** (recommended), a **job cluster** that tasks of the job can share, or a **SQL warehouse** for SQL and dashboard tasks |
-
-Job clusters are created for the run and terminated afterwards. They are cheaper than all-purpose clusters, which are meant for interactive development.
-
-## Triggers: when does a job run?
-
-| Trigger | Starts a run | Use when |
-|---|---|---|
-| **Manual / API** | *Run now*, REST API, another orchestrator | Ad hoc runs, testing |
-| **Scheduled** | Cron-style schedule with a time zone (UI or cron syntax) | Data arrives at **known times**; reports due at fixed times |
-| **File arrival** | New files in a UC **volume** or **external location** (checked about every minute; use **Test trigger** to verify the path) | Files arrive at **unpredictable** times |
-| **Table update** | One or more UC tables are updated | Run right after an upstream team's table changes |
-| **Continuous** | A new run starts as soon as the previous one ends | Always-on streaming workloads |
-
-Data-driven triggers (file arrival, table update) avoid **empty runs** and runs that start **too early**.
-
-## Parameters and dynamic values
-
-```python
-# In the task notebook, read a task/job parameter like a widget
-catalog = dbutils.widgets.get("catalog")
-
-# Pass a value to downstream tasks
-dbutils.jobs.taskValues.set(key="bad_records", value=5)
-```
-
-| Kind | Example | Scope |
-|---|---|---|
-| **Job parameters** | `env = prod`, referenced as `{{job.parameters.env}}` | Pushed down to every task |
-| **Task parameters** | `catalog = dbacademy` | One task |
-| **Dynamic value references** | `{{job.id}}`, `{{job.run_id}}`, `{{job.start_time.iso_date}}`, `{{tasks.Clean_Data.values.bad_records}}` | Resolved at run time |
-| **Task values** | `dbutils.jobs.taskValues.set / get` | Pass small results between tasks |
-
-Parameters make one notebook reusable across catalogs, environments and dates. Never hard-code them.
-
-## Controlling the flow
-
-**Run if dependencies:** when should a task with upstream tasks start?
-
-| Run if | Runs when | Typical use |
-|---|---|---|
-| **All succeeded** (default) | every upstream task succeeded | Normal flow |
-| At least one succeeded | ≥ 1 succeeded | Partial-source processing |
-| None failed | nothing failed | Skip-tolerant flows |
-| **All done** | everything finished, whatever the result | **Cleanup**, final notification |
-| At least one failed / All failed | something (everything) failed | **Alerting**, fallback |
-
-**If/else condition task:** branch on a value, e.g. `{{tasks.Clean_Data.values.bad_records}} > 0`. The *true* branch fixes the bad records, and the *false* branch goes straight to aggregation.
-
-**For each task:** run a nested task once per item of a list (e.g. per country), with a **concurrency** setting.
-
-## When things fail
-
-- **Repair run:** after a failure, re-run **only the failed tasks and their dependents**. Successful tasks are not executed again, which saves time and money.
-- **Retries:** per task, a retry count and interval. Retries are off by default for most tasks.
-- **Timeout:** the maximum duration of a task. When exceeded, the status is *Timed Out*. With retries, the timeout applies to each attempt.
-- **Duration threshold:** sends a **warning** only and does not stop the task.
-- **Notifications:** email, Slack or webhooks on start, success, failure or duration warning, at job or task level.
-- **Max concurrent runs:** the default is **1**. Extra triggered runs are skipped unless **queueing** is enabled.
-- Task statuses to recognise: *Succeeded*, *Failed*, ***Upstream failed*** (a dependency failed), *Excluded* (condition not met), *Timed Out*, *Skipped*.
-
-## Modular orchestration: Run Job task
-
-```
-Master_Job
- ├─ Run Job: Ingestion_Job ─┐
- ├─ Run Job: Reference_Job ─┼─► Run Job: Reporting_Job
-```
-
-- Split large workflows into **smaller, reusable jobs** owned by different people or teams.
-- The parent job controls the order and passes parameters down.
-- Each child job keeps its own run history, permissions and compute settings.
-
-## Decision cheat sheet
-
-| Situation | Choose |
-|---|---|
-| Files land at random times during the day | **File arrival** trigger, not a 5-minute schedule |
-| Downstream job must run after another team's table is refreshed | **Table update** trigger |
-| A cleanup task must always run | Run if **All done** |
-| Only the third of five tasks failed | **Repair run** |
-| Different logic when bad records are found | **If/else** task with a **task value** |
-| Same notebook for 12 countries | **For each** task with parameters |
-| A 40-task workflow maintained by three teams | Several jobs combined with **Run Job** tasks |
-
-## Common mistakes
-
-- ❌ Raising the duration **warning** threshold to fix *Timed Out* failures. It's the **timeout** that stops the task.
-- ❌ Re-running the whole job after one task failed. Use **repair run**.
-- ❌ Running production jobs on an **all-purpose** cluster. Use **serverless** or a **job cluster**.
-- ❌ Hard-coding catalog or schema names in task notebooks. Use **parameters**.
-- ❌ Expecting overlapping runs: max concurrent runs is **1** by default.
-
-**Next course:** *Build Data Pipelines with Lakeflow Spark Declarative Pipelines*, the pipelines these jobs will trigger.
-
-</script>
+<section id="doc"><nav id="toc"></nav><div id="docScroll"></div></section>
+</div>
 <script>
-function dbxQuiz(root, questions) {
+function dbxQuiz(root, questions, onDone) {
   if (typeof root === 'string') root = document.getElementById(root);
-  var i = 0, score = 0, picked = null, shown = false;
-  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/`([^`]+)`/g, '<code>$1</code>'); }
-  function btn(label, primary) { return '<button style="margin-top:14px;padding:8px 18px;border-radius:4px;border:none;cursor:pointer;background:' + (primary ? '#2272B4' : '#E0E0E0') + ';color:' + (primary ? '#fff' : '#333') + ';font-size:0.95em">' + label + '</button>'; }
+  var i = 0, score = 0, picked = null, shown = false, done = false;
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/`([^`]+)`/g, '<code style="background:#EEF2FF;color:#3730A3;padding:1px 6px;border-radius:6px">$1</code>'); }
+  function btn(label, primary) { return '<button style="margin-top:16px;padding:10px 22px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:' + (primary ? 'linear-gradient(135deg,#FF3621,#7C4DFF)' : '#E5E7EB') + ';color:' + (primary ? '#fff' : '#6B7280') + ';font-size:0.95em;box-shadow:' + (primary ? '0 6px 18px rgba(124,77,255,.3)' : 'none') + '">' + label + '</button>'; }
+  var box = 'padding:22px 24px;border-radius:16px;background:#fff;border:1px solid #E5E7EB;box-shadow:0 8px 28px rgba(27,49,57,.08);animation:dbxQ .4s ease both';
+  var style = '<style>@keyframes dbxQ{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}</style>';
+  function bar() {
+    var h = '<div style="display:flex;gap:6px;margin-bottom:14px">';
+    for (var k = 0; k < questions.length; k++) h += '<div style="flex:1;height:6px;border-radius:6px;background:' + (k < i ? 'linear-gradient(90deg,#FF3621,#7C4DFF)' : k === i ? '#C4B5FD' : '#E5E7EB') + '"></div>';
+    return h + '</div>';
+  }
   function render() {
     if (i >= questions.length) {
-      root.innerHTML = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;text-align:center;background:#fff"><div style="font-size:1.3em;font-weight:bold;color:#333">Score: ' + score + ' / ' + questions.length + '</div>' + btn('Retake', true) + '</div>';
-      root.querySelector('button').onclick = function () { i = 0; score = 0; picked = null; shown = false; render(); };
+      var pct = Math.round(score / questions.length * 100), msg = pct === 100 ? 'Perfect! 🎉' : pct >= 60 ? 'Nice work! 💪' : 'Worth another look 📖';
+      root.innerHTML = style + '<div style="' + box + ';text-align:center"><div style="font-size:48px">' + (pct === 100 ? '🏆' : pct >= 60 ? '🌟' : '🔁') + '</div><div style="font-size:1.6em;font-weight:800;color:#1B3139">' + score + ' / ' + questions.length + '</div><div style="color:#6B7280;margin-top:4px">' + msg + '</div>' + btn('Retake', true) + '</div>';
+      root.querySelector('button').onclick = function () { i = 0; score = 0; picked = null; shown = false; done = false; render(); };
+      if (!done && onDone) { done = true; onDone(score, questions.length); }
       return;
     }
-    var Q = questions[i], h = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;background:#fff">';
-    h += '<div style="color:#999;font-size:0.85em;margin-bottom:6px">Question ' + (i + 1) + ' of ' + questions.length + '</div>';
-    h += '<div style="font-weight:bold;color:#333;margin-bottom:12px;line-height:1.5">' + esc(Q.q) + '</div>';
+    var Q = questions[i], h = style + '<div style="' + box + '">' + bar();
+    h += '<div style="color:#7C4DFF;font-size:0.8em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Question ' + (i + 1) + ' of ' + questions.length + '</div>';
+    h += '<div style="font-weight:700;color:#1B3139;margin-bottom:14px;line-height:1.5;font-size:1.05em">' + esc(Q.q) + '</div>';
     Q.o.forEach(function (t, k) {
-      var bg = '#fff', bd = '#e0e0e0';
-      if (shown && k === Q.c) { bg = '#E8F5E9'; bd = '#43A047'; }
-      else if (shown && k === picked) { bg = '#FFEBEE'; bd = '#E53935'; }
-      else if (!shown && k === picked) { bg = '#E3F2FD'; bd = '#2272B4'; }
-      h += '<div data-k="' + k + '" style="padding:10px 14px;margin:6px 0;border:2px solid ' + bd + ';background:' + bg + ';border-radius:6px;cursor:' + (shown ? 'default' : 'pointer') + ';color:#333">' + String.fromCharCode(97 + k) + ') ' + esc(t) + '</div>';
+      var bg = '#fff', bd = '#E5E7EB', mark = String.fromCharCode(65 + k);
+      if (shown && k === Q.c) { bg = '#ECFDF3'; bd = '#22C55E'; mark = '✓'; }
+      else if (shown && k === picked) { bg = '#FFF1F0'; bd = '#EF4444'; mark = '✗'; }
+      else if (!shown && k === picked) { bg = '#F5F3FF'; bd = '#7C4DFF'; }
+      h += '<div data-k="' + k + '" style="display:flex;gap:12px;align-items:center;padding:11px 14px;margin:8px 0;border:2px solid ' + bd + ';background:' + bg + ';border-radius:12px;cursor:' + (shown ? 'default' : 'pointer') + ';color:#1F2937;transition:all .15s">' +
+        '<span style="flex:none;width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:.85em;background:' + (bd === '#E5E7EB' ? '#F1F5F9' : bd) + ';color:' + (bd === '#E5E7EB' ? '#64748B' : '#fff') + '">' + mark + '</span><span>' + esc(t) + '</span></div>';
     });
     if (shown) {
-      h += '<div style="margin-top:12px;padding:12px;background:#F5F5F5;border-radius:6px;color:#333"><strong>' + (picked === Q.c ? '&#9989; Correct.' : '&#10060; Not quite.') + '</strong> ' + esc(Q.e) + '</div>' + btn(i + 1 < questions.length ? 'Next' : 'See score', true);
+      var ok = picked === Q.c;
+      h += '<div style="margin-top:14px;padding:14px 16px;border-radius:12px;background:' + (ok ? '#ECFDF3' : '#FFF7ED') + ';border:1px solid ' + (ok ? '#A7F3D0' : '#FED7AA') + ';color:#1F2937;animation:dbxQ .3s both"><strong>' + (ok ? '✅ Correct.' : '💡 Not quite.') + '</strong> ' + esc(Q.e) + '</div>' + btn(i + 1 < questions.length ? 'Next →' : 'See score', true);
     } else {
       h += btn('Submit', picked !== null);
     }
@@ -254,81 +210,109 @@ function dbxQuiz(root, questions) {
   }
   render();
 }
-
+var SLIDES = [{"title": "Recap: Deploy Workloads with Lakeflow Jobs", "icon": "🚀", "html": "<div class=\"hero\"><div class=\"blob b1\"><\/div><div class=\"blob b2\"><\/div><div class=\"blob b3\"><\/div><div class=\"hero-in\"><div class=\"kicker\">Data Engineering with Databricks<\/div><h1><span class=\"kicker-inline\">Recap<\/span>Deploy Workloads with Lakeflow Jobs<\/h1><div class=\"chips\"><span class=\"chip\">Course 2 of 4<\/span><span class=\"chip\">⏱ ~8 minutes<\/span><\/div><p class=\"sub\">Turning notebooks, SQL and pipelines into <strong>reliable, scheduled, observable<\/strong> production workloads.<\/p><\/div><\/div><div class=\"idea\"><span class=\"idea-icon\">💡<\/span><div><b>The one idea to remember:<\/b> a job is a <strong>DAG of tasks<\/strong>. Dependencies, triggers, parameters and conditions decide <em>what<\/em> runs and <em>when<\/em>. Repair runs and notifications keep it healthy.<\/div><\/div>"}, {"title": "What we covered", "icon": "🗺️", "html": "<div class=\"sec-head\"><span class=\"sec-num\">01<\/span><span class=\"sec-icon\">🗺️<\/span><h2>What we covered<\/h2><\/div><div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Lesson<\/th>\n<th>Key takeaway<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td>1 Creating a job<\/td>\n<td>Single notebook task in the <strong>Jobs UI<\/strong>: configure, run, review the run<\/td>\n<\/tr>\n<tr>\n<td>2 Lab: multiple tasks<\/td>\n<td>Several tasks with <strong>dependencies<\/strong>, building a DAG<\/td>\n<\/tr>\n<tr>\n<td>3 Scheduling options<\/td>\n<td><strong>Scheduled<\/strong>, <strong>file arrival<\/strong>, <strong>continuous<\/strong> triggers, plus <strong>task parameters<\/strong><\/td>\n<\/tr>\n<tr>\n<td>4 Controlling the flow<\/td>\n<td><strong>Run if<\/strong> conditions, <strong>repair runs<\/strong>, <strong>task values<\/strong>, the <strong>If/else<\/strong> task<\/td>\n<\/tr>\n<tr>\n<td>5 Lab: modular orchestration<\/td>\n<td><strong>Run Job<\/strong> task: a parent (\"master\") job calling other jobs<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>"}, {"title": "Jobs, tasks and the DAG", "icon": "🕸️", "html": "<div class=\"sec-head\"><span class=\"sec-num\">02<\/span><span class=\"sec-icon\">🕸️<\/span><h2>Jobs, tasks and the DAG<\/h2><\/div><pre class=\"diagram\">Ingest_Source_1 ─┐\nIngest_Source_2 ─┼─► Clean_Data ─► If/else: bad_records &gt; 0 ─true──► Fix_Bad_Records\nIngest_Source_3 ─┘                                           └false─► Aggregate_Records<\/pre>\n<div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Building block<\/th>\n<th>What it is<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td><strong>Job<\/strong><\/td>\n<td>A named workflow with triggers, parameters, notifications and permissions<\/td>\n<\/tr>\n<tr>\n<td><strong>Task<\/strong><\/td>\n<td>One unit of work: notebook, Python script/wheel, <strong>SQL<\/strong>, <strong>dashboard<\/strong>, <strong>pipeline<\/strong>, dbt, <strong>Run Job<\/strong>, <strong>If/else<\/strong>, <strong>For each<\/strong><\/td>\n<\/tr>\n<tr>\n<td><strong>Dependency<\/strong><\/td>\n<td>\"Depends on\" edges between tasks. Tasks without dependencies run <strong>in parallel<\/strong><\/td>\n<\/tr>\n<tr>\n<td><strong>Compute<\/strong><\/td>\n<td><strong>Serverless<\/strong> (recommended), a <strong>job cluster<\/strong> that tasks of the job can share, or a <strong>SQL warehouse<\/strong> for SQL and dashboard tasks<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>\n<p>Job clusters are created for the run and terminated afterwards. They are cheaper than all-purpose clusters, which are meant for interactive development.<\/p>"}, {"title": "Triggers: when does a job run?", "icon": "⏰", "html": "<div class=\"sec-head\"><span class=\"sec-num\">03<\/span><span class=\"sec-icon\">⏰<\/span><h2>Triggers: when does a job run?<\/h2><\/div><div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Trigger<\/th>\n<th>Starts a run<\/th>\n<th>Use when<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td><strong>Manual / API<\/strong><\/td>\n<td><em>Run now<\/em>, REST API, another orchestrator<\/td>\n<td>Ad hoc runs, testing<\/td>\n<\/tr>\n<tr>\n<td><strong>Scheduled<\/strong><\/td>\n<td>Cron-style schedule with a time zone (UI or cron syntax)<\/td>\n<td>Data arrives at <strong>known times<\/strong>; reports due at fixed times<\/td>\n<\/tr>\n<tr>\n<td><strong>File arrival<\/strong><\/td>\n<td>New files in a UC <strong>volume<\/strong> or <strong>external location<\/strong> (checked about every minute; use <strong>Test trigger<\/strong> to verify the path)<\/td>\n<td>Files arrive at <strong>unpredictable<\/strong> times<\/td>\n<\/tr>\n<tr>\n<td><strong>Table update<\/strong><\/td>\n<td>One or more UC tables are updated<\/td>\n<td>Run right after an upstream team's table changes<\/td>\n<\/tr>\n<tr>\n<td><strong>Continuous<\/strong><\/td>\n<td>A new run starts as soon as the previous one ends<\/td>\n<td>Always-on streaming workloads<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>\n<p>Data-driven triggers (file arrival, table update) avoid <strong>empty runs<\/strong> and runs that start <strong>too early<\/strong>.<\/p>"}, {"title": "Parameters and dynamic values", "icon": "🎛️", "html": "<div class=\"sec-head\"><span class=\"sec-num\">04<\/span><span class=\"sec-icon\">🎛️<\/span><h2>Parameters and dynamic values<\/h2><\/div><div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\"># In the task notebook, read a task/job parameter like a widget<\/span>\n<span style=\"color: #E6EDF3\">catalog<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #E6EDF3\">dbutils<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">widgets<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">get(<\/span><span style=\"color: #A5D6FF\">\"catalog\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n\n<span style=\"color: #8B949E; font-style: italic\"># Pass a value to downstream tasks<\/span>\n<span style=\"color: #E6EDF3\">dbutils<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">jobs<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">taskValues<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">set(key<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #A5D6FF\">\"bad_records\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #E6EDF3\">value<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #A5D6FF\">5<\/span><span style=\"color: #E6EDF3\">)<\/span><\/pre><\/div>\n<div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Kind<\/th>\n<th>Example<\/th>\n<th>Scope<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td><strong>Job parameters<\/strong><\/td>\n<td><code>env = prod<\/code>, referenced as <code>{{job.parameters.env}}<\/code><\/td>\n<td>Pushed down to every task<\/td>\n<\/tr>\n<tr>\n<td><strong>Task parameters<\/strong><\/td>\n<td><code>catalog = dbacademy<\/code><\/td>\n<td>One task<\/td>\n<\/tr>\n<tr>\n<td><strong>Dynamic value references<\/strong><\/td>\n<td><code>{{job.id}}<\/code>, <code>{{job.run_id}}<\/code>, <code>{{job.start_time.iso_date}}<\/code>, <code>{{tasks.Clean_Data.values.bad_records}}<\/code><\/td>\n<td>Resolved at run time<\/td>\n<\/tr>\n<tr>\n<td><strong>Task values<\/strong><\/td>\n<td><code>dbutils.jobs.taskValues.set / get<\/code><\/td>\n<td>Pass small results between tasks<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>\n<p>Parameters make one notebook reusable across catalogs, environments and dates. Never hard-code them.<\/p>"}, {"title": "Controlling the flow", "icon": "🔀", "html": "<div class=\"sec-head\"><span class=\"sec-num\">05<\/span><span class=\"sec-icon\">🔀<\/span><h2>Controlling the flow<\/h2><\/div><p><strong>Run if dependencies:<\/strong> when should a task with upstream tasks start?<\/p>\n<div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Run if<\/th>\n<th>Runs when<\/th>\n<th>Typical use<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td><strong>All succeeded<\/strong> (default)<\/td>\n<td>every upstream task succeeded<\/td>\n<td>Normal flow<\/td>\n<\/tr>\n<tr>\n<td>At least one succeeded<\/td>\n<td>≥ 1 succeeded<\/td>\n<td>Partial-source processing<\/td>\n<\/tr>\n<tr>\n<td>None failed<\/td>\n<td>nothing failed<\/td>\n<td>Skip-tolerant flows<\/td>\n<\/tr>\n<tr>\n<td><strong>All done<\/strong><\/td>\n<td>everything finished, whatever the result<\/td>\n<td><strong>Cleanup<\/strong>, final notification<\/td>\n<\/tr>\n<tr>\n<td>At least one failed / All failed<\/td>\n<td>something (everything) failed<\/td>\n<td><strong>Alerting<\/strong>, fallback<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>\n<p><strong>If/else condition task:<\/strong> branch on a value, e.g. <code>{{tasks.Clean_Data.values.bad_records}} &gt; 0<\/code>. The <em>true<\/em> branch fixes the bad records, and the <em>false<\/em> branch goes straight to aggregation.<\/p>\n<p><strong>For each task:<\/strong> run a nested task once per item of a list (e.g. per country), with a <strong>concurrency<\/strong> setting.<\/p>"}, {"title": "When things fail", "icon": "🩹", "html": "<div class=\"sec-head\"><span class=\"sec-num\">06<\/span><span class=\"sec-icon\">🩹<\/span><h2>When things fail<\/h2><\/div><ul>\n<li><strong>Repair run:<\/strong> after a failure, re-run <strong>only the failed tasks and their dependents<\/strong>. Successful tasks are not executed again, which saves time and money.<\/li>\n<li><strong>Retries:<\/strong> per task, a retry count and interval. Retries are off by default for most tasks.<\/li>\n<li><strong>Timeout:<\/strong> the maximum duration of a task. When exceeded, the status is <em>Timed Out<\/em>. With retries, the timeout applies to each attempt.<\/li>\n<li><strong>Duration threshold:<\/strong> sends a <strong>warning<\/strong> only and does not stop the task.<\/li>\n<li><strong>Notifications:<\/strong> email, Slack or webhooks on start, success, failure or duration warning, at job or task level.<\/li>\n<li><strong>Max concurrent runs:<\/strong> the default is <strong>1<\/strong>. Extra triggered runs are skipped unless <strong>queueing<\/strong> is enabled.<\/li>\n<li>Task statuses to recognise: <em>Succeeded<\/em>, <em>Failed<\/em>, <strong><em>Upstream failed<\/em><\/strong> (a dependency failed), <em>Excluded<\/em> (condition not met), <em>Timed Out<\/em>, <em>Skipped<\/em>.<\/li>\n<\/ul>"}, {"title": "Modular orchestration: Run Job task", "icon": "🧱", "html": "<div class=\"sec-head\"><span class=\"sec-num\">07<\/span><span class=\"sec-icon\">🧱<\/span><h2>Modular orchestration: Run Job task<\/h2><\/div><pre class=\"diagram\">Master_Job\n ├─ Run Job: Ingestion_Job ─┐\n ├─ Run Job: Reference_Job ─┼─► Run Job: Reporting_Job<\/pre>\n<ul>\n<li>Split large workflows into <strong>smaller, reusable jobs<\/strong> owned by different people or teams.<\/li>\n<li>The parent job controls the order and passes parameters down.<\/li>\n<li>Each child job keeps its own run history, permissions and compute settings.<\/li>\n<\/ul>"}, {"title": "Decision cheat sheet", "icon": "🧭", "html": "<div class=\"sec-head\"><span class=\"sec-num\">08<\/span><span class=\"sec-icon\">🧭<\/span><h2>Decision cheat sheet<\/h2><\/div><div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Situation<\/th>\n<th>Choose<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td>Files land at random times during the day<\/td>\n<td><strong>File arrival<\/strong> trigger, not a 5-minute schedule<\/td>\n<\/tr>\n<tr>\n<td>Downstream job must run after another team's table is refreshed<\/td>\n<td><strong>Table update<\/strong> trigger<\/td>\n<\/tr>\n<tr>\n<td>A cleanup task must always run<\/td>\n<td>Run if <strong>All done<\/strong><\/td>\n<\/tr>\n<tr>\n<td>Only the third of five tasks failed<\/td>\n<td><strong>Repair run<\/strong><\/td>\n<\/tr>\n<tr>\n<td>Different logic when bad records are found<\/td>\n<td><strong>If/else<\/strong> task with a <strong>task value<\/strong><\/td>\n<\/tr>\n<tr>\n<td>Same notebook for 12 countries<\/td>\n<td><strong>For each<\/strong> task with parameters<\/td>\n<\/tr>\n<tr>\n<td>A 40-task workflow maintained by three teams<\/td>\n<td>Several jobs combined with <strong>Run Job<\/strong> tasks<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>"}, {"title": "Common mistakes", "icon": "⚠️", "html": "<div class=\"sec-head\"><span class=\"sec-num\">09<\/span><span class=\"sec-icon\">⚠️<\/span><h2>Common mistakes<\/h2><\/div><ul>\n<li class=\"bad\">❌ Raising the duration <strong>warning<\/strong> threshold to fix <em>Timed Out<\/em> failures. It's the <strong>timeout<\/strong> that stops the task.<\/li>\n<li class=\"bad\">❌ Re-running the whole job after one task failed. Use <strong>repair run<\/strong>.<\/li>\n<li class=\"bad\">❌ Running production jobs on an <strong>all-purpose<\/strong> cluster. Use <strong>serverless<\/strong> or a <strong>job cluster<\/strong>.<\/li>\n<li class=\"bad\">❌ Hard-coding catalog or schema names in task notebooks. Use <strong>parameters<\/strong>.<\/li>\n<li class=\"bad\">❌ Expecting overlapping runs: max concurrent runs is <strong>1<\/strong> by default.<\/li>\n<\/ul>\n<p><strong>Next course:<\/strong> <em>Build Data Pipelines with Lakeflow Spark Declarative Pipelines<\/em>, the pipelines these jobs will trigger.<\/p>"}];
 var QUIZ = [{"q": "Files from a partner arrive in a Unity Catalog volume at unpredictable times. How should the processing job be triggered?", "o": ["A schedule every 5 minutes", "A continuous trigger", "A file arrival trigger on the volume", "Manually by an operator"], "c": 2, "e": "A file arrival trigger starts the job only when new files appear. There are no empty runs and no delay waiting for the next schedule."}, {"q": "In a 5-task job, only task 3 failed after tasks 1 and 2 succeeded. What is the most efficient way to finish the run after fixing the bug?", "o": ["Run the whole job again", "Use Repair run to re-run the failed task and its dependents", "Clone the job and run only task 3", "Increase the retry count and wait"], "c": 1, "e": "Repair run re-executes only the failed tasks and their downstream dependents. Successful tasks are not repeated."}, {"q": "A cleanup task must run at the end of every job run, even when upstream tasks fail. Which Run if condition do you set?", "o": ["All succeeded", "At least one succeeded", "None failed", "All done"], "c": 3, "e": "'All done' runs once all upstream tasks have finished, whatever their result. That makes it the right choice for cleanup and final notifications."}, {"q": "The notebook of task Clean_Data calls `dbutils.jobs.taskValues.set(key='bad_records', value=5)`. How does a downstream If/else task reference this value?", "o": ["`{{job.parameters.bad_records}}`", "`{{tasks.Clean_Data.values.bad_records}}`", "`dbutils.widgets.get('bad_records')`", "`${bad_records}`"], "c": 1, "e": "Task values are referenced with `{{tasks.<task_key>.values.<key>}}` in downstream tasks, including If/else conditions."}, {"q": "A task keeps ending with status 'Timed Out' although its runs are legitimately getting longer. What should you change?", "o": ["The duration warning threshold", "The task timeout", "Max concurrent runs", "The notification settings"], "c": 1, "e": "The timeout stops the task. The duration threshold only sends a warning and never stops it."}];
-</script>
-<script>
 (function () {
-  var md = document.getElementById('source').textContent.replace(/<\\\/script/gi, '</script').trim();
-  marked.setOptions({ gfm: true, breaks: false });
-  function render(text) {
-    var div = document.createElement('div');
-    div.innerHTML = marked.parse(text);
-    div.querySelectorAll('pre code').forEach(function (el) { try { hljs.highlightElement(el); } catch (e) {} });
-    div.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; });
-    return div.innerHTML;
-  }
+  if (window.self !== window.top) document.body.classList.add('embedded');
+  if (QUIZ && QUIZ.length) SLIDES.push({ title: 'Check yourself', icon: '🎯', quiz: true,
+    html: '<div class="sec-head"><span class="sec-num">' + String(SLIDES.length).padStart(2, '0') + '</span><span class="sec-icon">🎯</span><h2>Check yourself</h2></div><div class="quiz"></div>' });
+  var idx = 0, stage = document.getElementById('stage'), dots = document.getElementById('dots');
+  var $ = function (id) { return document.getElementById(id); };
 
-  // Document view: the whole markdown file
-  var docBody = document.getElementById('docBody');
-  docBody.innerHTML = render(md);
-  if (QUIZ && QUIZ.length) {
-    docBody.insertAdjacentHTML('beforeend', '<h2>Check yourself</h2><div id="quizDoc"></div>');
-    dbxQuiz('quizDoc', QUIZ);
+  function wireCopy(root) {
+    root.querySelectorAll('.code').forEach(function (c) {
+      var b = c.querySelector('.copy'); if (!b) return;
+      b.onclick = function () {
+        var t = c.querySelector('pre').innerText;
+        (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { b.textContent = 'copied ✓'; setTimeout(function () { b.textContent = 'copy'; }, 1400); }, function () {});
+      };
+    });
   }
+  function confetti() {
+    var e = ['🎉', '✨', '🎊', '⭐', '🧡', '💜'];
+    for (var i = 0; i < 40; i++) {
+      var s = document.createElement('div'); s.className = 'confetti'; s.textContent = e[i % e.length];
+      s.style.left = Math.random() * 100 + 'vw'; s.style.animationDelay = Math.random() * .8 + 's'; document.body.appendChild(s);
+      setTimeout(function (n) { return function () { n.remove(); }; }(s), 3600);
+    }
+  }
+  function mountQuiz(el) { dbxQuiz(el, QUIZ, function (score, total) { if (score === total) confetti(); }); }
 
-  // Presentation view: split on "## " headings (outside fenced code blocks)
-  var slides = [], cur = [], fence = false;
-  md.split('\n').forEach(function (line) {
-    if (/^\s*```/.test(line)) fence = !fence;
-    if (!fence && /^## /.test(line) && cur.length) { slides.push(cur.join('\n')); cur = []; }
-    cur.push(line);
+  SLIDES.forEach(function (s, i) {
+    var d = document.createElement('button'); d.title = (i + 1) + '. ' + s.title; d.onclick = function () { go(i); }; dots.appendChild(d);
+    var c = document.createElement('div'); c.className = 'card';
+    c.innerHTML = '<div class="n">' + String(i + 1).padStart(2, '0') + '</div><div class="i">' + s.icon + '</div><div class="t">' + s.title + '</div>';
+    c.onclick = function () { overview(false); go(i); }; $('grid').appendChild(c);
   });
-  if (cur.length) slides.push(cur.join('\n'));
-  var html = slides.map(render), idx = 0;
-  if (QUIZ && QUIZ.length) { slides.push('quiz'); html.push('<h2>Check yourself</h2><div class="quiz-slot"></div>'); }
+  function go(n, dir) {
+    var prev = idx; idx = Math.max(0, Math.min(SLIDES.length - 1, n));
+    var s = SLIDES[idx], el = document.createElement('div');
+    el.className = 'slide ' + (idx === 0 ? 'title ' : '') + ((dir || (idx >= prev ? 1 : -1)) > 0 ? 'enter-r' : 'enter-l');
+    el.innerHTML = '<div class="dbx">' + s.html + '</div>';
+    Array.prototype.forEach.call(el.firstChild.children, function (ch, k) { ch.style.setProperty('--i', k); });
+    stage.innerHTML = ''; stage.appendChild(el); wireCopy(el);
+    if (s.quiz) mountQuiz(el.querySelector('.quiz'));
+    Array.prototype.forEach.call(dots.children, function (d, k) { d.classList.toggle('on', k === idx); });
+    $('count').textContent = (idx + 1) + ' / ' + SLIDES.length;
+    $('bar').style.width = ((idx + 1) / SLIDES.length * 100) + '%';
+    try { history.replaceState(null, '', '#slide-' + (idx + 1)); } catch (e) {}
+  }
+  function overview(on) { var o = $('overview'); o.classList.toggle('on', on === undefined ? !o.classList.contains('on') : on); }
+  $('prev').onclick = function () { go(idx - 1, -1); };
+  $('next').onclick = function () { go(idx + 1, 1); };
+  $('bOver').onclick = function () { mode('slides'); overview(); };
+  $('bFull').onclick = function () {
+    var r = document.documentElement;
+    if (document.fullscreenElement) document.exitFullscreen(); else if (r.requestFullscreen) r.requestFullscreen().catch(function () {});
+  };
+  var tx = null;
+  stage.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', function (e) { if (tx === null) return; var dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) go(idx + (dx < 0 ? 1 : -1)); tx = null; });
 
-  var slideEl = document.getElementById('slide'), counter = document.getElementById('counter'), progress = document.getElementById('progress');
-  function show(n) {
-    idx = Math.max(0, Math.min(slides.length - 1, n));
-    slideEl.innerHTML = html[idx];
-    slideEl.classList.toggle('title-slide', idx === 0);
-    slideEl.scrollTop = 0;
-    var slot = slideEl.querySelector('.quiz-slot');
-    if (slot) dbxQuiz(slot, QUIZ);
-    counter.textContent = (idx + 1) + ' / ' + slides.length;
-    progress.style.width = ((idx + 1) / slides.length * 100) + '%';
-    history.replaceState(null, '', '#slides/' + (idx + 1));
+  var docBuilt = false;
+  function buildDoc() {
+    if (docBuilt) return; docBuilt = true;
+    var toc = $('toc'), sc = $('docScroll');
+    SLIDES.forEach(function (s, i) {
+      var sec = document.createElement('div'); sec.className = 'dsec' + (i === 0 ? ' herosec' : ''); sec.id = 'sec-' + i;
+      sec.innerHTML = '<div class="dbx">' + s.html + '</div>'; sc.appendChild(sec); wireCopy(sec);
+      if (s.quiz) mountQuiz(sec.querySelector('.quiz'));
+      var a = document.createElement('a'); a.href = '#sec-' + i; a.innerHTML = '<span>' + s.icon + '</span><span>' + (i === 0 ? 'Overview' : s.title) + '</span>';
+      a.onclick = function (e) { e.preventDefault(); sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; toc.appendChild(a);
+    });
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (es) { es.forEach(function (en) { if (en.isIntersecting) en.target.classList.add('seen'); }); }, { root: sc, threshold: .05 });
+      sc.querySelectorAll('.dsec').forEach(function (s) { io.observe(s); });
+    } else sc.querySelectorAll('.dsec').forEach(function (s) { s.classList.add('seen'); });
+    sc.addEventListener('scroll', function () {
+      var cur = 0;
+      sc.querySelectorAll('.dsec').forEach(function (s, i) { if (s.offsetTop - sc.scrollTop < 140) cur = i; });
+      toc.querySelectorAll('a').forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+      $('bar').style.width = (sc.scrollTop / Math.max(1, sc.scrollHeight - sc.clientHeight) * 100) + '%';
+    });
   }
   function mode(m) {
-    var present = m === 'slides';
-    document.body.classList.toggle('present', present);
-    document.getElementById('btnSlides').classList.toggle('active', present);
-    document.getElementById('btnDoc').classList.toggle('active', !present);
-    if (present) show(idx); else history.replaceState(null, '', '#doc');
+    var doc = m === 'doc'; document.body.classList.toggle('docmode', doc);
+    $('bDoc').classList.toggle('on', doc); $('bSlides').classList.toggle('on', !doc);
+    if (doc) { buildDoc(); $('docScroll').dispatchEvent(new Event('scroll')); } else go(idx, 1);
   }
-  document.getElementById('btnDoc').onclick = function () { mode('doc'); };
-  document.getElementById('btnSlides').onclick = function () { mode('slides'); };
-  document.getElementById('prev').onclick = function () { show(idx - 1); };
-  document.getElementById('next').onclick = function () { show(idx + 1); };
-  document.getElementById('fs').onclick = function () {
-    if (document.fullscreenElement) document.exitFullscreen(); else document.getElementById('slides').requestFullscreen();
-  };
+  $('bDoc').onclick = function () { mode('doc'); };
+  $('bSlides').onclick = function () { mode('slides'); };
   document.addEventListener('keydown', function (e) {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    var present = document.body.classList.contains('present');
-    if (e.key === 'p' || e.key === 'P') return mode('slides');
-    if (e.key === 'd' || e.key === 'D') return mode('doc');
-    if (!present) return;
-    if (['ArrowRight', 'PageDown', ' '].indexOf(e.key) >= 0) { e.preventDefault(); show(idx + 1); }
-    else if (['ArrowLeft', 'PageUp'].indexOf(e.key) >= 0) { e.preventDefault(); show(idx - 1); }
-    else if (e.key === 'Home') show(0);
-    else if (e.key === 'End') show(slides.length - 1);
-    else if (e.key === 'f' || e.key === 'F') document.getElementById('fs').click();
+    var k = e.key, doc = document.body.classList.contains('docmode');
+    if (k === 'd' || k === 'D') return mode('doc');
+    if (k === 'p' || k === 'P') return mode('slides');
+    if (doc) return;
+    if (k === 'o' || k === 'O') return overview();
+    if (k === 'Escape') return overview(false);
+    if (k === 'f' || k === 'F') return $('bFull').click();
+    if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); go(idx + 1, 1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); go(idx - 1, -1); }
+    else if (k === 'Home') go(0, -1); else if (k === 'End') go(SLIDES.length - 1, 1);
   });
-
-  var m = location.hash.match(/^#slides(?:\/(\d+))?/);
-  if (m) { idx = (parseInt(m[1] || '1', 10) || 1) - 1; mode('slides'); }
+  var m = location.hash.match(/^#slide-(\d+)/); if (m) idx = parseInt(m[1], 10) - 1;
+  if (location.hash === '#doc') mode('doc'); else go(idx, 1);
 })();
 </script>
 </body>

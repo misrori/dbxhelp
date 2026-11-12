@@ -117,6 +117,51 @@ result = facts.join(F.broadcast(stores), "store_id")
 6. **Spill** > 0? → partitions or memory.
 7. Only then: bigger compute, or Photon if it isn't on yet.
 
+## Try it: layout, join strategy, serialization
+
+> Uses the synthetic **retail** tables, plus 5 million generated rows for the UDF comparison.
+
+```python run
+# ✏️ FILL IN: the catalog.schema you can write to
+WORK_SCHEMA = "FILL_IN"   # e.g. "dbacademy.labuser1234567_1700000000"
+```
+
+```python run
+# Load the retail tables from GitHub
+import urllib.request as u; exec(u.urlopen("https://raw.githubusercontent.com/misrori/dbxhelp/main/dbxdata.py").read().decode())
+S = load_dataset("retail", WORK_SCHEMA)
+```
+
+```python run
+# Liquid clustering: create a clustered copy and inspect its layout
+spark.sql("CREATE OR REPLACE TABLE orders_clustered CLUSTER BY (customer_id, order_date) AS SELECT * FROM fact_orders")
+spark.sql("OPTIMIZE orders_clustered")
+display(spark.sql("DESCRIBE DETAIL orders_clustered").select("clusteringColumns", "numFiles", "sizeInBytes"))
+```
+
+```python run
+# Join strategy: look for BroadcastHashJoin. The small dimension is broadcast, so the fact table isn't shuffled
+spark.sql("""
+SELECT p.category, sum(f.quantity * p.unit_price) AS revenue
+FROM fact_orders f JOIN dim_product p ON f.product_id = p.product_id
+GROUP BY ALL
+""").explain()
+```
+
+```python run
+# Serialization: a row-by-row Python UDF vs built-in functions on 5 million rows
+import time
+from pyspark.sql import functions as F
+
+df = spark.range(5_000_000).withColumn("email", F.concat(F.lit("  User"), F.col("id").cast("string"), F.lit("@Example.COM ")))
+clean_udf = F.udf(lambda s: s.strip().lower())
+
+for name, col in [("Python UDF", clean_udf("email")), ("built-in", F.lower(F.trim("email")))]:
+    start = time.time()
+    df.select(F.sum(F.length(col))).collect()
+    print(f"{name:<11} {time.time() - start:5.1f} s")
+```
+
 ## Common mistakes
 
 - ❌ Scaling up the cluster when the profile shows **no data skipping**. Fix the layout first.

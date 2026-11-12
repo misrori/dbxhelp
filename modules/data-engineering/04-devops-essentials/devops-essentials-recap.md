@@ -134,6 +134,45 @@ databricks bundle run      -t dev orders_job
 
 > Bundles are covered in depth in the advanced course *Automated Deployment with Databricks Asset Bundles*.
 
+## Try it: write and test a transformation
+
+> Runs on in-memory DataFrames, so no data or schema is needed.
+
+```python run
+# Modular, testable transformations: DataFrame in, DataFrame out
+from pyspark.sql import DataFrame, Row, functions as F
+
+def clean_orders(df: DataFrame) -> DataFrame:
+    return df.filter(F.col("amount") > 0).withColumn("email", F.lower(F.trim("email")))
+
+def add_net_amount(df: DataFrame, vat: float) -> DataFrame:
+    return df.withColumn("net_amount", F.round(F.col("amount") / (1 + vat), 2))
+```
+
+```python run
+# Unit tests with pyspark.testing. They pass silently
+from pyspark.testing import assertDataFrameEqual
+
+src = spark.createDataFrame([(1, 10.0, " A@X.COM "), (2, -5.0, "b@x.com")], "id INT, amount DOUBLE, email STRING")
+expected = spark.createDataFrame([(1, 10.0, "a@x.com")], "id INT, amount DOUBLE, email STRING")
+
+assertDataFrameEqual(clean_orders(src), expected)
+assertDataFrameEqual(src.transform(clean_orders).transform(add_net_amount, vat=0.25).select("net_amount"),
+                     [Row(net_amount=8.0)])
+print("✅ all tests passed")
+```
+
+```python run
+# A failing test shows exactly which rows differ
+try:
+    assertDataFrameEqual(clean_orders(src),
+                         spark.createDataFrame([(1, 10.0, "A@X.COM")], "id INT, amount DOUBLE, email STRING"))
+except AssertionError as e:
+    print("❌ test failed (as expected):\n", str(e)[:900])
+```
+
+> In a real project these functions live in `src/`, the tests in `tests/test_*.py`, and CI runs `pytest` on every pull request.
+
 ## Decision cheat sheet
 
 | Situation | Choose |

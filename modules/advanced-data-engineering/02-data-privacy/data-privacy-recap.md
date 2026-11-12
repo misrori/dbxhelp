@@ -111,6 +111,74 @@ VACUUM prod.bronze.customers;
 - **Design for deletion:** keep PII in a separate table keyed by a surrogate ID, so an erasure touches only one small table.
 - **Retention rules:** e.g. auto TTL (`DELETE ROWS 365 DAYS AFTER event_ts`) on managed tables with predictive optimization.
 
+## Try it: de-identify, mask, filter, forget
+
+> Uses the synthetic **retail** customers, which include a fake `email`, `birth_year` and `postal_code`. Everything runs in your own schema.
+
+```python run
+# ✏️ FILL IN: the catalog.schema you can write to
+WORK_SCHEMA = "FILL_IN"   # e.g. "dbacademy.labuser1234567_1700000000"
+```
+
+```python run
+# Load the retail tables from GitHub
+import urllib.request as u; exec(u.urlopen("https://raw.githubusercontent.com/misrori/dbxhelp/main/dbxdata.py").read().decode())
+S = load_dataset("retail", WORK_SCHEMA)
+```
+
+```python run
+# Pseudonymize + generalize: hash the email, bucket the birth year, truncate the postal code
+display(spark.sql("""
+SELECT customer_id,
+       sha2(concat(email, 'demo-salt-keep-real-ones-in-secrets'), 256) AS email_hash,    -- pseudonymized, joinable
+       concat(CAST(floor(birth_year / 10) * 10 AS STRING), 's')       AS birth_decade,  -- generalized
+       concat(left(postal_code, 2), '**')                             AS postal_area,   -- generalized
+       region, segment
+FROM dim_customer
+LIMIT 10
+"""))
+```
+
+```python run
+# Column mask: only members of 'pii_readers' see full emails
+spark.sql(f"""
+CREATE OR REPLACE FUNCTION {S}.mask_email(email STRING)
+RETURN CASE WHEN is_account_group_member('pii_readers') THEN email
+            ELSE regexp_replace(email, '^[^@]+', '***') END
+""")
+spark.sql(f"ALTER TABLE dim_customer ALTER COLUMN email SET MASK {S}.mask_email")
+display(spark.sql("SELECT customer_id, email, region FROM dim_customer LIMIT 5"))
+```
+
+```python run
+# Row filter: non-admins see EMEA customers only
+spark.sql(f"""
+CREATE OR REPLACE FUNCTION {S}.emea_only(region STRING)
+RETURN is_account_group_member('admins') OR region = 'EMEA'
+""")
+spark.sql(f"ALTER TABLE dim_customer SET ROW FILTER {S}.emea_only ON (region)")
+display(spark.sql("SELECT region, count(*) AS customers FROM dim_customer GROUP BY ALL"))
+```
+
+```python run
+# Remove the policies again
+spark.sql("ALTER TABLE dim_customer DROP ROW FILTER")
+spark.sql("ALTER TABLE dim_customer ALTER COLUMN email DROP MASK")
+```
+
+```python run
+# Right to be forgotten: after DELETE, time travel still shows the row
+spark.sql("DELETE FROM dim_customer WHERE customer_id = 42")
+before = spark.sql("DESCRIBE HISTORY dim_customer").filter("operation = 'DELETE'").first()["version"] - 1
+display(spark.sql(f"SELECT customer_id, email FROM dim_customer VERSION AS OF {before} WHERE customer_id = 42"))
+```
+
+```python run
+# Physically remove it: purge deletion vectors, then VACUUM (removes files older than the retention, default 7 days)
+display(spark.sql("REORG TABLE dim_customer APPLY (PURGE)"))
+display(spark.sql("VACUUM dim_customer"))
+```
+
 ## Decision cheat sheet
 
 | Requirement | Choose |

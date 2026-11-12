@@ -125,6 +125,74 @@ dp.create_auto_cdc_flow(
 - **AUTO CDC FROM SNAPSHOT:** for sources that only deliver full snapshots.
 - **Change data feed (CDF)** (`delta.enableChangeDataFeed = true`) exposes row-level inserts, updates and deletes of a Delta table, so downstream processing touches only what changed.
 
+## Try it: incremental, exactly-once, stateful
+
+> Streams the synthetic **retail** orders with `availableNow` (the trigger Serverless supports). Run the processing twice to see the checkpoint at work.
+
+```python run
+# ✏️ FILL IN: the catalog.schema you can write to
+WORK_SCHEMA = "FILL_IN"   # e.g. "dbacademy.labuser1234567_1700000000"
+```
+
+```python run
+# Load the retail tables from GitHub and create a volume for checkpoints
+import urllib.request as u; exec(u.urlopen("https://raw.githubusercontent.com/misrori/dbxhelp/main/dbxdata.py").read().decode())
+S = load_dataset("retail", WORK_SCHEMA)
+CHK = files_volume(WORK_SCHEMA) + "/checkpoints"
+```
+
+```python run
+# Incremental bronze → silver stream. The checkpoint remembers what was processed
+from pyspark.sql import functions as F
+
+def rows_in(q):
+    return sum(p["numInputRows"] if isinstance(p, dict) else p.numInputRows for p in q.recentProgress)
+
+def run_silver():
+    q = (spark.readStream.table("fact_orders")
+         .filter("status <> 'TEST'")
+         .withColumn("processed_at", F.current_timestamp())
+         .writeStream
+         .option("checkpointLocation", f"{CHK}/orders_silver")
+         .trigger(availableNow=True)
+         .toTable("orders_silver_stream"))
+    q.awaitTermination()
+    return rows_in(q)
+
+print("1st run, rows processed:", run_silver())
+print("2nd run, rows processed:", run_silver(), "← nothing new, nothing reprocessed")
+```
+
+```python run
+# New data arrives: only the new rows are processed
+spark.sql("""
+INSERT INTO fact_orders
+SELECT order_id + 1000000, current_date(), customer_id, product_id, quantity, discount, 'COMPLETED'
+FROM fact_orders LIMIT 100
+""")
+print("3rd run, rows processed:", run_silver())
+display(spark.sql("SELECT count(*) AS silver_rows FROM orders_silver_stream"))
+```
+
+```python run
+# Stateful: weekly revenue per category (stream-static join + windowed aggregation)
+weekly = (spark.readStream.table("fact_orders")
+    .join(spark.read.table("dim_product"), "product_id")                  # stream-static join
+    .withColumn("order_ts", F.col("order_date").cast("timestamp"))
+    .groupBy(F.window("order_ts", "7 days"), "category")
+    .agg(F.round(F.sum(F.col("quantity") * F.col("unit_price")), 2).alias("revenue"), F.count("*").alias("orders")))
+
+q = (weekly.writeStream
+     .outputMode("complete")                       # small aggregate: rewrite the full result each trigger
+     .option("checkpointLocation", f"{CHK}/weekly")
+     .trigger(availableNow=True)
+     .toTable("orders_weekly_stream"))
+q.awaitTermination()
+display(spark.sql("SELECT window.start, category, revenue, orders FROM orders_weekly_stream ORDER BY window.start DESC, revenue DESC LIMIT 15"))
+```
+
+> In production, a large aggregate would use **append** mode plus `withWatermark(...)`, so finished windows are written once and their state is dropped.
+
 ## Decision cheat sheet
 
 | Situation | Choose |

@@ -4,289 +4,199 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Recap 1: Data Ingestion with Lakeflow Connect · dbxhelp</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css">
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 <style>
-  :root { --accent: #FF3621; --navy: #1B3139; --blue: #2272B4; --bg: #F9F7F4; --text: #1F2328; --muted: #6B7280; --border: #E5E7EB; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); }
-  header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: var(--navy); color: #fff; }
-  header a.home { color: #fff; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-  header .title { color: #CBD5E1; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-  .toggle { display: inline-flex; background: rgba(255,255,255,0.12); border-radius: 999px; padding: 3px; }
-  .toggle button { border: 0; background: transparent; color: #E2E8F0; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 0.9em; }
-  .toggle button.active { background: #fff; color: var(--navy); font-weight: 600; }
-  header .link { color: #E2E8F0; font-size: 0.85em; text-decoration: none; border: 1px solid rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 6px; }
-  header .link:hover { background: rgba(255,255,255,0.1); }
-
-  /* ---------- shared markdown styling ---------- */
-  .md h1 { font-size: 2em; color: var(--navy); margin: 0 0 0.5em; }
-  .md h2 { color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 0.3em; margin-top: 1.8em; }
-  .md h3 { color: var(--navy); }
-  .md a { color: var(--blue); }
-  .md code { background: #EEF2F6; padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.9em; }
-  .md pre { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow: auto; }
-  .md pre code { background: none; padding: 0; font-size: 0.88em; line-height: 1.5; }
-  .md blockquote { margin: 1em 0; padding: 10px 16px; border-left: 4px solid var(--blue); background: #E3F2FD; border-radius: 4px; color: #1F2937; }
-  .md blockquote p { margin: 0.3em 0; }
-  .md table { border-collapse: collapse; width: 100%; margin: 1em 0; background: #fff; font-size: 0.95em; }
-  .md th, .md td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
-  .md th { background: #F1F5F9; }
-  .md li { margin: 0.25em 0; line-height: 1.55; }
-  .md p { line-height: 1.6; }
-
-  /* ---------- document mode ---------- */
-  #doc { max-width: 920px; margin: 0 auto; padding: 32px 24px 80px; }
-  #doc .md { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 36px 44px; }
-
-  /* ---------- presentation mode ---------- */
-  #slides { display: none; height: calc(100vh - 52px); padding: 18px; }
-  body.present #doc { display: none; }
-  body.present #slides { display: flex; flex-direction: column; align-items: center; }
-  .stage { flex: 1; width: 100%; max-width: 1280px; display: flex; align-items: center; justify-content: center; min-height: 0; }
-  .slide { width: 100%; height: 100%; max-height: 760px; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-top: 6px solid var(--accent); padding: 40px 56px; overflow: auto; font-size: 1.22em; }
-  .slide.title-slide { display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, var(--navy), #24495A); color: #fff; }
-  .slide.title-slide h1 { color: #fff; font-size: 2.3em; }
-  .slide.title-slide blockquote { background: rgba(255,255,255,0.1); border-left-color: var(--accent); color: #fff; }
-  .slide.title-slide code { background: rgba(255,255,255,0.15); color: #fff; }
-  .slide.title-slide strong { color: #FFD7CF; }
-  .slide h2 { margin-top: 0; font-size: 1.6em; border-bottom-color: var(--accent); }
-  .controls { display: flex; align-items: center; gap: 14px; padding-top: 12px; color: var(--muted); font-size: 0.9em; }
-  .controls button { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 1em; }
-  .controls button:hover { border-color: var(--blue); }
-  .progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--accent); transition: width 0.2s; }
-  body:not(.present) .progress { display: none; }
-  :fullscreen #slides { height: 100vh; }
-  @media (max-width: 700px) { .slide { padding: 24px; font-size: 1em; } #doc .md { padding: 20px; } header .title { display: none; } }
-  @media print { header, .controls, .progress { display: none; } #doc .md { border: 0; } }
+.dbx{--navy:#1B3139;--accent:#FF3621;--blue:#2272B4;--teal:#00A3A1;--purple:#7C4DFF;--amber:#FFAB00;--ink:#1F2937;--muted:#6B7280;--line:#E5E7EB;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);font-size:15px;line-height:1.6;max-width:1100px}
+.dbx *{box-sizing:border-box}
+.dbx>*{animation:dbxRise .55s cubic-bezier(.2,.7,.2,1) both}
+.dbx>*:nth-child(2){animation-delay:.06s}.dbx>*:nth-child(3){animation-delay:.12s}.dbx>*:nth-child(4){animation-delay:.18s}.dbx>*:nth-child(5){animation-delay:.24s}.dbx>*:nth-child(6){animation-delay:.3s}.dbx>*:nth-child(n+7){animation-delay:.36s}
+@keyframes dbxRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes dbxGrad{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes dbxFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,-14px) scale(1.08)}}
+@keyframes dbxLine{from{width:0}to{width:100%}}
+@keyframes dbxPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,54,33,.25)}50%{box-shadow:0 0 0 8px rgba(255,54,33,0)}}
+.dbx .hero{position:relative;overflow:hidden;border-radius:18px;padding:38px 40px 34px;margin:4px 0 18px;color:#fff;background:linear-gradient(120deg,#1B3139,#22425a,#2a2f6b,#1B3139);background-size:300% 300%;animation:dbxGrad 14s ease infinite,dbxRise .6s both}
+.dbx .blob{position:absolute;border-radius:50%;filter:blur(30px);opacity:.55;animation:dbxFloat 9s ease-in-out infinite}
+.dbx .b1{width:220px;height:220px;background:#FF3621;right:-40px;top:-60px}
+.dbx .b2{width:180px;height:180px;background:#7C4DFF;right:160px;bottom:-90px;animation-delay:-3s}
+.dbx .b3{width:140px;height:140px;background:#00A3A1;left:-40px;bottom:-50px;animation-delay:-6s}
+.dbx .hero-in{position:relative}
+.dbx .kicker{text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:#FFC4BA;font-weight:700}
+.dbx .hero h1{font-size:34px;line-height:1.15;margin:8px 0 14px;color:#fff;font-weight:800}
+.dbx .kicker-inline{display:inline-block;font-size:.5em;vertical-align:middle;background:var(--accent);padding:4px 10px;border-radius:999px;margin-right:10px;letter-spacing:.08em;text-transform:uppercase}
+.dbx .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.dbx .chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:4px 12px;border-radius:999px;font-size:13px;color:#fff}
+.dbx .chip strong{color:#fff}
+.dbx .sub{color:#E2E8F0;font-size:16px;margin:0;max-width:820px}
+.dbx .sub strong,.dbx .sub b{color:#FFD7CF}
+.dbx .sub code{background:rgba(255,255,255,.16);color:#fff}
+.dbx .idea{display:flex;gap:14px;align-items:flex-start;background:linear-gradient(135deg,#FFF4F1,#FFF);border:1px solid #FFD0C7;border-left:5px solid var(--accent);border-radius:14px;padding:16px 18px;margin:14px 0;animation:dbxRise .55s both,dbxPulse 3s ease-in-out 1s 2}
+.dbx .idea-icon{font-size:26px;line-height:1}
+.dbx .idea b{color:#C62D1A}
+.dbx .sec-head{display:flex;align-items:center;gap:12px;margin:6px 0 14px;position:relative;padding-bottom:10px}
+.dbx .sec-head:after{content:"";position:absolute;left:0;bottom:0;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--purple),var(--teal));animation:dbxLine .9s ease-out both}
+.dbx .sec-num{font-weight:800;font-size:13px;color:#fff;background:linear-gradient(135deg,var(--accent),#ff7a59);padding:5px 10px;border-radius:9px;letter-spacing:.05em}
+.dbx .sec-icon{font-size:26px;line-height:1}
+.dbx .sec-head h2{margin:0;font-size:25px;color:var(--navy);font-weight:800;border:0}
+.dbx h3{color:var(--navy);margin:18px 0 8px}
+.dbx p{margin:8px 0}
+.dbx a{color:var(--blue)}
+.dbx code{background:#EEF2FF;color:#3730A3;padding:1px 6px;border-radius:6px;font-size:.88em;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.dbx .tbl{overflow-x:auto;border-radius:12px;border:1px solid var(--line);box-shadow:0 2px 10px rgba(27,49,57,.06);margin:12px 0;background:#fff}
+.dbx table{border-collapse:collapse;width:100%;font-size:14px}
+.dbx th{background:linear-gradient(135deg,#1B3139,#2B4F63);color:#fff;text-align:left;padding:10px 12px;font-weight:600}
+.dbx td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}
+.dbx tr:nth-child(even) td{background:#F8FAFC}
+.dbx tr:hover td{background:#FFF4F1}
+.dbx td:first-child{font-weight:600;color:var(--navy)}
+.dbx ul,.dbx ol{padding-left:22px;margin:8px 0}
+.dbx li{margin:5px 0}
+.dbx li::marker{color:var(--accent)}
+.dbx li.bad,.dbx li.good{list-style:none;margin:8px 0 8px -22px;padding:10px 14px;border-radius:10px}
+.dbx li.bad{background:#FFF1F0;border:1px solid #FFCDC7}
+.dbx li.good{background:#ECFDF3;border:1px solid #B7EBC9}
+.dbx blockquote.callout{margin:14px 0;padding:12px 16px 12px 46px;border-radius:12px;background:linear-gradient(135deg,#E8F1FF,#F5F9FF);border:1px solid #C7DBFF;position:relative;color:#1E3A5F}
+.dbx blockquote.callout:before{content:"ℹ️";position:absolute;left:14px;top:11px;font-size:18px}
+.dbx blockquote.callout p{margin:4px 0}
+.dbx .code{border-radius:12px;overflow:hidden;margin:12px 0;box-shadow:0 8px 24px rgba(15,23,42,.18);background:#0D1117}
+.dbx .code-bar{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#161B22;border-bottom:1px solid #30363D}
+.dbx .code-bar i{width:11px;height:11px;border-radius:50%;background:#FF5F57;display:inline-block}
+.dbx .code-bar i:nth-child(2){background:#FEBC2E}.dbx .code-bar i:nth-child(3){background:#28C840}
+.dbx .lang{margin-left:8px;color:#8B949E;font-size:11px;letter-spacing:.1em;font-weight:700}
+.dbx .run{margin-left:auto;color:#3FB950;font-size:11px;font-weight:700}
+.dbx .copy{display:none}
+.dbx .code pre{margin:0;padding:14px 16px;color:#E6EDF3;font-size:13px;line-height:1.55;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:transparent}
+.dbx pre.diagram{background:linear-gradient(135deg,#F8FAFC,#EEF2FF);border:1px dashed #A5B4FC;border-radius:12px;padding:14px 16px;font-size:13px;color:#312E81;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.dbx .tryit{display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,#ECFDF3,#F0FDFA);border:1px solid #A7F3D0;border-radius:12px;padding:12px 16px;margin:12px 0}
+.dbx .tryit b{color:#047857}
+.dbx .present{display:flex;gap:16px;align-items:center;border-radius:14px;padding:16px 20px;background:linear-gradient(120deg,#2a2f6b,#7C4DFF);color:#fff;box-shadow:0 10px 30px rgba(124,77,255,.3)}
+.dbx .present b{font-size:17px}
+.dbx .present span{color:#E9E5FF}
+.dbx .present .big{font-size:34px}
+.dbx .footer{margin-top:10px;padding:14px 18px;border-radius:12px;background:#F8FAFC;border:1px solid var(--line);color:var(--muted);font-size:13px}
+:root{--navy:#1B3139;--accent:#FF3621;--blue:#2272B4;--purple:#7C4DFF;--teal:#00A3A1;--bg:#F4F2EE;--muted:#6B7280;--line:#E5E7EB}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:#1F2937;overflow:hidden}
+body.embedded{height:760px}
+#app{display:flex;flex-direction:column;height:100%}
+header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--navy);color:#fff;flex:none;z-index:5}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:.02em}
+.crumb{color:#94A3B8;font-size:.9em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.seg{display:inline-flex;background:rgba(255,255,255,.1);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;color:#CBD5E1;padding:6px 14px;border-radius:999px;cursor:pointer;font-size:.88em;font-family:inherit}
+.seg button.on{background:#fff;color:var(--navy);font-weight:700}
+.hbtn{border:1px solid rgba(255,255,255,.25);background:transparent;color:#E2E8F0;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.85em;font-family:inherit}
+.hbtn:hover{background:rgba(255,255,255,.1)}
+#bar{height:3px;background:linear-gradient(90deg,var(--accent),var(--purple),var(--teal));width:0;transition:width .35s ease;flex:none}
+#slides{flex:1;display:flex;flex-direction:column;min-height:0;padding:18px 22px 10px;position:relative}
+.stage{flex:1;position:relative;min-height:0;perspective:1400px}
+.slide{position:absolute;inset:0;background:#fff;border-radius:20px;box-shadow:0 18px 50px rgba(27,49,57,.14);overflow:auto;padding:34px 52px 40px}
+.slide.enter-r{animation:inR .5s cubic-bezier(.2,.8,.2,1) both}
+.slide.enter-l{animation:inL .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes inR{from{opacity:0;transform:translateX(60px) rotateY(-6deg)}to{opacity:1;transform:none}}
+@keyframes inL{from{opacity:0;transform:translateX(-60px) rotateY(6deg)}to{opacity:1;transform:none}}
+.slide .dbx{max-width:none;font-size:18px}
+.slide .dbx .sec-head h2{font-size:32px}
+.slide .dbx table{font-size:16px}
+.slide .dbx .code pre{font-size:14.5px}
+.slide .dbx>*{animation:dbxRise .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0) * 90ms + 120ms)}
+.slide.title{padding:0;overflow:hidden;background:transparent;box-shadow:0 18px 50px rgba(27,49,57,.25)}
+.slide.title .dbx{height:100%;display:flex;flex-direction:column;position:relative}
+.slide.title .hero{flex:1;margin:0;border-radius:20px;display:flex;align-items:center;padding:60px 70px 150px}
+.slide.title .hero h1{font-size:54px}
+.slide.title .sub{font-size:20px}
+.slide.title .b1{width:420px;height:420px}.slide.title .b2{width:340px;height:340px}.slide.title .b3{width:300px;height:300px}
+.slide.title .idea{position:absolute;left:70px;right:70px;bottom:40px;font-size:18px;background:rgba(255,255,255,.96)}
+.slide.title .dbx>:not(.hero):not(.idea){display:none}
+.controls{display:flex;align-items:center;gap:12px;padding-top:12px;flex:none}
+.controls .nav{border:1px solid var(--line);background:#fff;border-radius:10px;width:40px;height:36px;cursor:pointer;font-size:16px}
+.controls .nav:hover{border-color:var(--accent);color:var(--accent)}
+.dots{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}
+.dots button{width:10px;height:10px;border-radius:50%;border:0;background:#CBD5E1;cursor:pointer;padding:0;transition:all .25s}
+.dots button.on{background:var(--accent);width:28px;border-radius:6px}
+.count{color:var(--muted);font-size:.85em;min-width:60px;text-align:right}
+.hint{color:#94A3B8;font-size:.78em;white-space:nowrap}
+#overview{position:absolute;inset:0;background:rgba(244,242,238,.97);z-index:4;display:none;overflow:auto;padding:26px}
+#overview.on{display:block;animation:dbxRise .3s both}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.card{background:#fff;border-radius:14px;padding:16px;cursor:pointer;border:2px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.06);transition:all .2s}
+.card:hover{transform:translateY(-3px);border-color:var(--accent)}
+.card .n{font-size:.75em;color:var(--muted);font-weight:700}
+.card .i{font-size:28px;margin:6px 0}
+.card .t{font-weight:700;color:var(--navy)}
+#doc{flex:1;display:none;min-height:0}
+body.docmode #slides{display:none}
+body.docmode #doc{display:flex}
+#toc{width:270px;flex:none;overflow:auto;padding:22px 14px;border-right:1px solid var(--line);background:#fff}
+#toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:9px;color:#334155;text-decoration:none;font-size:.9em;margin:2px 0}
+#toc a:hover{background:#F1F5F9}
+#toc a.on{background:#FFF1EE;color:#C62D1A;font-weight:700}
+#docScroll{flex:1;overflow:auto;padding:26px 34px 80px}
+.dsec{background:#fff;border-radius:18px;padding:26px 32px;margin:0 auto 18px;max-width:1000px;box-shadow:0 4px 18px rgba(27,49,57,.06);opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s cubic-bezier(.2,.7,.2,1)}
+.dsec.seen{opacity:1;transform:none}
+.dsec.herosec{padding:0;background:transparent;box-shadow:none}
+.dsec .dbx>*{animation:none}
+.quiz{max-width:820px}
+.confetti{position:fixed;top:-20px;font-size:22px;z-index:9;animation:fall 2.6s linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.7}}
+.dbx .code .copy{display:inline-block;margin-left:auto;border:1px solid #30363D;background:#21262D;color:#C9D1D9;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer}
+.dbx .code .run+.copy{margin-left:10px}
+@media (max-width:760px){.slide{padding:22px}.slide.title .hero{padding:30px 30px 160px}.slide.title .hero h1{font-size:32px}.slide.title .idea{left:16px;right:16px}#toc{display:none}.crumb{display:none}.hint{display:none}}
+@media print{header,.controls,#bar,#toc{display:none}body{overflow:visible}#doc{display:block}#slides{display:none}.dsec{opacity:1;transform:none;box-shadow:none}}
 </style>
 </head>
 <body>
+<div id="app">
 <header>
-  <a class="home" href="../../../index.html" title="All topics"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</a>
-  <span class="title">Data Engineering with Databricks › Recap 1: Data Ingestion with Lakeflow Connect</span>
-  <div class="toggle" role="tablist">
-    <button id="btnDoc" class="active" title="Document view (D)">📄 Document</button>
-    <button id="btnSlides" title="Presentation view (P)">🎞️ Presentation</button>
-  </div>
-  <a class="link" href="lakeflow-connect-recap.md" download>⬇ .md</a>
-  <a class="link" href="https://github.com/misrori/dbxhelp/tree/main/modules/data-engineering/01-lakeflow-connect" target="_blank">GitHub</a>
+  <div class="brand"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</div>
+  <div class="crumb">Data Engineering with Databricks › Recap 1: Data Ingestion with Lakeflow Connect</div>
+  <div class="seg"><button id="bSlides" class="on">🎞️ Slides</button><button id="bDoc">📄 Document</button></div>
+  <button class="hbtn" id="bOver" title="Overview (O)">▦</button>
+  <button class="hbtn" id="bFull" title="Fullscreen (F)">⛶</button>
 </header>
-
-<main id="doc"><article class="md" id="docBody"></article></main>
-
+<div id="bar"></div>
 <section id="slides">
-  <div class="stage"><div class="slide md" id="slide"></div></div>
-  <div class="controls">
-    <button id="prev" title="Previous (←)">←</button>
-    <span id="counter"></span>
-    <button id="next" title="Next (→ / Space)">→</button>
-    <button id="fs" title="Fullscreen (F)">⛶</button>
-    <span>← → navigate · F fullscreen · D document</span>
-  </div>
+  <div class="stage" id="stage"></div>
+  <div class="controls"><button class="nav" id="prev" title="Previous (←)">←</button><div class="dots" id="dots"></div><span class="hint">← → navigate · O overview · F fullscreen · D document</span><span class="count" id="count"></span><button class="nav" id="next" title="Next (→)">→</button></div>
+  <div id="overview"><div class="grid" id="grid"></div></div>
 </section>
-<div class="progress" id="progress"></div>
-
-<script type="text/markdown" id="source">
-# Recap: Data Ingestion with Lakeflow Connect
-
-> **Course 1 of 4 · Data Engineering with Databricks** · ⏱ ~8 minutes
->
-> Getting data **into** the lakehouse: files from cloud storage, semi-structured formats, and enterprise sources, all landing in **Unity Catalog** bronze tables.
-
-**The one idea to remember:** pick the *most managed* ingestion option that fits the source. Then make the load **incremental** and **traceable**, so you only process new data and always know where each row came from.
-
-## What we covered
-
-| Lesson | Key takeaway |
-|---|---|
-| 01 Lab environment | Unity Catalog: `catalog.schema.table` and **volumes** for files |
-| 02A CTAS & COPY INTO | Batch load with `read_files()`; **incremental, idempotent** load with `COPY INTO` |
-| 02B Streaming tables | `CREATE OR REFRESH STREAMING TABLE` + Auto Loader, the recommended incremental method |
-| 03 Metadata columns | `_metadata.file_name`, `file_modification_time`, `current_timestamp()` for lineage |
-| 04 CSV & rescued data | CSV options, explicit schemas, and `_rescued_data` for rows that don't fit |
-| 06 JSON | Flatten JSON strings, use `from_json` / STRUCT, and the `VARIANT` type |
-| 08 Lakeflow Connect | **Managed connectors** for databases and SaaS, plus Partner Connect |
-| 09 MERGE INTO (bonus) | Upserts with schema enforcement and evolution |
-| Appendix | XML ingestion, Auto Loader in Python |
-
-## The ingestion menu
-
-Start at the top of the list and move down only when you need to:
-
-| Option | Use for |
-|---|---|
-| **Managed connectors** (Lakeflow Connect) | SaaS apps (Salesforce, Workday, ServiceNow…) and databases (SQL Server, PostgreSQL…). Fully managed, incremental, CDC-aware |
-| **Standard connectors** | Files in cloud object storage (Auto Loader, `COPY INTO`, `read_files`) and message buses (Kafka, Kinesis…) |
-| **Upload UI / Add data** | One-off CSV, JSON or Excel files into a table or a **volume** |
-| **Partner Connect** (Fivetran, …) | Sources not covered natively, or a tool the company already uses |
-| **Custom code** (JDBC / REST in a notebook) | Anything else. You own pagination, retries and incrementality |
-
-Everything should end up in **Unity Catalog-governed** tables. Volume paths look like `/Volumes/<catalog>/<schema>/<volume>/<path>`.
-
-## Three ways to load files
-
-```sql
--- 1) Batch: CTAS + read_files()  → re-reads everything every time
-CREATE OR REPLACE TABLE bronze_users AS
-SELECT * FROM read_files('/Volumes/shop/raw/users/', format => 'parquet');
-
--- 2) Incremental batch: COPY INTO  → idempotent, already-loaded files are skipped
-CREATE TABLE IF NOT EXISTS bronze_sales;
-COPY INTO bronze_sales
-FROM '/Volumes/shop/raw/sales/'
-FILEFORMAT = PARQUET
-COPY_OPTIONS ('mergeSchema' = 'true');
-
--- 3) Incremental: streaming table + Auto Loader  → recommended
-CREATE OR REFRESH STREAMING TABLE bronze_orders
-AS SELECT * FROM STREAM read_files('/Volumes/shop/raw/orders/', format => 'json');
-
-REFRESH STREAMING TABLE bronze_orders;   -- pick up new files
-```
-
-| | CTAS + `read_files` | `COPY INTO` | Streaming table / Auto Loader |
-|---|---|---|---|
-| Re-run behaviour | Reloads **all** files | Loads only **new** files | Processes only **new** files |
-| Scale | Small / one-off | Thousands of files | **Millions** of files |
-| Schema drift | Re-infers | `mergeSchema` | Evolution modes, schema hints, `_rescued_data` |
-| State | None | Tracked in the table | Checkpoint (managed for you) |
-
-> A streaming table created in Databricks SQL is refreshed by a **serverless pipeline** that Databricks creates for you. It does not use warehouse compute.
-
-## Traceability: metadata columns
-
-Every file source exposes a hidden `_metadata` column. Select it explicitly when you load:
-
-```sql
-CREATE OR REPLACE TABLE bronze_users AS
-SELECT
-  *,
-  cast(from_unixtime(user_first_touch_timestamp / 1000000) AS DATE) AS first_touch_date,
-  _metadata.file_name              AS source_file,
-  _metadata.file_modification_time AS file_modified_at,
-  current_timestamp()              AS ingested_at
-FROM read_files('/Volumes/shop/raw/users/', format => 'parquet');
-```
-
-This tells you **which file** a row came from and **when** it was loaded. That's essential for debugging and for reprocessing.
-
-## CSV and the rescued data column
-
-CSV needs options. The defaults often give a single column, or headers loaded as data:
-
-```sql
-SELECT * FROM read_files(
-  '/Volumes/shop/raw/sales-csv/',
-  format    => 'csv',
-  header    => true,
-  delimiter => '|',
-  schema    => 'order_id INT, email STRING, amount DOUBLE',
-  rescuedDataColumn => '_rescued_data'
-);
-```
-
-- **`_rescued_data`** catches values that don't match the schema (wrong type, extra columns) as JSON, so **nothing is silently lost**.
-- When the schema is inferred, `read_files` / Auto Loader add `_rescued_data` automatically.
-- Missing header? Set `header => false` and supply the column names through `schema`.
-- Typical lab pattern: ingest, inspect rows `WHERE _rescued_data IS NOT NULL`, then fix and coalesce them.
-
-## JSON and semi-structured data
-
-```sql
--- JSON files → table (nested fields become STRUCT / ARRAY)
-SELECT * FROM read_files('/Volumes/shop/raw/events/', format => 'json');
-
--- A JSON *string* column (e.g. Kafka value, after unbase64 + cast to STRING):
-SELECT value:device, value:items[0].sku::int FROM bronze_kafka;               -- colon syntax
-SELECT from_json(value, schema_of_json('<sample json>')) AS v FROM bronze_kafka; -- → STRUCT
-SELECT parse_json(value) AS v FROM bronze_kafka;                               -- → VARIANT
-```
-
-| Need | Use |
-|---|---|
-| Quick extraction from a JSON string | `col:field.subfield`, cast with `::type` |
-| Typed nested columns | `from_json(col, schema)` → STRUCT, then `select v.*` to flatten |
-| Flexible, evolving schema, fast queries | **`VARIANT`** via `parse_json()` |
-| One row per array element | `explode()` / `explode_outer()` |
-| XML (appendix) | `read_files(..., format => 'xml', rowTag => 'book')` |
-
-## Enterprise sources: Lakeflow Connect managed connectors
-
-- In the workspace, open **Data Ingestion**. It shows the Databricks connectors, file upload, and Fivetran (partner) connectors.
-- A managed connector creates an **ingestion pipeline**:
-  - a **connection** (credentials stored as a UC object);
-  - the source objects to sync;
-  - the destination **catalog and schema**.
-- **SaaS connectors** run fully serverless. **Database connectors** add an **ingestion gateway** that reads the change log (CDC).
-- Each source table lands as a **streaming table**, with history as **SCD Type 1** (overwrite) or **SCD Type 2** (keep history).
-- Schedule it from the pipeline itself or from a Lakeflow Job.
-
-> Federation **queries data in place**. Lakeflow Connect **ingests** it. These are different tools for different needs.
-
-## Bonus: MERGE INTO for upserts
-
-```sql
-MERGE WITH SCHEMA EVOLUTION INTO users_target t
-USING users_updates s
-ON t.id = s.id
-WHEN MATCHED AND s.op = 'DELETE' THEN DELETE
-WHEN MATCHED THEN UPDATE SET *
-WHEN NOT MATCHED THEN INSERT *;
-```
-
-- Atomic insert, update and delete in a single statement.
-- **Schema enforcement** by default: new source columns cause an error. Use `WITH SCHEMA EVOLUTION` to add them to the target.
-
-## Decision cheat sheet
-
-| Situation | Choose |
-|---|---|
-| Salesforce / SQL Server tables, keep them in sync | **Managed connector** |
-| New files land in a volume every hour | **Streaming table** (Auto Loader) or `COPY INTO` on a schedule |
-| Millions of small files, continuous arrival | **Auto Loader** |
-| A one-off Excel file from a business user | **Upload UI** |
-| You must know which file each row came from | Add **`_metadata`** columns |
-| Bad CSV rows must not be lost | **`_rescued_data`** |
-| Incoming changes must update existing rows | **`MERGE INTO`** (or AUTO CDC in pipelines, course 3) |
-
-## Common mistakes
-
-- ❌ Expecting `COPY INTO` to reload every file on each run. It is **idempotent** and skips files it has already loaded. Use `'force' = 'true'` to reload.
-- ❌ CTAS on a schedule for growing data: this reprocesses **everything** on every run.
-- ❌ Ignoring `_rescued_data`: bad values quietly turn into NULLs in your analysis.
-- ❌ Writing a custom REST poller for a source that has a **managed connector**.
-- ❌ Hard-coding credentials. Use **UC connections** or **secrets**.
-
-**Next course:** *Deploy Workloads with Lakeflow Jobs*, which schedules and orchestrates these loads.
-
-</script>
+<section id="doc"><nav id="toc"></nav><div id="docScroll"></div></section>
+</div>
 <script>
-function dbxQuiz(root, questions) {
+function dbxQuiz(root, questions, onDone) {
   if (typeof root === 'string') root = document.getElementById(root);
-  var i = 0, score = 0, picked = null, shown = false;
-  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/`([^`]+)`/g, '<code>$1</code>'); }
-  function btn(label, primary) { return '<button style="margin-top:14px;padding:8px 18px;border-radius:4px;border:none;cursor:pointer;background:' + (primary ? '#2272B4' : '#E0E0E0') + ';color:' + (primary ? '#fff' : '#333') + ';font-size:0.95em">' + label + '</button>'; }
+  var i = 0, score = 0, picked = null, shown = false, done = false;
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/`([^`]+)`/g, '<code style="background:#EEF2FF;color:#3730A3;padding:1px 6px;border-radius:6px">$1</code>'); }
+  function btn(label, primary) { return '<button style="margin-top:16px;padding:10px 22px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:' + (primary ? 'linear-gradient(135deg,#FF3621,#7C4DFF)' : '#E5E7EB') + ';color:' + (primary ? '#fff' : '#6B7280') + ';font-size:0.95em;box-shadow:' + (primary ? '0 6px 18px rgba(124,77,255,.3)' : 'none') + '">' + label + '</button>'; }
+  var box = 'padding:22px 24px;border-radius:16px;background:#fff;border:1px solid #E5E7EB;box-shadow:0 8px 28px rgba(27,49,57,.08);animation:dbxQ .4s ease both';
+  var style = '<style>@keyframes dbxQ{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}</style>';
+  function bar() {
+    var h = '<div style="display:flex;gap:6px;margin-bottom:14px">';
+    for (var k = 0; k < questions.length; k++) h += '<div style="flex:1;height:6px;border-radius:6px;background:' + (k < i ? 'linear-gradient(90deg,#FF3621,#7C4DFF)' : k === i ? '#C4B5FD' : '#E5E7EB') + '"></div>';
+    return h + '</div>';
+  }
   function render() {
     if (i >= questions.length) {
-      root.innerHTML = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;text-align:center;background:#fff"><div style="font-size:1.3em;font-weight:bold;color:#333">Score: ' + score + ' / ' + questions.length + '</div>' + btn('Retake', true) + '</div>';
-      root.querySelector('button').onclick = function () { i = 0; score = 0; picked = null; shown = false; render(); };
+      var pct = Math.round(score / questions.length * 100), msg = pct === 100 ? 'Perfect! 🎉' : pct >= 60 ? 'Nice work! 💪' : 'Worth another look 📖';
+      root.innerHTML = style + '<div style="' + box + ';text-align:center"><div style="font-size:48px">' + (pct === 100 ? '🏆' : pct >= 60 ? '🌟' : '🔁') + '</div><div style="font-size:1.6em;font-weight:800;color:#1B3139">' + score + ' / ' + questions.length + '</div><div style="color:#6B7280;margin-top:4px">' + msg + '</div>' + btn('Retake', true) + '</div>';
+      root.querySelector('button').onclick = function () { i = 0; score = 0; picked = null; shown = false; done = false; render(); };
+      if (!done && onDone) { done = true; onDone(score, questions.length); }
       return;
     }
-    var Q = questions[i], h = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;background:#fff">';
-    h += '<div style="color:#999;font-size:0.85em;margin-bottom:6px">Question ' + (i + 1) + ' of ' + questions.length + '</div>';
-    h += '<div style="font-weight:bold;color:#333;margin-bottom:12px;line-height:1.5">' + esc(Q.q) + '</div>';
+    var Q = questions[i], h = style + '<div style="' + box + '">' + bar();
+    h += '<div style="color:#7C4DFF;font-size:0.8em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Question ' + (i + 1) + ' of ' + questions.length + '</div>';
+    h += '<div style="font-weight:700;color:#1B3139;margin-bottom:14px;line-height:1.5;font-size:1.05em">' + esc(Q.q) + '</div>';
     Q.o.forEach(function (t, k) {
-      var bg = '#fff', bd = '#e0e0e0';
-      if (shown && k === Q.c) { bg = '#E8F5E9'; bd = '#43A047'; }
-      else if (shown && k === picked) { bg = '#FFEBEE'; bd = '#E53935'; }
-      else if (!shown && k === picked) { bg = '#E3F2FD'; bd = '#2272B4'; }
-      h += '<div data-k="' + k + '" style="padding:10px 14px;margin:6px 0;border:2px solid ' + bd + ';background:' + bg + ';border-radius:6px;cursor:' + (shown ? 'default' : 'pointer') + ';color:#333">' + String.fromCharCode(97 + k) + ') ' + esc(t) + '</div>';
+      var bg = '#fff', bd = '#E5E7EB', mark = String.fromCharCode(65 + k);
+      if (shown && k === Q.c) { bg = '#ECFDF3'; bd = '#22C55E'; mark = '✓'; }
+      else if (shown && k === picked) { bg = '#FFF1F0'; bd = '#EF4444'; mark = '✗'; }
+      else if (!shown && k === picked) { bg = '#F5F3FF'; bd = '#7C4DFF'; }
+      h += '<div data-k="' + k + '" style="display:flex;gap:12px;align-items:center;padding:11px 14px;margin:8px 0;border:2px solid ' + bd + ';background:' + bg + ';border-radius:12px;cursor:' + (shown ? 'default' : 'pointer') + ';color:#1F2937;transition:all .15s">' +
+        '<span style="flex:none;width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:.85em;background:' + (bd === '#E5E7EB' ? '#F1F5F9' : bd) + ';color:' + (bd === '#E5E7EB' ? '#64748B' : '#fff') + '">' + mark + '</span><span>' + esc(t) + '</span></div>';
     });
     if (shown) {
-      h += '<div style="margin-top:12px;padding:12px;background:#F5F5F5;border-radius:6px;color:#333"><strong>' + (picked === Q.c ? '&#9989; Correct.' : '&#10060; Not quite.') + '</strong> ' + esc(Q.e) + '</div>' + btn(i + 1 < questions.length ? 'Next' : 'See score', true);
+      var ok = picked === Q.c;
+      h += '<div style="margin-top:14px;padding:14px 16px;border-radius:12px;background:' + (ok ? '#ECFDF3' : '#FFF7ED') + ';border:1px solid ' + (ok ? '#A7F3D0' : '#FED7AA') + ';color:#1F2937;animation:dbxQ .3s both"><strong>' + (ok ? '✅ Correct.' : '💡 Not quite.') + '</strong> ' + esc(Q.e) + '</div>' + btn(i + 1 < questions.length ? 'Next →' : 'See score', true);
     } else {
       h += btn('Submit', picked !== null);
     }
@@ -300,81 +210,109 @@ function dbxQuiz(root, questions) {
   }
   render();
 }
-
+var SLIDES = [{"title": "Recap: Data Ingestion with Lakeflow Connect", "icon": "🚀", "html": "<div class=\"hero\"><div class=\"blob b1\"><\/div><div class=\"blob b2\"><\/div><div class=\"blob b3\"><\/div><div class=\"hero-in\"><div class=\"kicker\">Data Engineering with Databricks<\/div><h1><span class=\"kicker-inline\">Recap<\/span>Data Ingestion with Lakeflow Connect<\/h1><div class=\"chips\"><span class=\"chip\">Course 1 of 4<\/span><span class=\"chip\">⏱ ~8 minutes<\/span><\/div><p class=\"sub\">Getting data <strong>into<\/strong> the lakehouse: files from cloud storage, semi-structured formats, and enterprise sources, all landing in <strong>Unity Catalog<\/strong> bronze tables.<\/p><\/div><\/div><div class=\"idea\"><span class=\"idea-icon\">💡<\/span><div><b>The one idea to remember:<\/b> pick the <em>most managed<\/em> ingestion option that fits the source. Then make the load <strong>incremental<\/strong> and <strong>traceable<\/strong>, so you only process new data and always know where each row came from.<\/div><\/div>"}, {"title": "What we covered", "icon": "🗺️", "html": "<div class=\"sec-head\"><span class=\"sec-num\">01<\/span><span class=\"sec-icon\">🗺️<\/span><h2>What we covered<\/h2><\/div><div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Lesson<\/th>\n<th>Key takeaway<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td>01 Lab environment<\/td>\n<td>Unity Catalog: <code>catalog.schema.table<\/code> and <strong>volumes<\/strong> for files<\/td>\n<\/tr>\n<tr>\n<td>02A CTAS &amp; COPY INTO<\/td>\n<td>Batch load with <code>read_files()<\/code>; <strong>incremental, idempotent<\/strong> load with <code>COPY INTO<\/code><\/td>\n<\/tr>\n<tr>\n<td>02B Streaming tables<\/td>\n<td><code>CREATE OR REFRESH STREAMING TABLE<\/code> + Auto Loader, the recommended incremental method<\/td>\n<\/tr>\n<tr>\n<td>03 Metadata columns<\/td>\n<td><code>_metadata.file_name<\/code>, <code>file_modification_time<\/code>, <code>current_timestamp()<\/code> for lineage<\/td>\n<\/tr>\n<tr>\n<td>04 CSV &amp; rescued data<\/td>\n<td>CSV options, explicit schemas, and <code>_rescued_data<\/code> for rows that don't fit<\/td>\n<\/tr>\n<tr>\n<td>06 JSON<\/td>\n<td>Flatten JSON strings, use <code>from_json<\/code> / STRUCT, and the <code>VARIANT<\/code> type<\/td>\n<\/tr>\n<tr>\n<td>08 Lakeflow Connect<\/td>\n<td><strong>Managed connectors<\/strong> for databases and SaaS, plus Partner Connect<\/td>\n<\/tr>\n<tr>\n<td>09 MERGE INTO (bonus)<\/td>\n<td>Upserts with schema enforcement and evolution<\/td>\n<\/tr>\n<tr>\n<td>Appendix<\/td>\n<td>XML ingestion, Auto Loader in Python<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>"}, {"title": "The ingestion menu", "icon": "📥", "html": "<div class=\"sec-head\"><span class=\"sec-num\">02<\/span><span class=\"sec-icon\">📥<\/span><h2>The ingestion menu<\/h2><\/div><p>Start at the top of the list and move down only when you need to:<\/p>\n<div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Option<\/th>\n<th>Use for<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td><strong>Managed connectors<\/strong> (Lakeflow Connect)<\/td>\n<td>SaaS apps (Salesforce, Workday, ServiceNow…) and databases (SQL Server, PostgreSQL…). Fully managed, incremental, CDC-aware<\/td>\n<\/tr>\n<tr>\n<td><strong>Standard connectors<\/strong><\/td>\n<td>Files in cloud object storage (Auto Loader, <code>COPY INTO<\/code>, <code>read_files<\/code>) and message buses (Kafka, Kinesis…)<\/td>\n<\/tr>\n<tr>\n<td><strong>Upload UI / Add data<\/strong><\/td>\n<td>One-off CSV, JSON or Excel files into a table or a <strong>volume<\/strong><\/td>\n<\/tr>\n<tr>\n<td><strong>Partner Connect<\/strong> (Fivetran, …)<\/td>\n<td>Sources not covered natively, or a tool the company already uses<\/td>\n<\/tr>\n<tr>\n<td><strong>Custom code<\/strong> (JDBC / REST in a notebook)<\/td>\n<td>Anything else. You own pagination, retries and incrementality<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>\n<p>Everything should end up in <strong>Unity Catalog-governed<\/strong> tables. Volume paths look like <code>/Volumes/&lt;catalog&gt;/&lt;schema&gt;/&lt;volume&gt;/&lt;path&gt;<\/code>.<\/p>"}, {"title": "Three ways to load files", "icon": "📥", "html": "<div class=\"sec-head\"><span class=\"sec-num\">03<\/span><span class=\"sec-icon\">📥<\/span><h2>Three ways to load files<\/h2><\/div><div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">SQL<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\">-- 1) Batch: CTAS + read_files()  → re-reads everything every time<\/span>\n<span style=\"color: #FF7B72\">CREATE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">OR<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">REPLACE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">TABLE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">bronze_users<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span>\n<span style=\"color: #FF7B72\">SELECT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">*<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">FROM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">read_files(<\/span><span style=\"color: #A5D6FF\">'/Volumes/shop/raw/users/'<\/span><span style=\"color: #E6EDF3\">,<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">format<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">=&gt;<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'parquet'<\/span><span style=\"color: #E6EDF3\">);<\/span>\n\n<span style=\"color: #8B949E; font-style: italic\">-- 2) Incremental batch: COPY INTO  → idempotent, already-loaded files are skipped<\/span>\n<span style=\"color: #FF7B72\">CREATE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">TABLE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">IF<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">NOT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">EXISTS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">bronze_sales;<\/span>\n<span style=\"color: #FF7B72\">COPY<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">INTO<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">bronze_sales<\/span>\n<span style=\"color: #FF7B72\">FROM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'/Volumes/shop/raw/sales/'<\/span>\n<span style=\"color: #E6EDF3\">FILEFORMAT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">PARQUET<\/span>\n<span style=\"color: #E6EDF3\">COPY_OPTIONS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">(<\/span><span style=\"color: #A5D6FF\">'mergeSchema'<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'true'<\/span><span style=\"color: #E6EDF3\">);<\/span>\n\n<span style=\"color: #8B949E; font-style: italic\">-- 3) Incremental: streaming table + Auto Loader  → recommended<\/span>\n<span style=\"color: #FF7B72\">CREATE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">OR<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">REFRESH<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">STREAMING<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">TABLE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">bronze_orders<\/span>\n<span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">SELECT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">*<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">FROM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">STREAM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">read_files(<\/span><span style=\"color: #A5D6FF\">'/Volumes/shop/raw/orders/'<\/span><span style=\"color: #E6EDF3\">,<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">format<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">=&gt;<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'json'<\/span><span style=\"color: #E6EDF3\">);<\/span>\n\n<span style=\"color: #E6EDF3\">REFRESH<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">STREAMING<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">TABLE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">bronze_orders;<\/span><span style=\"color: #6E7681\">   <\/span><span style=\"color: #8B949E; font-style: italic\">-- pick up new files<\/span><\/pre><\/div>\n<div class=\"tbl\"><table>\n<thead>\n<tr>\n<th><\/th>\n<th>CTAS + <code>read_files<\/code><\/th>\n<th><code>COPY INTO<\/code><\/th>\n<th>Streaming table / Auto Loader<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td>Re-run behaviour<\/td>\n<td>Reloads <strong>all<\/strong> files<\/td>\n<td>Loads only <strong>new<\/strong> files<\/td>\n<td>Processes only <strong>new<\/strong> files<\/td>\n<\/tr>\n<tr>\n<td>Scale<\/td>\n<td>Small / one-off<\/td>\n<td>Thousands of files<\/td>\n<td><strong>Millions<\/strong> of files<\/td>\n<\/tr>\n<tr>\n<td>Schema drift<\/td>\n<td>Re-infers<\/td>\n<td><code>mergeSchema<\/code><\/td>\n<td>Evolution modes, schema hints, <code>_rescued_data<\/code><\/td>\n<\/tr>\n<tr>\n<td>State<\/td>\n<td>None<\/td>\n<td>Tracked in the table<\/td>\n<td>Checkpoint (managed for you)<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>\n<blockquote class=\"callout\">\n<p>A streaming table created in Databricks SQL is refreshed by a <strong>serverless pipeline<\/strong> that Databricks creates for you. It does not use warehouse compute.<\/p>\n<\/blockquote>"}, {"title": "Traceability: metadata columns", "icon": "🏷️", "html": "<div class=\"sec-head\"><span class=\"sec-num\">04<\/span><span class=\"sec-icon\">🏷️<\/span><h2>Traceability: metadata columns<\/h2><\/div><p>Every file source exposes a hidden <code>_metadata<\/code> column. Select it explicitly when you load:<\/p>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">SQL<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #FF7B72\">CREATE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">OR<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">REPLACE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">TABLE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">bronze_users<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span>\n<span style=\"color: #FF7B72\">SELECT<\/span>\n<span style=\"color: #6E7681\">  <\/span><span style=\"color: #FF7B72; font-weight: bold\">*<\/span><span style=\"color: #E6EDF3\">,<\/span>\n<span style=\"color: #6E7681\">  <\/span><span style=\"color: #FF7B72\">cast<\/span><span style=\"color: #E6EDF3\">(from_unixtime(user_first_touch_timestamp<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">/<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">1000000<\/span><span style=\"color: #E6EDF3\">)<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">DATE)<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">first_touch_date,<\/span>\n<span style=\"color: #6E7681\">  <\/span><span style=\"color: #E6EDF3\">_metadata.file_name<\/span><span style=\"color: #6E7681\">              <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">source_file,<\/span>\n<span style=\"color: #6E7681\">  <\/span><span style=\"color: #E6EDF3\">_metadata.file_modification_time<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">file_modified_at,<\/span>\n<span style=\"color: #6E7681\">  <\/span><span style=\"color: #FF7B72\">current_timestamp<\/span><span style=\"color: #E6EDF3\">()<\/span><span style=\"color: #6E7681\">              <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">ingested_at<\/span>\n<span style=\"color: #FF7B72\">FROM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">read_files(<\/span><span style=\"color: #A5D6FF\">'/Volumes/shop/raw/users/'<\/span><span style=\"color: #E6EDF3\">,<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">format<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">=&gt;<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'parquet'<\/span><span style=\"color: #E6EDF3\">);<\/span><\/pre><\/div>\n<p>This tells you <strong>which file<\/strong> a row came from and <strong>when<\/strong> it was loaded. That's essential for debugging and for reprocessing.<\/p>"}, {"title": "CSV and the rescued data column", "icon": "📄", "html": "<div class=\"sec-head\"><span class=\"sec-num\">05<\/span><span class=\"sec-icon\">📄<\/span><h2>CSV and the rescued data column<\/h2><\/div><p>CSV needs options. The defaults often give a single column, or headers loaded as data:<\/p>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">SQL<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #FF7B72\">SELECT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">*<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">FROM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">read_files(<\/span>\n<span style=\"color: #6E7681\">  <\/span><span style=\"color: #A5D6FF\">'/Volumes/shop/raw/sales-csv/'<\/span><span style=\"color: #E6EDF3\">,<\/span>\n<span style=\"color: #6E7681\">  <\/span><span style=\"color: #E6EDF3\">format<\/span><span style=\"color: #6E7681\">    <\/span><span style=\"color: #FF7B72; font-weight: bold\">=&gt;<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'csv'<\/span><span style=\"color: #E6EDF3\">,<\/span>\n<span style=\"color: #6E7681\">  <\/span><span style=\"color: #E6EDF3\">header<\/span><span style=\"color: #6E7681\">    <\/span><span style=\"color: #FF7B72; font-weight: bold\">=&gt;<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">true<\/span><span style=\"color: #E6EDF3\">,<\/span>\n<span style=\"color: #6E7681\">  <\/span><span style=\"color: #FF7B72\">delimiter<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">=&gt;<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'|'<\/span><span style=\"color: #E6EDF3\">,<\/span>\n<span style=\"color: #6E7681\">  <\/span><span style=\"color: #FF7B72\">schema<\/span><span style=\"color: #6E7681\">    <\/span><span style=\"color: #FF7B72; font-weight: bold\">=&gt;<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'order_id INT, email STRING, amount DOUBLE'<\/span><span style=\"color: #E6EDF3\">,<\/span>\n<span style=\"color: #6E7681\">  <\/span><span style=\"color: #E6EDF3\">rescuedDataColumn<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">=&gt;<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'_rescued_data'<\/span>\n<span style=\"color: #E6EDF3\">);<\/span><\/pre><\/div>\n<ul>\n<li><strong><code>_rescued_data<\/code><\/strong> catches values that don't match the schema (wrong type, extra columns) as JSON, so <strong>nothing is silently lost<\/strong>.<\/li>\n<li>When the schema is inferred, <code>read_files<\/code> / Auto Loader add <code>_rescued_data<\/code> automatically.<\/li>\n<li>Missing header? Set <code>header =&gt; false<\/code> and supply the column names through <code>schema<\/code>.<\/li>\n<li>Typical lab pattern: ingest, inspect rows <code>WHERE _rescued_data IS NOT NULL<\/code>, then fix and coalesce them.<\/li>\n<\/ul>"}, {"title": "JSON and semi-structured data", "icon": "🧩", "html": "<div class=\"sec-head\"><span class=\"sec-num\">06<\/span><span class=\"sec-icon\">🧩<\/span><h2>JSON and semi-structured data<\/h2><\/div><div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">SQL<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\">-- JSON files → table (nested fields become STRUCT / ARRAY)<\/span>\n<span style=\"color: #FF7B72\">SELECT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">*<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">FROM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">read_files(<\/span><span style=\"color: #A5D6FF\">'/Volumes/shop/raw/events/'<\/span><span style=\"color: #E6EDF3\">,<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">format<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">=&gt;<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'json'<\/span><span style=\"color: #E6EDF3\">);<\/span>\n\n<span style=\"color: #8B949E; font-style: italic\">-- A JSON *string* column (e.g. Kafka value, after unbase64 + cast to STRING):<\/span>\n<span style=\"color: #FF7B72\">SELECT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">value:device,<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">value:items[<\/span><span style=\"color: #A5D6FF\">0<\/span><span style=\"color: #E6EDF3\">].sku::int<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">FROM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">bronze_kafka;<\/span><span style=\"color: #6E7681\">               <\/span><span style=\"color: #8B949E; font-style: italic\">-- colon syntax<\/span>\n<span style=\"color: #FF7B72\">SELECT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">from_json(value,<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">schema_of_json(<\/span><span style=\"color: #A5D6FF\">'&lt;sample json&gt;'<\/span><span style=\"color: #E6EDF3\">))<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">v<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">FROM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">bronze_kafka;<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #8B949E; font-style: italic\">-- → STRUCT<\/span>\n<span style=\"color: #FF7B72\">SELECT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">parse_json(value)<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">v<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">FROM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">bronze_kafka;<\/span><span style=\"color: #6E7681\">                               <\/span><span style=\"color: #8B949E; font-style: italic\">-- → VARIANT<\/span><\/pre><\/div>\n<div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Need<\/th>\n<th>Use<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td>Quick extraction from a JSON string<\/td>\n<td><code>col:field.subfield<\/code>, cast with <code>::type<\/code><\/td>\n<\/tr>\n<tr>\n<td>Typed nested columns<\/td>\n<td><code>from_json(col, schema)<\/code> → STRUCT, then <code>select v.*<\/code> to flatten<\/td>\n<\/tr>\n<tr>\n<td>Flexible, evolving schema, fast queries<\/td>\n<td><strong><code>VARIANT<\/code><\/strong> via <code>parse_json()<\/code><\/td>\n<\/tr>\n<tr>\n<td>One row per array element<\/td>\n<td><code>explode()<\/code> / <code>explode_outer()<\/code><\/td>\n<\/tr>\n<tr>\n<td>XML (appendix)<\/td>\n<td><code>read_files(..., format =&gt; 'xml', rowTag =&gt; 'book')<\/code><\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>"}, {"title": "Enterprise sources: Lakeflow Connect managed connectors", "icon": "🔀", "html": "<div class=\"sec-head\"><span class=\"sec-num\">07<\/span><span class=\"sec-icon\">🔀<\/span><h2>Enterprise sources: Lakeflow Connect managed connectors<\/h2><\/div><ul>\n<li>In the workspace, open <strong>Data Ingestion<\/strong>. It shows the Databricks connectors, file upload, and Fivetran (partner) connectors.<\/li>\n<li>A managed connector creates an <strong>ingestion pipeline<\/strong>:<\/li>\n<li>a <strong>connection<\/strong> (credentials stored as a UC object);<\/li>\n<li>the source objects to sync;<\/li>\n<li>the destination <strong>catalog and schema<\/strong>.<\/li>\n<li><strong>SaaS connectors<\/strong> run fully serverless. <strong>Database connectors<\/strong> add an <strong>ingestion gateway<\/strong> that reads the change log (CDC).<\/li>\n<li>Each source table lands as a <strong>streaming table<\/strong>, with history as <strong>SCD Type 1<\/strong> (overwrite) or <strong>SCD Type 2<\/strong> (keep history).<\/li>\n<li>Schedule it from the pipeline itself or from a Lakeflow Job.<\/li>\n<\/ul>\n<blockquote class=\"callout\">\n<p>Federation <strong>queries data in place<\/strong>. Lakeflow Connect <strong>ingests<\/strong> it. These are different tools for different needs.<\/p>\n<\/blockquote>"}, {"title": "Bonus: MERGE INTO for upserts", "icon": "🔀", "html": "<div class=\"sec-head\"><span class=\"sec-num\">08<\/span><span class=\"sec-icon\">🔀<\/span><h2>Bonus: MERGE INTO for upserts<\/h2><\/div><div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">SQL<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #E6EDF3\">MERGE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">WITH<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">SCHEMA<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">EVOLUTION<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">INTO<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">users_target<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">t<\/span>\n<span style=\"color: #FF7B72\">USING<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">users_updates<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">s<\/span>\n<span style=\"color: #FF7B72\">ON<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">t.id<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">s.id<\/span>\n<span style=\"color: #FF7B72\">WHEN<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">MATCHED<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AND<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">s.op<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'DELETE'<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">THEN<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">DELETE<\/span>\n<span style=\"color: #FF7B72\">WHEN<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">MATCHED<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">THEN<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">UPDATE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">SET<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">*<\/span>\n<span style=\"color: #FF7B72\">WHEN<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">NOT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">MATCHED<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">THEN<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">INSERT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">*<\/span><span style=\"color: #E6EDF3\">;<\/span><\/pre><\/div>\n<ul>\n<li>Atomic insert, update and delete in a single statement.<\/li>\n<li><strong>Schema enforcement<\/strong> by default: new source columns cause an error. Use <code>WITH SCHEMA EVOLUTION<\/code> to add them to the target.<\/li>\n<\/ul>"}, {"title": "Try it: three ways to ingest, in two minutes", "icon": "🧪", "html": "<div class=\"sec-head\"><span class=\"sec-num\">09<\/span><span class=\"sec-icon\">🧪<\/span><h2>Try it: three ways to ingest, in two minutes<\/h2><\/div><blockquote class=\"callout\">\n<p>Lands the synthetic <strong>retail<\/strong> CSV files from GitHub in a volume in your schema, then loads them three ways. Only one value to fill in.<\/p>\n<\/blockquote>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><span class=\"run\">▶ runs in the notebook<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\"># ✏️ FILL IN: the catalog.schema you can write to<\/span>\n<span style=\"color: #E6EDF3\">WORK_SCHEMA<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #A5D6FF\">\"FILL_IN\"<\/span>   <span style=\"color: #8B949E; font-style: italic\"># e.g. \"dbacademy.labuser1234567_1700000000\"<\/span><\/pre><\/div>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><span class=\"run\">▶ runs in the notebook<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\"># Land raw CSV files from GitHub in a volume (2 of the 3 order files for now)<\/span>\n<span style=\"color: #FF7B72\">import<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">urllib.request<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">as<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">u<\/span><span style=\"color: #E6EDF3\">;<\/span> <span style=\"color: #E6EDF3\">exec(u<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">urlopen(<\/span><span style=\"color: #A5D6FF\">\"https://raw.githubusercontent.com/misrori/dbxhelp/main/dbxdata.py\"<\/span><span style=\"color: #E6EDF3\">)<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">read()<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">decode())<\/span>\n<span style=\"color: #E6EDF3\">LANDING<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #E6EDF3\">land_files(<\/span><span style=\"color: #A5D6FF\">\"retail\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #E6EDF3\">WORK_SCHEMA,<\/span> <span style=\"color: #E6EDF3\">upto<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #A5D6FF\">2<\/span><span style=\"color: #E6EDF3\">)<\/span><\/pre><\/div>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><span class=\"run\">▶ runs in the notebook<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\"># 1) Batch: CTAS + read_files() with metadata columns<\/span>\n<span style=\"color: #E6EDF3\">spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">sql(<\/span><span style=\"color: #79C0FF\">f<\/span><span style=\"color: #A5D6FF\">\"\"\"<\/span>\n<span style=\"color: #A5D6FF\">CREATE OR REPLACE TABLE bronze_orders_ctas AS<\/span>\n<span style=\"color: #A5D6FF\">SELECT *, _metadata.file_name AS source_file, current_timestamp() AS ingested_at<\/span>\n<span style=\"color: #A5D6FF\">FROM read_files('{<\/span><span style=\"color: #E6EDF3\">LANDING<\/span><span style=\"color: #A5D6FF\">}/fact_orders/', format =&gt; 'csv', header =&gt; true)<\/span>\n<span style=\"color: #A5D6FF\">\"\"\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n<span style=\"color: #E6EDF3\">display(spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">sql(<\/span><span style=\"color: #A5D6FF\">\"SELECT source_file, count(*) AS rows, max(ingested_at) AS ingested_at FROM bronze_orders_ctas GROUP BY ALL\"<\/span><span style=\"color: #E6EDF3\">))<\/span><\/pre><\/div>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><span class=\"run\">▶ runs in the notebook<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\"># 2) Incremental: COPY INTO is idempotent. Run this cell twice and watch num_inserted_rows<\/span>\n<span style=\"color: #E6EDF3\">COPY<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #79C0FF\">f<\/span><span style=\"color: #A5D6FF\">\"\"\"<\/span>\n<span style=\"color: #A5D6FF\">COPY INTO bronze_orders_copy<\/span>\n<span style=\"color: #A5D6FF\">FROM '{<\/span><span style=\"color: #E6EDF3\">LANDING<\/span><span style=\"color: #A5D6FF\">}/fact_orders/'<\/span>\n<span style=\"color: #A5D6FF\">FILEFORMAT = CSV<\/span>\n<span style=\"color: #A5D6FF\">FORMAT_OPTIONS ('header' = 'true', 'inferSchema' = 'true')<\/span>\n<span style=\"color: #A5D6FF\">COPY_OPTIONS ('mergeSchema' = 'true')<\/span>\n<span style=\"color: #A5D6FF\">\"\"\"<\/span>\n<span style=\"color: #E6EDF3\">spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">sql(<\/span><span style=\"color: #A5D6FF\">\"CREATE TABLE IF NOT EXISTS bronze_orders_copy\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n<span style=\"color: #E6EDF3\">display(spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">sql(COPY))<\/span><\/pre><\/div>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><span class=\"run\">▶ runs in the notebook<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\"># 3) A new file arrives: COPY INTO loads only that one<\/span>\n<span style=\"color: #E6EDF3\">land_files(<\/span><span style=\"color: #A5D6FF\">\"retail\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #E6EDF3\">WORK_SCHEMA,<\/span> <span style=\"color: #E6EDF3\">upto<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #A5D6FF\">3<\/span><span style=\"color: #E6EDF3\">)<\/span>\n<span style=\"color: #E6EDF3\">display(spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">sql(COPY))<\/span><\/pre><\/div>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><span class=\"run\">▶ runs in the notebook<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\"># 4) Rescued data: malformed values are kept in _rescued_data instead of being lost<\/span>\n<span style=\"color: #E6EDF3\">display(spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">sql(<\/span><span style=\"color: #79C0FF\">f<\/span><span style=\"color: #A5D6FF\">\"\"\"<\/span>\n<span style=\"color: #A5D6FF\">SELECT * FROM read_files('{<\/span><span style=\"color: #E6EDF3\">LANDING<\/span><span style=\"color: #A5D6FF\">}/fact_orders_bad/', format =&gt; 'csv', header =&gt; true,<\/span>\n<span style=\"color: #A5D6FF\">  schema =&gt; 'order_id INT, order_date DATE, customer_id INT, product_id INT, quantity INT, discount DOUBLE, status STRING',<\/span>\n<span style=\"color: #A5D6FF\">  rescuedDataColumn =&gt; '_rescued_data')<\/span>\n<span style=\"color: #A5D6FF\">\"\"\"<\/span><span style=\"color: #E6EDF3\">))<\/span><\/pre><\/div>"}, {"title": "Decision cheat sheet", "icon": "🧭", "html": "<div class=\"sec-head\"><span class=\"sec-num\">10<\/span><span class=\"sec-icon\">🧭<\/span><h2>Decision cheat sheet<\/h2><\/div><div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Situation<\/th>\n<th>Choose<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td>Salesforce / SQL Server tables, keep them in sync<\/td>\n<td><strong>Managed connector<\/strong><\/td>\n<\/tr>\n<tr>\n<td>New files land in a volume every hour<\/td>\n<td><strong>Streaming table<\/strong> (Auto Loader) or <code>COPY INTO<\/code> on a schedule<\/td>\n<\/tr>\n<tr>\n<td>Millions of small files, continuous arrival<\/td>\n<td><strong>Auto Loader<\/strong><\/td>\n<\/tr>\n<tr>\n<td>A one-off Excel file from a business user<\/td>\n<td><strong>Upload UI<\/strong><\/td>\n<\/tr>\n<tr>\n<td>You must know which file each row came from<\/td>\n<td>Add <strong><code>_metadata<\/code><\/strong> columns<\/td>\n<\/tr>\n<tr>\n<td>Bad CSV rows must not be lost<\/td>\n<td><strong><code>_rescued_data<\/code><\/strong><\/td>\n<\/tr>\n<tr>\n<td>Incoming changes must update existing rows<\/td>\n<td><strong><code>MERGE INTO<\/code><\/strong> (or AUTO CDC in pipelines, course 3)<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>"}, {"title": "Common mistakes", "icon": "⚠️", "html": "<div class=\"sec-head\"><span class=\"sec-num\">11<\/span><span class=\"sec-icon\">⚠️<\/span><h2>Common mistakes<\/h2><\/div><ul>\n<li class=\"bad\">❌ Expecting <code>COPY INTO<\/code> to reload every file on each run. It is <strong>idempotent<\/strong> and skips files it has already loaded. Use <code>'force' = 'true'<\/code> to reload.<\/li>\n<li class=\"bad\">❌ CTAS on a schedule for growing data: this reprocesses <strong>everything<\/strong> on every run.<\/li>\n<li class=\"bad\">❌ Ignoring <code>_rescued_data<\/code>: bad values quietly turn into NULLs in your analysis.<\/li>\n<li class=\"bad\">❌ Writing a custom REST poller for a source that has a <strong>managed connector<\/strong>.<\/li>\n<li class=\"bad\">❌ Hard-coding credentials. Use <strong>UC connections<\/strong> or <strong>secrets<\/strong>.<\/li>\n<\/ul>\n<p><strong>Next course:<\/strong> <em>Deploy Workloads with Lakeflow Jobs<\/em>, which schedules and orchestrates these loads.<\/p>"}];
 var QUIZ = [{"q": "You run the same COPY INTO command every hour against a volume. What happens to files that were already loaded in a previous run?", "o": ["They are loaded again, creating duplicates", "They are skipped, because COPY INTO is idempotent", "The command fails until the files are deleted", "They are reloaded only if mergeSchema is true"], "c": 1, "e": "COPY INTO tracks which files it has loaded and skips them on re-runs. Use COPY_OPTIONS ('force' = 'true') to reload on purpose."}, {"q": "A CSV load must keep values that don't match the defined schema instead of turning them into NULLs. What do you use?", "o": ["The `_metadata` column", "`header => true`", "The rescued data column (`_rescued_data`)", "`mergeSchema`"], "c": 2, "e": "The rescued data column stores non-conforming values as JSON so nothing is silently lost. You can then inspect rows where `_rescued_data IS NOT NULL`."}, {"q": "Which expression adds the source file name to every ingested row?", "o": ["`input_file()`", "`_metadata.file_name`", "`current_timestamp()`", "`_rescued_data.file`"], "c": 1, "e": "Every file-based source exposes a hidden `_metadata` column with fields like file_name, file_path and file_modification_time. You must select it explicitly."}, {"q": "The team needs to keep 40 Salesforce objects in sync in Unity Catalog with minimal maintenance. What is the best fit?", "o": ["A notebook that calls the Salesforce REST API on a schedule", "Lakehouse Federation", "A Lakeflow Connect managed connector", "COPY INTO from a nightly CSV export"], "c": 2, "e": "Start with the most managed option. The Salesforce managed connector provides incremental ingestion into streaming tables, with schema-change handling and no custom code."}, {"q": "A JSON payload's schema keeps changing and analysts need fast queries on nested fields. Which approach fits best?", "o": ["Store it as STRING and use regexp_extract", "`parse_json()` into a VARIANT column", "Flatten every field into its own column by hand", "Convert it to CSV first"], "c": 1, "e": "VARIANT stores semi-structured data efficiently without a fixed schema, and supports path queries like `v:items[0].sku::int`."}];
-</script>
-<script>
 (function () {
-  var md = document.getElementById('source').textContent.replace(/<\\\/script/gi, '</script').trim();
-  marked.setOptions({ gfm: true, breaks: false });
-  function render(text) {
-    var div = document.createElement('div');
-    div.innerHTML = marked.parse(text);
-    div.querySelectorAll('pre code').forEach(function (el) { try { hljs.highlightElement(el); } catch (e) {} });
-    div.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; });
-    return div.innerHTML;
-  }
+  if (window.self !== window.top) document.body.classList.add('embedded');
+  if (QUIZ && QUIZ.length) SLIDES.push({ title: 'Check yourself', icon: '🎯', quiz: true,
+    html: '<div class="sec-head"><span class="sec-num">' + String(SLIDES.length).padStart(2, '0') + '</span><span class="sec-icon">🎯</span><h2>Check yourself</h2></div><div class="quiz"></div>' });
+  var idx = 0, stage = document.getElementById('stage'), dots = document.getElementById('dots');
+  var $ = function (id) { return document.getElementById(id); };
 
-  // Document view: the whole markdown file
-  var docBody = document.getElementById('docBody');
-  docBody.innerHTML = render(md);
-  if (QUIZ && QUIZ.length) {
-    docBody.insertAdjacentHTML('beforeend', '<h2>Check yourself</h2><div id="quizDoc"></div>');
-    dbxQuiz('quizDoc', QUIZ);
+  function wireCopy(root) {
+    root.querySelectorAll('.code').forEach(function (c) {
+      var b = c.querySelector('.copy'); if (!b) return;
+      b.onclick = function () {
+        var t = c.querySelector('pre').innerText;
+        (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { b.textContent = 'copied ✓'; setTimeout(function () { b.textContent = 'copy'; }, 1400); }, function () {});
+      };
+    });
   }
+  function confetti() {
+    var e = ['🎉', '✨', '🎊', '⭐', '🧡', '💜'];
+    for (var i = 0; i < 40; i++) {
+      var s = document.createElement('div'); s.className = 'confetti'; s.textContent = e[i % e.length];
+      s.style.left = Math.random() * 100 + 'vw'; s.style.animationDelay = Math.random() * .8 + 's'; document.body.appendChild(s);
+      setTimeout(function (n) { return function () { n.remove(); }; }(s), 3600);
+    }
+  }
+  function mountQuiz(el) { dbxQuiz(el, QUIZ, function (score, total) { if (score === total) confetti(); }); }
 
-  // Presentation view: split on "## " headings (outside fenced code blocks)
-  var slides = [], cur = [], fence = false;
-  md.split('\n').forEach(function (line) {
-    if (/^\s*```/.test(line)) fence = !fence;
-    if (!fence && /^## /.test(line) && cur.length) { slides.push(cur.join('\n')); cur = []; }
-    cur.push(line);
+  SLIDES.forEach(function (s, i) {
+    var d = document.createElement('button'); d.title = (i + 1) + '. ' + s.title; d.onclick = function () { go(i); }; dots.appendChild(d);
+    var c = document.createElement('div'); c.className = 'card';
+    c.innerHTML = '<div class="n">' + String(i + 1).padStart(2, '0') + '</div><div class="i">' + s.icon + '</div><div class="t">' + s.title + '</div>';
+    c.onclick = function () { overview(false); go(i); }; $('grid').appendChild(c);
   });
-  if (cur.length) slides.push(cur.join('\n'));
-  var html = slides.map(render), idx = 0;
-  if (QUIZ && QUIZ.length) { slides.push('quiz'); html.push('<h2>Check yourself</h2><div class="quiz-slot"></div>'); }
+  function go(n, dir) {
+    var prev = idx; idx = Math.max(0, Math.min(SLIDES.length - 1, n));
+    var s = SLIDES[idx], el = document.createElement('div');
+    el.className = 'slide ' + (idx === 0 ? 'title ' : '') + ((dir || (idx >= prev ? 1 : -1)) > 0 ? 'enter-r' : 'enter-l');
+    el.innerHTML = '<div class="dbx">' + s.html + '</div>';
+    Array.prototype.forEach.call(el.firstChild.children, function (ch, k) { ch.style.setProperty('--i', k); });
+    stage.innerHTML = ''; stage.appendChild(el); wireCopy(el);
+    if (s.quiz) mountQuiz(el.querySelector('.quiz'));
+    Array.prototype.forEach.call(dots.children, function (d, k) { d.classList.toggle('on', k === idx); });
+    $('count').textContent = (idx + 1) + ' / ' + SLIDES.length;
+    $('bar').style.width = ((idx + 1) / SLIDES.length * 100) + '%';
+    try { history.replaceState(null, '', '#slide-' + (idx + 1)); } catch (e) {}
+  }
+  function overview(on) { var o = $('overview'); o.classList.toggle('on', on === undefined ? !o.classList.contains('on') : on); }
+  $('prev').onclick = function () { go(idx - 1, -1); };
+  $('next').onclick = function () { go(idx + 1, 1); };
+  $('bOver').onclick = function () { mode('slides'); overview(); };
+  $('bFull').onclick = function () {
+    var r = document.documentElement;
+    if (document.fullscreenElement) document.exitFullscreen(); else if (r.requestFullscreen) r.requestFullscreen().catch(function () {});
+  };
+  var tx = null;
+  stage.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', function (e) { if (tx === null) return; var dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) go(idx + (dx < 0 ? 1 : -1)); tx = null; });
 
-  var slideEl = document.getElementById('slide'), counter = document.getElementById('counter'), progress = document.getElementById('progress');
-  function show(n) {
-    idx = Math.max(0, Math.min(slides.length - 1, n));
-    slideEl.innerHTML = html[idx];
-    slideEl.classList.toggle('title-slide', idx === 0);
-    slideEl.scrollTop = 0;
-    var slot = slideEl.querySelector('.quiz-slot');
-    if (slot) dbxQuiz(slot, QUIZ);
-    counter.textContent = (idx + 1) + ' / ' + slides.length;
-    progress.style.width = ((idx + 1) / slides.length * 100) + '%';
-    history.replaceState(null, '', '#slides/' + (idx + 1));
+  var docBuilt = false;
+  function buildDoc() {
+    if (docBuilt) return; docBuilt = true;
+    var toc = $('toc'), sc = $('docScroll');
+    SLIDES.forEach(function (s, i) {
+      var sec = document.createElement('div'); sec.className = 'dsec' + (i === 0 ? ' herosec' : ''); sec.id = 'sec-' + i;
+      sec.innerHTML = '<div class="dbx">' + s.html + '</div>'; sc.appendChild(sec); wireCopy(sec);
+      if (s.quiz) mountQuiz(sec.querySelector('.quiz'));
+      var a = document.createElement('a'); a.href = '#sec-' + i; a.innerHTML = '<span>' + s.icon + '</span><span>' + (i === 0 ? 'Overview' : s.title) + '</span>';
+      a.onclick = function (e) { e.preventDefault(); sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; toc.appendChild(a);
+    });
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (es) { es.forEach(function (en) { if (en.isIntersecting) en.target.classList.add('seen'); }); }, { root: sc, threshold: .05 });
+      sc.querySelectorAll('.dsec').forEach(function (s) { io.observe(s); });
+    } else sc.querySelectorAll('.dsec').forEach(function (s) { s.classList.add('seen'); });
+    sc.addEventListener('scroll', function () {
+      var cur = 0;
+      sc.querySelectorAll('.dsec').forEach(function (s, i) { if (s.offsetTop - sc.scrollTop < 140) cur = i; });
+      toc.querySelectorAll('a').forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+      $('bar').style.width = (sc.scrollTop / Math.max(1, sc.scrollHeight - sc.clientHeight) * 100) + '%';
+    });
   }
   function mode(m) {
-    var present = m === 'slides';
-    document.body.classList.toggle('present', present);
-    document.getElementById('btnSlides').classList.toggle('active', present);
-    document.getElementById('btnDoc').classList.toggle('active', !present);
-    if (present) show(idx); else history.replaceState(null, '', '#doc');
+    var doc = m === 'doc'; document.body.classList.toggle('docmode', doc);
+    $('bDoc').classList.toggle('on', doc); $('bSlides').classList.toggle('on', !doc);
+    if (doc) { buildDoc(); $('docScroll').dispatchEvent(new Event('scroll')); } else go(idx, 1);
   }
-  document.getElementById('btnDoc').onclick = function () { mode('doc'); };
-  document.getElementById('btnSlides').onclick = function () { mode('slides'); };
-  document.getElementById('prev').onclick = function () { show(idx - 1); };
-  document.getElementById('next').onclick = function () { show(idx + 1); };
-  document.getElementById('fs').onclick = function () {
-    if (document.fullscreenElement) document.exitFullscreen(); else document.getElementById('slides').requestFullscreen();
-  };
+  $('bDoc').onclick = function () { mode('doc'); };
+  $('bSlides').onclick = function () { mode('slides'); };
   document.addEventListener('keydown', function (e) {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    var present = document.body.classList.contains('present');
-    if (e.key === 'p' || e.key === 'P') return mode('slides');
-    if (e.key === 'd' || e.key === 'D') return mode('doc');
-    if (!present) return;
-    if (['ArrowRight', 'PageDown', ' '].indexOf(e.key) >= 0) { e.preventDefault(); show(idx + 1); }
-    else if (['ArrowLeft', 'PageUp'].indexOf(e.key) >= 0) { e.preventDefault(); show(idx - 1); }
-    else if (e.key === 'Home') show(0);
-    else if (e.key === 'End') show(slides.length - 1);
-    else if (e.key === 'f' || e.key === 'F') document.getElementById('fs').click();
+    var k = e.key, doc = document.body.classList.contains('docmode');
+    if (k === 'd' || k === 'D') return mode('doc');
+    if (k === 'p' || k === 'P') return mode('slides');
+    if (doc) return;
+    if (k === 'o' || k === 'O') return overview();
+    if (k === 'Escape') return overview(false);
+    if (k === 'f' || k === 'F') return $('bFull').click();
+    if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); go(idx + 1, 1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); go(idx - 1, -1); }
+    else if (k === 'Home') go(0, -1); else if (k === 'End') go(SLIDES.length - 1, 1);
   });
-
-  var m = location.hash.match(/^#slides(?:\/(\d+))?/);
-  if (m) { idx = (parseInt(m[1] || '1', 10) || 1) - 1; mode('slides'); }
+  var m = location.hash.match(/^#slide-(\d+)/); if (m) idx = parseInt(m[1], 10) - 1;
+  if (location.hash === '#doc') mode('doc'); else go(idx, 1);
 })();
 </script>
 </body>

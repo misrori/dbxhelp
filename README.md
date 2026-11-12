@@ -2,7 +2,11 @@
 
 Extra notebooks, slides and notes for Databricks courses. Each topic can be pulled into a Databricks workspace with **one line**, from a notebook running on **Serverless**.
 
-🌐 **Site with copy-ready commands:** https://misrori.github.io/dbxhelp/
+🌐 **Copy-the-command site:** https://misrori.github.io/dbxhelp/. Its menu lists Recaps, Extra materials, Tutorials and Datasets, each with a one-line command. The material itself is always **downloaded into the workspace**:
+
+- a styled, animated `%md-sandbox` **notebook** (with a 🧪 *Try it* mini demo where it makes sense),
+- an animated, self-contained **HTML presentation** (slides + document view + quiz) that the notebook's 🎞️ cell opens inline,
+- the **`.md`** notes.
 
 ## Quick start (inside Databricks)
 
@@ -67,17 +71,18 @@ index.html                       # GitHub Pages landing page (generated)
 modules/<module>/<topic>/
     01_lecture_*.sql|py          # Databricks notebook source (%md-sandbox styled)
     02_demo_*.py                 # runnable demo (Serverless)
-    <topic>.md                   # notes, the single source for the HTML viewer (and for generated recap notebooks)
-    <topic>.quiz.json            # optional knowledge check: rendered into the .md, the HTML and the notebook
-    <topic>.html                 # Document ⇄ Presentation viewer (generated)
-tools/build.py                   # regenerates index.html and <topic>.html
-tools/templates/                 # HTML templates
+    <topic>.md                   # single source: notebook, presentation and notes are generated from it
+    <topic>.quiz.json            # knowledge check, rendered into the .md, the HTML and the notebook
+    <topic>.html                 # animated presentation (generated, self-contained)
+tools/build.py                   # regenerates notebooks, presentations and index.html
+tools/render.py                  # markdown -> styled HTML (pygments highlighting, icons, callouts)
+tools/templates/                 # notebook.css, topic.html (presentation), index.html (site), quiz.js
 ```
 
 ## Adding a new topic
 
 1. Create `modules/<module>/<topic>/` with a `<topic>.md` (and optionally `<topic>.quiz.json`). For recap-style topics, list a notebook with `"from_doc": true` in `catalog.json` and it is generated from the markdown. Otherwise add hand-written notebooks (files must start with `# Databricks notebook source` or `-- Databricks notebook source`) and a `<topic>.md`.
 2. Register it in `catalog.json`.
-3. In the markdown, every `## ` heading becomes a new slide in presentation mode (and a notebook cell).
+3. In the markdown, every `## ` heading becomes a slide and a styled notebook cell. ```` ```python run ```` / ```` ```sql run ```` blocks become **runnable cells** (shown with a "runs in the notebook" badge in the presentation). Set `"category"` (`recaps` / `extra` / `tutorials`), `"icon"` and `"demo"` in `catalog.json`.
 4. Demos that need data: start with the `WORK_SCHEMA = "FILL_IN"` cell plus `load_dataset(...)`. Add new datasets to `tools/generate_data.py`.
 5. Run `python3 tools/build.py`, then commit and push. GitHub Pages serves the repo root (`main` branch, `/`).

@@ -30,7 +30,10 @@
           ],
           "doc": "lakeflow-connect-recap.md",
           "quiz": "lakeflow-connect-recap.quiz.json",
-          "html": "lakeflow-connect-recap.html"
+          "html": "lakeflow-connect-recap.html",
+          "category": "recaps",
+          "icon": "📥",
+          "demo": true
         },
         {
           "id": "lakeflow-jobs",
@@ -53,7 +56,10 @@
           ],
           "doc": "lakeflow-jobs-recap.md",
           "quiz": "lakeflow-jobs-recap.quiz.json",
-          "html": "lakeflow-jobs-recap.html"
+          "html": "lakeflow-jobs-recap.html",
+          "category": "recaps",
+          "icon": "🕸️",
+          "demo": false
         },
         {
           "id": "declarative-pipelines",
@@ -77,7 +83,10 @@
           ],
           "doc": "declarative-pipelines-recap.md",
           "quiz": "declarative-pipelines-recap.quiz.json",
-          "html": "declarative-pipelines-recap.html"
+          "html": "declarative-pipelines-recap.html",
+          "category": "recaps",
+          "icon": "🏗️",
+          "demo": false
         },
         {
           "id": "devops-essentials",
@@ -101,7 +110,10 @@
           ],
           "doc": "devops-essentials-recap.md",
           "quiz": "devops-essentials-recap.quiz.json",
-          "html": "devops-essentials-recap.html"
+          "html": "devops-essentials-recap.html",
+          "category": "recaps",
+          "icon": "♾️",
+          "demo": true
         }
       ]
     },
@@ -133,7 +145,10 @@
           ],
           "doc": "streaming-pipelines-recap.md",
           "quiz": "streaming-pipelines-recap.quiz.json",
-          "html": "streaming-pipelines-recap.html"
+          "html": "streaming-pipelines-recap.html",
+          "category": "recaps",
+          "icon": "🌊",
+          "demo": true
         },
         {
           "id": "data-privacy",
@@ -157,7 +172,10 @@
           ],
           "doc": "data-privacy-recap.md",
           "quiz": "data-privacy-recap.quiz.json",
-          "html": "data-privacy-recap.html"
+          "html": "data-privacy-recap.html",
+          "category": "recaps",
+          "icon": "🔐",
+          "demo": true
         },
         {
           "id": "performance-optimization",
@@ -181,7 +199,10 @@
           ],
           "doc": "performance-optimization-recap.md",
           "quiz": "performance-optimization-recap.quiz.json",
-          "html": "performance-optimization-recap.html"
+          "html": "performance-optimization-recap.html",
+          "category": "recaps",
+          "icon": "⚡",
+          "demo": true
         },
         {
           "id": "asset-bundles",
@@ -205,7 +226,10 @@
           ],
           "doc": "asset-bundles-recap.md",
           "quiz": "asset-bundles-recap.quiz.json",
-          "html": "asset-bundles-recap.html"
+          "html": "asset-bundles-recap.html",
+          "category": "recaps",
+          "icon": "📦",
+          "demo": false
         }
       ]
     },
@@ -230,8 +254,9 @@
           "updated": "2026-11-12",
           "notebooks": [
             {
-              "file": "01_lecture_metric_views.sql",
-              "name": "01 Lecture - Metric Views Explained"
+              "file": "01_lecture_metric_views.py",
+              "name": "01 Lecture - Metric Views Explained",
+              "from_doc": true
             },
             {
               "file": "02_demo_metric_views.py",
@@ -239,7 +264,11 @@
             }
           ],
           "doc": "metric-views.md",
-          "html": "metric-views.html"
+          "html": "metric-views.html",
+          "category": "extra",
+          "icon": "📏",
+          "demo": true,
+          "quiz": "metric-views.quiz.json"
         }
       ]
     }
@@ -257,6 +286,26 @@
       "used_by": [
         "genie/metric-views"
       ]
+    }
+  ],
+  "categories": [
+    {
+      "id": "recaps",
+      "title": "Recaps",
+      "icon": "🔁",
+      "description": "5–10 minute recaps at the end of each course: styled notebook, animated presentation and a 5-question check. Some include a mini demo."
+    },
+    {
+      "id": "extra",
+      "title": "Extra materials",
+      "icon": "✨",
+      "description": "Deep dives on topics the course material only touches: lecture, hands-on demo and presentation."
+    },
+    {
+      "id": "tutorials",
+      "title": "Tutorials",
+      "icon": "📚",
+      "description": "Step-by-step guides and how-tos for the platform."
     }
   ]
 }

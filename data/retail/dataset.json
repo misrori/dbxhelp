@@ -29,6 +29,21 @@
           "segment",
           "STRING",
           "Customer segment: Enterprise, SMB, Consumer"
+        ],
+        [
+          "email",
+          "STRING",
+          "Customer email address (PII, synthetic)"
+        ],
+        [
+          "birth_year",
+          "INT",
+          "Year of birth (PII, synthetic)"
+        ],
+        [
+          "postal_code",
+          "STRING",
+          "Postal code (quasi-identifier, synthetic)"
         ]
       ]
     },
@@ -116,6 +131,13 @@
           "COMPLETED, OPEN, CANCELLED, or TEST (internal test orders - always exclude)"
         ]
       ]
+    }
+  ],
+  "extra_files": [
+    {
+      "file": "fact_orders_bad.csv",
+      "folder": "fact_orders_bad",
+      "comment": "4 orders with malformed values (quantity 'five', bad date, bad discount)"
     }
   ]
 }

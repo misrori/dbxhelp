@@ -1,26 +1,37 @@
-function dbxQuiz(root, questions) {
+function dbxQuiz(root, questions, onDone) {
   if (typeof root === 'string') root = document.getElementById(root);
-  var i = 0, score = 0, picked = null, shown = false;
-  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/`([^`]+)`/g, '<code>$1</code>'); }
-  function btn(label, primary) { return '<button style="margin-top:14px;padding:8px 18px;border-radius:4px;border:none;cursor:pointer;background:' + (primary ? '#2272B4' : '#E0E0E0') + ';color:' + (primary ? '#fff' : '#333') + ';font-size:0.95em">' + label + '</button>'; }
+  var i = 0, score = 0, picked = null, shown = false, done = false;
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/`([^`]+)`/g, '<code style="background:#EEF2FF;color:#3730A3;padding:1px 6px;border-radius:6px">$1</code>'); }
+  function btn(label, primary) { return '<button style="margin-top:16px;padding:10px 22px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:' + (primary ? 'linear-gradient(135deg,#FF3621,#7C4DFF)' : '#E5E7EB') + ';color:' + (primary ? '#fff' : '#6B7280') + ';font-size:0.95em;box-shadow:' + (primary ? '0 6px 18px rgba(124,77,255,.3)' : 'none') + '">' + label + '</button>'; }
+  var box = 'padding:22px 24px;border-radius:16px;background:#fff;border:1px solid #E5E7EB;box-shadow:0 8px 28px rgba(27,49,57,.08);animation:dbxQ .4s ease both';
+  var style = '<style>@keyframes dbxQ{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}</style>';
+  function bar() {
+    var h = '<div style="display:flex;gap:6px;margin-bottom:14px">';
+    for (var k = 0; k < questions.length; k++) h += '<div style="flex:1;height:6px;border-radius:6px;background:' + (k < i ? 'linear-gradient(90deg,#FF3621,#7C4DFF)' : k === i ? '#C4B5FD' : '#E5E7EB') + '"></div>';
+    return h + '</div>';
+  }
   function render() {
     if (i >= questions.length) {
-      root.innerHTML = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;text-align:center;background:#fff"><div style="font-size:1.3em;font-weight:bold;color:#333">Score: ' + score + ' / ' + questions.length + '</div>' + btn('Retake', true) + '</div>';
-      root.querySelector('button').onclick = function () { i = 0; score = 0; picked = null; shown = false; render(); };
+      var pct = Math.round(score / questions.length * 100), msg = pct === 100 ? 'Perfect! 🎉' : pct >= 60 ? 'Nice work! 💪' : 'Worth another look 📖';
+      root.innerHTML = style + '<div style="' + box + ';text-align:center"><div style="font-size:48px">' + (pct === 100 ? '🏆' : pct >= 60 ? '🌟' : '🔁') + '</div><div style="font-size:1.6em;font-weight:800;color:#1B3139">' + score + ' / ' + questions.length + '</div><div style="color:#6B7280;margin-top:4px">' + msg + '</div>' + btn('Retake', true) + '</div>';
+      root.querySelector('button').onclick = function () { i = 0; score = 0; picked = null; shown = false; done = false; render(); };
+      if (!done && onDone) { done = true; onDone(score, questions.length); }
       return;
     }
-    var Q = questions[i], h = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;background:#fff">';
-    h += '<div style="color:#999;font-size:0.85em;margin-bottom:6px">Question ' + (i + 1) + ' of ' + questions.length + '</div>';
-    h += '<div style="font-weight:bold;color:#333;margin-bottom:12px;line-height:1.5">' + esc(Q.q) + '</div>';
+    var Q = questions[i], h = style + '<div style="' + box + '">' + bar();
+    h += '<div style="color:#7C4DFF;font-size:0.8em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Question ' + (i + 1) + ' of ' + questions.length + '</div>';
+    h += '<div style="font-weight:700;color:#1B3139;margin-bottom:14px;line-height:1.5;font-size:1.05em">' + esc(Q.q) + '</div>';
     Q.o.forEach(function (t, k) {
-      var bg = '#fff', bd = '#e0e0e0';
-      if (shown && k === Q.c) { bg = '#E8F5E9'; bd = '#43A047'; }
-      else if (shown && k === picked) { bg = '#FFEBEE'; bd = '#E53935'; }
-      else if (!shown && k === picked) { bg = '#E3F2FD'; bd = '#2272B4'; }
-      h += '<div data-k="' + k + '" style="padding:10px 14px;margin:6px 0;border:2px solid ' + bd + ';background:' + bg + ';border-radius:6px;cursor:' + (shown ? 'default' : 'pointer') + ';color:#333">' + String.fromCharCode(97 + k) + ') ' + esc(t) + '</div>';
+      var bg = '#fff', bd = '#E5E7EB', mark = String.fromCharCode(65 + k);
+      if (shown && k === Q.c) { bg = '#ECFDF3'; bd = '#22C55E'; mark = '✓'; }
+      else if (shown && k === picked) { bg = '#FFF1F0'; bd = '#EF4444'; mark = '✗'; }
+      else if (!shown && k === picked) { bg = '#F5F3FF'; bd = '#7C4DFF'; }
+      h += '<div data-k="' + k + '" style="display:flex;gap:12px;align-items:center;padding:11px 14px;margin:8px 0;border:2px solid ' + bd + ';background:' + bg + ';border-radius:12px;cursor:' + (shown ? 'default' : 'pointer') + ';color:#1F2937;transition:all .15s">' +
+        '<span style="flex:none;width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:.85em;background:' + (bd === '#E5E7EB' ? '#F1F5F9' : bd) + ';color:' + (bd === '#E5E7EB' ? '#64748B' : '#fff') + '">' + mark + '</span><span>' + esc(t) + '</span></div>';
     });
     if (shown) {
-      h += '<div style="margin-top:12px;padding:12px;background:#F5F5F5;border-radius:6px;color:#333"><strong>' + (picked === Q.c ? '&#9989; Correct.' : '&#10060; Not quite.') + '</strong> ' + esc(Q.e) + '</div>' + btn(i + 1 < questions.length ? 'Next' : 'See score', true);
+      var ok = picked === Q.c;
+      h += '<div style="margin-top:14px;padding:14px 16px;border-radius:12px;background:' + (ok ? '#ECFDF3' : '#FFF7ED') + ';border:1px solid ' + (ok ? '#A7F3D0' : '#FED7AA') + ';color:#1F2937;animation:dbxQ .3s both"><strong>' + (ok ? '✅ Correct.' : '💡 Not quite.') + '</strong> ' + esc(Q.e) + '</div>' + btn(i + 1 < questions.length ? 'Next →' : 'See score', true);
     } else {
       h += btn('Submit', picked !== null);
     }

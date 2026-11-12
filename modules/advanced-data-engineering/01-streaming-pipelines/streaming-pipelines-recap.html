@@ -4,268 +4,199 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Recap 1: Databricks Streaming and Lakeflow Spark Declarative Pipelines · dbxhelp</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css">
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 <style>
-  :root { --accent: #FF3621; --navy: #1B3139; --blue: #2272B4; --bg: #F9F7F4; --text: #1F2328; --muted: #6B7280; --border: #E5E7EB; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); }
-  header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: var(--navy); color: #fff; }
-  header a.home { color: #fff; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-  header .title { color: #CBD5E1; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-  .toggle { display: inline-flex; background: rgba(255,255,255,0.12); border-radius: 999px; padding: 3px; }
-  .toggle button { border: 0; background: transparent; color: #E2E8F0; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 0.9em; }
-  .toggle button.active { background: #fff; color: var(--navy); font-weight: 600; }
-  header .link { color: #E2E8F0; font-size: 0.85em; text-decoration: none; border: 1px solid rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 6px; }
-  header .link:hover { background: rgba(255,255,255,0.1); }
-
-  /* ---------- shared markdown styling ---------- */
-  .md h1 { font-size: 2em; color: var(--navy); margin: 0 0 0.5em; }
-  .md h2 { color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 0.3em; margin-top: 1.8em; }
-  .md h3 { color: var(--navy); }
-  .md a { color: var(--blue); }
-  .md code { background: #EEF2F6; padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.9em; }
-  .md pre { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow: auto; }
-  .md pre code { background: none; padding: 0; font-size: 0.88em; line-height: 1.5; }
-  .md blockquote { margin: 1em 0; padding: 10px 16px; border-left: 4px solid var(--blue); background: #E3F2FD; border-radius: 4px; color: #1F2937; }
-  .md blockquote p { margin: 0.3em 0; }
-  .md table { border-collapse: collapse; width: 100%; margin: 1em 0; background: #fff; font-size: 0.95em; }
-  .md th, .md td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
-  .md th { background: #F1F5F9; }
-  .md li { margin: 0.25em 0; line-height: 1.55; }
-  .md p { line-height: 1.6; }
-
-  /* ---------- document mode ---------- */
-  #doc { max-width: 920px; margin: 0 auto; padding: 32px 24px 80px; }
-  #doc .md { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 36px 44px; }
-
-  /* ---------- presentation mode ---------- */
-  #slides { display: none; height: calc(100vh - 52px); padding: 18px; }
-  body.present #doc { display: none; }
-  body.present #slides { display: flex; flex-direction: column; align-items: center; }
-  .stage { flex: 1; width: 100%; max-width: 1280px; display: flex; align-items: center; justify-content: center; min-height: 0; }
-  .slide { width: 100%; height: 100%; max-height: 760px; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-top: 6px solid var(--accent); padding: 40px 56px; overflow: auto; font-size: 1.22em; }
-  .slide.title-slide { display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, var(--navy), #24495A); color: #fff; }
-  .slide.title-slide h1 { color: #fff; font-size: 2.3em; }
-  .slide.title-slide blockquote { background: rgba(255,255,255,0.1); border-left-color: var(--accent); color: #fff; }
-  .slide.title-slide code { background: rgba(255,255,255,0.15); color: #fff; }
-  .slide.title-slide strong { color: #FFD7CF; }
-  .slide h2 { margin-top: 0; font-size: 1.6em; border-bottom-color: var(--accent); }
-  .controls { display: flex; align-items: center; gap: 14px; padding-top: 12px; color: var(--muted); font-size: 0.9em; }
-  .controls button { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 1em; }
-  .controls button:hover { border-color: var(--blue); }
-  .progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--accent); transition: width 0.2s; }
-  body:not(.present) .progress { display: none; }
-  :fullscreen #slides { height: 100vh; }
-  @media (max-width: 700px) { .slide { padding: 24px; font-size: 1em; } #doc .md { padding: 20px; } header .title { display: none; } }
-  @media print { header, .controls, .progress { display: none; } #doc .md { border: 0; } }
+.dbx{--navy:#1B3139;--accent:#FF3621;--blue:#2272B4;--teal:#00A3A1;--purple:#7C4DFF;--amber:#FFAB00;--ink:#1F2937;--muted:#6B7280;--line:#E5E7EB;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);font-size:15px;line-height:1.6;max-width:1100px}
+.dbx *{box-sizing:border-box}
+.dbx>*{animation:dbxRise .55s cubic-bezier(.2,.7,.2,1) both}
+.dbx>*:nth-child(2){animation-delay:.06s}.dbx>*:nth-child(3){animation-delay:.12s}.dbx>*:nth-child(4){animation-delay:.18s}.dbx>*:nth-child(5){animation-delay:.24s}.dbx>*:nth-child(6){animation-delay:.3s}.dbx>*:nth-child(n+7){animation-delay:.36s}
+@keyframes dbxRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes dbxGrad{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes dbxFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,-14px) scale(1.08)}}
+@keyframes dbxLine{from{width:0}to{width:100%}}
+@keyframes dbxPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,54,33,.25)}50%{box-shadow:0 0 0 8px rgba(255,54,33,0)}}
+.dbx .hero{position:relative;overflow:hidden;border-radius:18px;padding:38px 40px 34px;margin:4px 0 18px;color:#fff;background:linear-gradient(120deg,#1B3139,#22425a,#2a2f6b,#1B3139);background-size:300% 300%;animation:dbxGrad 14s ease infinite,dbxRise .6s both}
+.dbx .blob{position:absolute;border-radius:50%;filter:blur(30px);opacity:.55;animation:dbxFloat 9s ease-in-out infinite}
+.dbx .b1{width:220px;height:220px;background:#FF3621;right:-40px;top:-60px}
+.dbx .b2{width:180px;height:180px;background:#7C4DFF;right:160px;bottom:-90px;animation-delay:-3s}
+.dbx .b3{width:140px;height:140px;background:#00A3A1;left:-40px;bottom:-50px;animation-delay:-6s}
+.dbx .hero-in{position:relative}
+.dbx .kicker{text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:#FFC4BA;font-weight:700}
+.dbx .hero h1{font-size:34px;line-height:1.15;margin:8px 0 14px;color:#fff;font-weight:800}
+.dbx .kicker-inline{display:inline-block;font-size:.5em;vertical-align:middle;background:var(--accent);padding:4px 10px;border-radius:999px;margin-right:10px;letter-spacing:.08em;text-transform:uppercase}
+.dbx .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.dbx .chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:4px 12px;border-radius:999px;font-size:13px;color:#fff}
+.dbx .chip strong{color:#fff}
+.dbx .sub{color:#E2E8F0;font-size:16px;margin:0;max-width:820px}
+.dbx .sub strong,.dbx .sub b{color:#FFD7CF}
+.dbx .sub code{background:rgba(255,255,255,.16);color:#fff}
+.dbx .idea{display:flex;gap:14px;align-items:flex-start;background:linear-gradient(135deg,#FFF4F1,#FFF);border:1px solid #FFD0C7;border-left:5px solid var(--accent);border-radius:14px;padding:16px 18px;margin:14px 0;animation:dbxRise .55s both,dbxPulse 3s ease-in-out 1s 2}
+.dbx .idea-icon{font-size:26px;line-height:1}
+.dbx .idea b{color:#C62D1A}
+.dbx .sec-head{display:flex;align-items:center;gap:12px;margin:6px 0 14px;position:relative;padding-bottom:10px}
+.dbx .sec-head:after{content:"";position:absolute;left:0;bottom:0;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--purple),var(--teal));animation:dbxLine .9s ease-out both}
+.dbx .sec-num{font-weight:800;font-size:13px;color:#fff;background:linear-gradient(135deg,var(--accent),#ff7a59);padding:5px 10px;border-radius:9px;letter-spacing:.05em}
+.dbx .sec-icon{font-size:26px;line-height:1}
+.dbx .sec-head h2{margin:0;font-size:25px;color:var(--navy);font-weight:800;border:0}
+.dbx h3{color:var(--navy);margin:18px 0 8px}
+.dbx p{margin:8px 0}
+.dbx a{color:var(--blue)}
+.dbx code{background:#EEF2FF;color:#3730A3;padding:1px 6px;border-radius:6px;font-size:.88em;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.dbx .tbl{overflow-x:auto;border-radius:12px;border:1px solid var(--line);box-shadow:0 2px 10px rgba(27,49,57,.06);margin:12px 0;background:#fff}
+.dbx table{border-collapse:collapse;width:100%;font-size:14px}
+.dbx th{background:linear-gradient(135deg,#1B3139,#2B4F63);color:#fff;text-align:left;padding:10px 12px;font-weight:600}
+.dbx td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}
+.dbx tr:nth-child(even) td{background:#F8FAFC}
+.dbx tr:hover td{background:#FFF4F1}
+.dbx td:first-child{font-weight:600;color:var(--navy)}
+.dbx ul,.dbx ol{padding-left:22px;margin:8px 0}
+.dbx li{margin:5px 0}
+.dbx li::marker{color:var(--accent)}
+.dbx li.bad,.dbx li.good{list-style:none;margin:8px 0 8px -22px;padding:10px 14px;border-radius:10px}
+.dbx li.bad{background:#FFF1F0;border:1px solid #FFCDC7}
+.dbx li.good{background:#ECFDF3;border:1px solid #B7EBC9}
+.dbx blockquote.callout{margin:14px 0;padding:12px 16px 12px 46px;border-radius:12px;background:linear-gradient(135deg,#E8F1FF,#F5F9FF);border:1px solid #C7DBFF;position:relative;color:#1E3A5F}
+.dbx blockquote.callout:before{content:"ℹ️";position:absolute;left:14px;top:11px;font-size:18px}
+.dbx blockquote.callout p{margin:4px 0}
+.dbx .code{border-radius:12px;overflow:hidden;margin:12px 0;box-shadow:0 8px 24px rgba(15,23,42,.18);background:#0D1117}
+.dbx .code-bar{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#161B22;border-bottom:1px solid #30363D}
+.dbx .code-bar i{width:11px;height:11px;border-radius:50%;background:#FF5F57;display:inline-block}
+.dbx .code-bar i:nth-child(2){background:#FEBC2E}.dbx .code-bar i:nth-child(3){background:#28C840}
+.dbx .lang{margin-left:8px;color:#8B949E;font-size:11px;letter-spacing:.1em;font-weight:700}
+.dbx .run{margin-left:auto;color:#3FB950;font-size:11px;font-weight:700}
+.dbx .copy{display:none}
+.dbx .code pre{margin:0;padding:14px 16px;color:#E6EDF3;font-size:13px;line-height:1.55;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:transparent}
+.dbx pre.diagram{background:linear-gradient(135deg,#F8FAFC,#EEF2FF);border:1px dashed #A5B4FC;border-radius:12px;padding:14px 16px;font-size:13px;color:#312E81;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.dbx .tryit{display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,#ECFDF3,#F0FDFA);border:1px solid #A7F3D0;border-radius:12px;padding:12px 16px;margin:12px 0}
+.dbx .tryit b{color:#047857}
+.dbx .present{display:flex;gap:16px;align-items:center;border-radius:14px;padding:16px 20px;background:linear-gradient(120deg,#2a2f6b,#7C4DFF);color:#fff;box-shadow:0 10px 30px rgba(124,77,255,.3)}
+.dbx .present b{font-size:17px}
+.dbx .present span{color:#E9E5FF}
+.dbx .present .big{font-size:34px}
+.dbx .footer{margin-top:10px;padding:14px 18px;border-radius:12px;background:#F8FAFC;border:1px solid var(--line);color:var(--muted);font-size:13px}
+:root{--navy:#1B3139;--accent:#FF3621;--blue:#2272B4;--purple:#7C4DFF;--teal:#00A3A1;--bg:#F4F2EE;--muted:#6B7280;--line:#E5E7EB}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:#1F2937;overflow:hidden}
+body.embedded{height:760px}
+#app{display:flex;flex-direction:column;height:100%}
+header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--navy);color:#fff;flex:none;z-index:5}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:.02em}
+.crumb{color:#94A3B8;font-size:.9em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.seg{display:inline-flex;background:rgba(255,255,255,.1);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;color:#CBD5E1;padding:6px 14px;border-radius:999px;cursor:pointer;font-size:.88em;font-family:inherit}
+.seg button.on{background:#fff;color:var(--navy);font-weight:700}
+.hbtn{border:1px solid rgba(255,255,255,.25);background:transparent;color:#E2E8F0;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.85em;font-family:inherit}
+.hbtn:hover{background:rgba(255,255,255,.1)}
+#bar{height:3px;background:linear-gradient(90deg,var(--accent),var(--purple),var(--teal));width:0;transition:width .35s ease;flex:none}
+#slides{flex:1;display:flex;flex-direction:column;min-height:0;padding:18px 22px 10px;position:relative}
+.stage{flex:1;position:relative;min-height:0;perspective:1400px}
+.slide{position:absolute;inset:0;background:#fff;border-radius:20px;box-shadow:0 18px 50px rgba(27,49,57,.14);overflow:auto;padding:34px 52px 40px}
+.slide.enter-r{animation:inR .5s cubic-bezier(.2,.8,.2,1) both}
+.slide.enter-l{animation:inL .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes inR{from{opacity:0;transform:translateX(60px) rotateY(-6deg)}to{opacity:1;transform:none}}
+@keyframes inL{from{opacity:0;transform:translateX(-60px) rotateY(6deg)}to{opacity:1;transform:none}}
+.slide .dbx{max-width:none;font-size:18px}
+.slide .dbx .sec-head h2{font-size:32px}
+.slide .dbx table{font-size:16px}
+.slide .dbx .code pre{font-size:14.5px}
+.slide .dbx>*{animation:dbxRise .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0) * 90ms + 120ms)}
+.slide.title{padding:0;overflow:hidden;background:transparent;box-shadow:0 18px 50px rgba(27,49,57,.25)}
+.slide.title .dbx{height:100%;display:flex;flex-direction:column;position:relative}
+.slide.title .hero{flex:1;margin:0;border-radius:20px;display:flex;align-items:center;padding:60px 70px 150px}
+.slide.title .hero h1{font-size:54px}
+.slide.title .sub{font-size:20px}
+.slide.title .b1{width:420px;height:420px}.slide.title .b2{width:340px;height:340px}.slide.title .b3{width:300px;height:300px}
+.slide.title .idea{position:absolute;left:70px;right:70px;bottom:40px;font-size:18px;background:rgba(255,255,255,.96)}
+.slide.title .dbx>:not(.hero):not(.idea){display:none}
+.controls{display:flex;align-items:center;gap:12px;padding-top:12px;flex:none}
+.controls .nav{border:1px solid var(--line);background:#fff;border-radius:10px;width:40px;height:36px;cursor:pointer;font-size:16px}
+.controls .nav:hover{border-color:var(--accent);color:var(--accent)}
+.dots{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}
+.dots button{width:10px;height:10px;border-radius:50%;border:0;background:#CBD5E1;cursor:pointer;padding:0;transition:all .25s}
+.dots button.on{background:var(--accent);width:28px;border-radius:6px}
+.count{color:var(--muted);font-size:.85em;min-width:60px;text-align:right}
+.hint{color:#94A3B8;font-size:.78em;white-space:nowrap}
+#overview{position:absolute;inset:0;background:rgba(244,242,238,.97);z-index:4;display:none;overflow:auto;padding:26px}
+#overview.on{display:block;animation:dbxRise .3s both}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.card{background:#fff;border-radius:14px;padding:16px;cursor:pointer;border:2px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.06);transition:all .2s}
+.card:hover{transform:translateY(-3px);border-color:var(--accent)}
+.card .n{font-size:.75em;color:var(--muted);font-weight:700}
+.card .i{font-size:28px;margin:6px 0}
+.card .t{font-weight:700;color:var(--navy)}
+#doc{flex:1;display:none;min-height:0}
+body.docmode #slides{display:none}
+body.docmode #doc{display:flex}
+#toc{width:270px;flex:none;overflow:auto;padding:22px 14px;border-right:1px solid var(--line);background:#fff}
+#toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:9px;color:#334155;text-decoration:none;font-size:.9em;margin:2px 0}
+#toc a:hover{background:#F1F5F9}
+#toc a.on{background:#FFF1EE;color:#C62D1A;font-weight:700}
+#docScroll{flex:1;overflow:auto;padding:26px 34px 80px}
+.dsec{background:#fff;border-radius:18px;padding:26px 32px;margin:0 auto 18px;max-width:1000px;box-shadow:0 4px 18px rgba(27,49,57,.06);opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s cubic-bezier(.2,.7,.2,1)}
+.dsec.seen{opacity:1;transform:none}
+.dsec.herosec{padding:0;background:transparent;box-shadow:none}
+.dsec .dbx>*{animation:none}
+.quiz{max-width:820px}
+.confetti{position:fixed;top:-20px;font-size:22px;z-index:9;animation:fall 2.6s linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.7}}
+.dbx .code .copy{display:inline-block;margin-left:auto;border:1px solid #30363D;background:#21262D;color:#C9D1D9;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer}
+.dbx .code .run+.copy{margin-left:10px}
+@media (max-width:760px){.slide{padding:22px}.slide.title .hero{padding:30px 30px 160px}.slide.title .hero h1{font-size:32px}.slide.title .idea{left:16px;right:16px}#toc{display:none}.crumb{display:none}.hint{display:none}}
+@media print{header,.controls,#bar,#toc{display:none}body{overflow:visible}#doc{display:block}#slides{display:none}.dsec{opacity:1;transform:none;box-shadow:none}}
 </style>
 </head>
 <body>
+<div id="app">
 <header>
-  <a class="home" href="../../../index.html" title="All topics"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</a>
-  <span class="title">Advanced Data Engineering with Databricks › Recap 1: Databricks Streaming and Lakeflow Spark Declarative Pipelines</span>
-  <div class="toggle" role="tablist">
-    <button id="btnDoc" class="active" title="Document view (D)">📄 Document</button>
-    <button id="btnSlides" title="Presentation view (P)">🎞️ Presentation</button>
-  </div>
-  <a class="link" href="streaming-pipelines-recap.md" download>⬇ .md</a>
-  <a class="link" href="https://github.com/misrori/dbxhelp/tree/main/modules/advanced-data-engineering/01-streaming-pipelines" target="_blank">GitHub</a>
+  <div class="brand"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</div>
+  <div class="crumb">Advanced Data Engineering with Databricks › Recap 1: Databricks Streaming and Lakeflow Spark Declarative Pipelines</div>
+  <div class="seg"><button id="bSlides" class="on">🎞️ Slides</button><button id="bDoc">📄 Document</button></div>
+  <button class="hbtn" id="bOver" title="Overview (O)">▦</button>
+  <button class="hbtn" id="bFull" title="Fullscreen (F)">⛶</button>
 </header>
-
-<main id="doc"><article class="md" id="docBody"></article></main>
-
+<div id="bar"></div>
 <section id="slides">
-  <div class="stage"><div class="slide md" id="slide"></div></div>
-  <div class="controls">
-    <button id="prev" title="Previous (←)">←</button>
-    <span id="counter"></span>
-    <button id="next" title="Next (→ / Space)">→</button>
-    <button id="fs" title="Fullscreen (F)">⛶</button>
-    <span>← → navigate · F fullscreen · D document</span>
-  </div>
+  <div class="stage" id="stage"></div>
+  <div class="controls"><button class="nav" id="prev" title="Previous (←)">←</button><div class="dots" id="dots"></div><span class="hint">← → navigate · O overview · F fullscreen · D document</span><span class="count" id="count"></span><button class="nav" id="next" title="Next (→)">→</button></div>
+  <div id="overview"><div class="grid" id="grid"></div></div>
 </section>
-<div class="progress" id="progress"></div>
-
-<script type="text/markdown" id="source">
-# Recap: Databricks Streaming and Lakeflow Spark Declarative Pipelines
-
-> **Course 1 of 4 · Advanced Data Engineering with Databricks** · ⏱ ~9 minutes
->
-> Production streaming: how **Structured Streaming** keeps state, emits results and recovers, and how **declarative pipelines** apply it to ingestion, joins, deduplication and **CDC**.
-
-**The one idea to remember:** a stream is an **unbounded table** processed incrementally. **Checkpoints** make it exactly-once, **watermarks** bound its state, and declarative pipelines manage most of this for you.
-
-## What we covered
-
-| Topic | Key takeaway |
-|---|---|
-| Streaming concepts | Unbounded table, micro-batches, latency vs cost, batch ↔ streaming with the same API |
-| Structured Streaming basics | `readStream` / `writeStream`, sources and sinks, **triggers**, **output modes**, **checkpoints** |
-| Stateful processing | Aggregations, **windows** (tumbling, sliding, session), **watermarks**, late data |
-| Streaming joins & deduplication | Stream-static vs stream-stream joins, `dropDuplicatesWithinWatermark` |
-| Streaming in declarative pipelines | Streaming tables, Auto Loader and Kafka ingestion, append flows, quarantine |
-| CDC and SCD | **AUTO CDC** with `SEQUENCE BY`, SCD Type 1 and 2, snapshots, change data feed |
-
-## Structured Streaming in one example
-
-```python
-from pyspark.sql import functions as F
-
-events = (spark.readStream                       # source: Delta table, Auto Loader, Kafka…
-          .table("main.bronze.device_events"))
-
-per_window = (events
-    .withWatermark("event_ts", "10 minutes")     # accept data up to 10 min late, then drop state
-    .groupBy(F.window("event_ts", "5 minutes"), "device_id")
-    .agg(F.avg("temp").alias("avg_temp")))
-
-(per_window.writeStream
-    .outputMode("append")                        # emit each window once, when it is final
-    .option("checkpointLocation", "/Volumes/main/chk/device_5min")
-    .trigger(availableNow=True)                  # process what's there, then stop
-    .toTable("main.silver.device_5min"))
-```
-
-| Concept | Options |
-|---|---|
-| **Trigger** | default / `processingTime="1 minute"` (continuous micro-batches) · **`availableNow=True`** (incremental batch, then stop) · real-time mode (very low latency) |
-| **Output mode** | **Append**: only new, final rows (aggregations need a watermark) · **Update**: changed rows (use with `foreachBatch` + `MERGE`) · **Complete**: whole result each trigger (keeps all state) |
-| **Checkpoint** | Source offsets + committed batches + state. **One per query.** Never share it or delete it |
-
-## State, windows and watermarks
-
-```
-tumbling  |----|----|----|      fixed, non-overlapping: "per 5 minutes"
-sliding   |------|               overlapping: "last 10 minutes, every 5 minutes"
-            |------|
-session   |--|   |-----|         gap-based: "activity bursts per user"
-```
-
-- **Stateless** operations (`select`, `filter`, stream-static join) don't remember anything between micro-batches.
-- **Stateful** operations (aggregations, `dropDuplicates`, stream-stream joins) keep **state** in the state store (RocksDB), and it is saved in the checkpoint.
-- **Watermark** = the latest event time seen minus the allowed delay. Windows older than the watermark are **finalized** and their state is **dropped**. Events arriving later than that can be ignored.
-- A longer delay accepts later data, but keeps **more state** and delays append-mode output.
-- Changing the aggregation keys, the window, or the number of stateful operators requires a **new checkpoint**.
-
-## Streaming joins and deduplication
-
-| Join | How it works | Watch out |
-|---|---|---|
-| **Stream-static** | Each micro-batch joins with the **current** version of a Delta table | Dimension changes are **not** re-applied to past results. Use an MV when results must stay correct |
-| **Stream-stream** | Both sides buffered in state until they can match | Needs **watermarks on both sides** plus a **time-range condition**, otherwise state grows forever |
-
-```python
-deduped = (events
-    .withWatermark("event_ts", "1 hour")
-    .dropDuplicatesWithinWatermark(["event_id"]))   # bounded state
-# dropDuplicates(["event_id"]) without a watermark keeps every key forever
-```
-
-**`foreachBatch`** runs batch code per micro-batch, e.g. a `MERGE` into Delta or writes to several sinks. It is at-least-once, so make it **idempotent** (MERGE is), and deduplicate inside the batch first.
-
-## Streaming in declarative pipelines
-
-```sql
--- Bronze from Kafka: decode the value, keep metadata
-CREATE OR REFRESH STREAMING TABLE events_bronze AS
-SELECT CAST(value AS STRING) AS payload, timestamp AS kafka_ts, topic, partition, offset
-FROM STREAM read_kafka(bootstrapServers => '${kafka_servers}', subscribe => 'events');
-
--- Silver: parse, validate, deduplicate
-CREATE OR REFRESH STREAMING TABLE events_silver (
-  CONSTRAINT valid_device EXPECT (device_id IS NOT NULL) ON VIOLATION DROP ROW
-) AS SELECT payload:device_id::string AS device_id, payload:temp::double AS temp,
-            payload:ts::timestamp AS event_ts
-FROM STREAM(events_bronze);
-```
-
-- Pipelines manage **checkpoints, retries and the schema location** for you.
-- **Append flows**: several sources (e.g. one Kafka topic per region) write into one streaming table, and backfills run as a separate `ONCE` flow.
-- **Quarantine**: route rows that fail a rule into a separate table instead of dropping them silently.
-- Use a **materialized view** for aggregates that must reflect late updates. A streaming table processes each row only once.
-- A streaming read **fails** if its source table gets UPDATEs or DELETEs. Use `skipChangeCommits` or read the **change data feed**.
-
-## CDC and slowly changing dimensions
-
-```python
-from pyspark import pipelines as dp
-from pyspark.sql.functions import col, expr
-
-dp.create_streaming_table("customers_silver")
-
-dp.create_auto_cdc_flow(
-    target="customers_silver",
-    source="customers_cdc_clean",
-    keys=["customer_id"],
-    sequence_by=col("event_ts"),                 # out-of-order events resolved by this column
-    apply_as_deletes=expr("op = 'DELETE'"),
-    except_column_list=["op", "event_ts"],
-    stored_as_scd_type=2,                        # 1 = overwrite, 2 = keep history
-    track_history_column_list=["address", "segment"],
-)
-```
-
-| | SCD Type 1 | SCD Type 2 |
-|---|---|---|
-| Keeps | Latest row per key | Every version, with `__START_AT` / `__END_AT` |
-| Current rows | All | `WHERE __END_AT IS NULL` |
-| Typical question | "What is the customer's address?" | "Which segment was the customer in **when** they ordered?" |
-
-- **AUTO CDC FROM SNAPSHOT:** for sources that only deliver full snapshots.
-- **Change data feed (CDF)** (`delta.enableChangeDataFeed = true`) exposes row-level inserts, updates and deletes of a Delta table, so downstream processing touches only what changed.
-
-## Decision cheat sheet
-
-| Situation | Choose |
-|---|---|
-| Hourly SLA, files land continuously | `availableNow` trigger / **triggered** pipeline + schedule |
-| Seconds of latency on Kafka events | Continuous micro-batches or **real-time mode** |
-| Per-window aggregates written to Delta once | **Append** mode + **watermark** |
-| Upsert each micro-batch into a table | **`foreachBatch` + `MERGE`** (idempotent) |
-| Duplicate events within an hour | `dropDuplicatesWithinWatermark` |
-| Change feed with out-of-order updates and deletes | **AUTO CDC** + `SEQUENCE BY` |
-| History of dimension changes | **SCD Type 2** |
-| Propagate updates and deletes from silver to gold | **Change data feed** |
-
-## Common mistakes
-
-- ❌ An append-mode aggregation without a watermark. This is not allowed, and state is unbounded.
-- ❌ Complete mode on a large keyspace. It keeps all state forever.
-- ❌ Deleting or sharing a checkpoint to "fix" a stream. This causes duplicates or gaps.
-- ❌ A stream-stream join without watermarks and a time condition.
-- ❌ Streaming from a table that receives UPDATEs or DELETEs without CDF or `skipChangeCommits`.
-- ❌ `trigger(once=True)` in new code. Use **`availableNow`**.
-
-**Next course:** *Databricks Data Privacy*, which protects the data these pipelines produce.
-
-</script>
+<section id="doc"><nav id="toc"></nav><div id="docScroll"></div></section>
+</div>
 <script>
-function dbxQuiz(root, questions) {
+function dbxQuiz(root, questions, onDone) {
   if (typeof root === 'string') root = document.getElementById(root);
-  var i = 0, score = 0, picked = null, shown = false;
-  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/`([^`]+)`/g, '<code>$1</code>'); }
-  function btn(label, primary) { return '<button style="margin-top:14px;padding:8px 18px;border-radius:4px;border:none;cursor:pointer;background:' + (primary ? '#2272B4' : '#E0E0E0') + ';color:' + (primary ? '#fff' : '#333') + ';font-size:0.95em">' + label + '</button>'; }
+  var i = 0, score = 0, picked = null, shown = false, done = false;
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/`([^`]+)`/g, '<code style="background:#EEF2FF;color:#3730A3;padding:1px 6px;border-radius:6px">$1</code>'); }
+  function btn(label, primary) { return '<button style="margin-top:16px;padding:10px 22px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:' + (primary ? 'linear-gradient(135deg,#FF3621,#7C4DFF)' : '#E5E7EB') + ';color:' + (primary ? '#fff' : '#6B7280') + ';font-size:0.95em;box-shadow:' + (primary ? '0 6px 18px rgba(124,77,255,.3)' : 'none') + '">' + label + '</button>'; }
+  var box = 'padding:22px 24px;border-radius:16px;background:#fff;border:1px solid #E5E7EB;box-shadow:0 8px 28px rgba(27,49,57,.08);animation:dbxQ .4s ease both';
+  var style = '<style>@keyframes dbxQ{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}</style>';
+  function bar() {
+    var h = '<div style="display:flex;gap:6px;margin-bottom:14px">';
+    for (var k = 0; k < questions.length; k++) h += '<div style="flex:1;height:6px;border-radius:6px;background:' + (k < i ? 'linear-gradient(90deg,#FF3621,#7C4DFF)' : k === i ? '#C4B5FD' : '#E5E7EB') + '"></div>';
+    return h + '</div>';
+  }
   function render() {
     if (i >= questions.length) {
-      root.innerHTML = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;text-align:center;background:#fff"><div style="font-size:1.3em;font-weight:bold;color:#333">Score: ' + score + ' / ' + questions.length + '</div>' + btn('Retake', true) + '</div>';
-      root.querySelector('button').onclick = function () { i = 0; score = 0; picked = null; shown = false; render(); };
+      var pct = Math.round(score / questions.length * 100), msg = pct === 100 ? 'Perfect! 🎉' : pct >= 60 ? 'Nice work! 💪' : 'Worth another look 📖';
+      root.innerHTML = style + '<div style="' + box + ';text-align:center"><div style="font-size:48px">' + (pct === 100 ? '🏆' : pct >= 60 ? '🌟' : '🔁') + '</div><div style="font-size:1.6em;font-weight:800;color:#1B3139">' + score + ' / ' + questions.length + '</div><div style="color:#6B7280;margin-top:4px">' + msg + '</div>' + btn('Retake', true) + '</div>';
+      root.querySelector('button').onclick = function () { i = 0; score = 0; picked = null; shown = false; done = false; render(); };
+      if (!done && onDone) { done = true; onDone(score, questions.length); }
       return;
     }
-    var Q = questions[i], h = '<div style="padding:20px;border:1px solid #E0E0E0;border-radius:8px;background:#fff">';
-    h += '<div style="color:#999;font-size:0.85em;margin-bottom:6px">Question ' + (i + 1) + ' of ' + questions.length + '</div>';
-    h += '<div style="font-weight:bold;color:#333;margin-bottom:12px;line-height:1.5">' + esc(Q.q) + '</div>';
+    var Q = questions[i], h = style + '<div style="' + box + '">' + bar();
+    h += '<div style="color:#7C4DFF;font-size:0.8em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Question ' + (i + 1) + ' of ' + questions.length + '</div>';
+    h += '<div style="font-weight:700;color:#1B3139;margin-bottom:14px;line-height:1.5;font-size:1.05em">' + esc(Q.q) + '</div>';
     Q.o.forEach(function (t, k) {
-      var bg = '#fff', bd = '#e0e0e0';
-      if (shown && k === Q.c) { bg = '#E8F5E9'; bd = '#43A047'; }
-      else if (shown && k === picked) { bg = '#FFEBEE'; bd = '#E53935'; }
-      else if (!shown && k === picked) { bg = '#E3F2FD'; bd = '#2272B4'; }
-      h += '<div data-k="' + k + '" style="padding:10px 14px;margin:6px 0;border:2px solid ' + bd + ';background:' + bg + ';border-radius:6px;cursor:' + (shown ? 'default' : 'pointer') + ';color:#333">' + String.fromCharCode(97 + k) + ') ' + esc(t) + '</div>';
+      var bg = '#fff', bd = '#E5E7EB', mark = String.fromCharCode(65 + k);
+      if (shown && k === Q.c) { bg = '#ECFDF3'; bd = '#22C55E'; mark = '✓'; }
+      else if (shown && k === picked) { bg = '#FFF1F0'; bd = '#EF4444'; mark = '✗'; }
+      else if (!shown && k === picked) { bg = '#F5F3FF'; bd = '#7C4DFF'; }
+      h += '<div data-k="' + k + '" style="display:flex;gap:12px;align-items:center;padding:11px 14px;margin:8px 0;border:2px solid ' + bd + ';background:' + bg + ';border-radius:12px;cursor:' + (shown ? 'default' : 'pointer') + ';color:#1F2937;transition:all .15s">' +
+        '<span style="flex:none;width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:.85em;background:' + (bd === '#E5E7EB' ? '#F1F5F9' : bd) + ';color:' + (bd === '#E5E7EB' ? '#64748B' : '#fff') + '">' + mark + '</span><span>' + esc(t) + '</span></div>';
     });
     if (shown) {
-      h += '<div style="margin-top:12px;padding:12px;background:#F5F5F5;border-radius:6px;color:#333"><strong>' + (picked === Q.c ? '&#9989; Correct.' : '&#10060; Not quite.') + '</strong> ' + esc(Q.e) + '</div>' + btn(i + 1 < questions.length ? 'Next' : 'See score', true);
+      var ok = picked === Q.c;
+      h += '<div style="margin-top:14px;padding:14px 16px;border-radius:12px;background:' + (ok ? '#ECFDF3' : '#FFF7ED') + ';border:1px solid ' + (ok ? '#A7F3D0' : '#FED7AA') + ';color:#1F2937;animation:dbxQ .3s both"><strong>' + (ok ? '✅ Correct.' : '💡 Not quite.') + '</strong> ' + esc(Q.e) + '</div>' + btn(i + 1 < questions.length ? 'Next →' : 'See score', true);
     } else {
       h += btn('Submit', picked !== null);
     }
@@ -279,81 +210,109 @@ function dbxQuiz(root, questions) {
   }
   render();
 }
-
+var SLIDES = [{"title": "Recap: Databricks Streaming and Lakeflow Spark Declarative Pipelines", "icon": "🚀", "html": "<div class=\"hero\"><div class=\"blob b1\"><\/div><div class=\"blob b2\"><\/div><div class=\"blob b3\"><\/div><div class=\"hero-in\"><div class=\"kicker\">Advanced Data Engineering with Databricks<\/div><h1><span class=\"kicker-inline\">Recap<\/span>Databricks Streaming and Lakeflow Spark Declarative Pipelines<\/h1><div class=\"chips\"><span class=\"chip\">Course 1 of 4<\/span><span class=\"chip\">⏱ ~9 minutes<\/span><\/div><p class=\"sub\">Production streaming: how <strong>Structured Streaming<\/strong> keeps state, emits results and recovers, and how <strong>declarative pipelines<\/strong> apply it to ingestion, joins, deduplication and <strong>CDC<\/strong>.<\/p><\/div><\/div><div class=\"idea\"><span class=\"idea-icon\">💡<\/span><div><b>The one idea to remember:<\/b> a stream is an <strong>unbounded table<\/strong> processed incrementally. <strong>Checkpoints<\/strong> make it exactly-once, <strong>watermarks<\/strong> bound its state, and declarative pipelines manage most of this for you.<\/div><\/div>"}, {"title": "What we covered", "icon": "🗺️", "html": "<div class=\"sec-head\"><span class=\"sec-num\">01<\/span><span class=\"sec-icon\">🗺️<\/span><h2>What we covered<\/h2><\/div><div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Topic<\/th>\n<th>Key takeaway<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td>Streaming concepts<\/td>\n<td>Unbounded table, micro-batches, latency vs cost, batch ↔ streaming with the same API<\/td>\n<\/tr>\n<tr>\n<td>Structured Streaming basics<\/td>\n<td><code>readStream<\/code> / <code>writeStream<\/code>, sources and sinks, <strong>triggers<\/strong>, <strong>output modes<\/strong>, <strong>checkpoints<\/strong><\/td>\n<\/tr>\n<tr>\n<td>Stateful processing<\/td>\n<td>Aggregations, <strong>windows<\/strong> (tumbling, sliding, session), <strong>watermarks<\/strong>, late data<\/td>\n<\/tr>\n<tr>\n<td>Streaming joins &amp; deduplication<\/td>\n<td>Stream-static vs stream-stream joins, <code>dropDuplicatesWithinWatermark<\/code><\/td>\n<\/tr>\n<tr>\n<td>Streaming in declarative pipelines<\/td>\n<td>Streaming tables, Auto Loader and Kafka ingestion, append flows, quarantine<\/td>\n<\/tr>\n<tr>\n<td>CDC and SCD<\/td>\n<td><strong>AUTO CDC<\/strong> with <code>SEQUENCE BY<\/code>, SCD Type 1 and 2, snapshots, change data feed<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>"}, {"title": "Structured Streaming in one example", "icon": "🌊", "html": "<div class=\"sec-head\"><span class=\"sec-num\">02<\/span><span class=\"sec-icon\">🌊<\/span><h2>Structured Streaming in one example<\/h2><\/div><div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #FF7B72\">from<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">pyspark.sql<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">import<\/span> <span style=\"color: #E6EDF3\">functions<\/span> <span style=\"color: #FF7B72\">as<\/span> <span style=\"color: #E6EDF3\">F<\/span>\n\n<span style=\"color: #E6EDF3\">events<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #E6EDF3\">(spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">readStream<\/span>                       <span style=\"color: #8B949E; font-style: italic\"># source: Delta table, Auto Loader, Kafka…<\/span>\n          <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">table(<\/span><span style=\"color: #A5D6FF\">\"main.bronze.device_events\"<\/span><span style=\"color: #E6EDF3\">))<\/span>\n\n<span style=\"color: #E6EDF3\">per_window<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #E6EDF3\">(events<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">withWatermark(<\/span><span style=\"color: #A5D6FF\">\"event_ts\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #A5D6FF\">\"10 minutes\"<\/span><span style=\"color: #E6EDF3\">)<\/span>     <span style=\"color: #8B949E; font-style: italic\"># accept data up to 10 min late, then drop state<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">groupBy(F<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">window(<\/span><span style=\"color: #A5D6FF\">\"event_ts\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #A5D6FF\">\"5 minutes\"<\/span><span style=\"color: #E6EDF3\">),<\/span> <span style=\"color: #A5D6FF\">\"device_id\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">agg(F<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">avg(<\/span><span style=\"color: #A5D6FF\">\"temp\"<\/span><span style=\"color: #E6EDF3\">)<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">alias(<\/span><span style=\"color: #A5D6FF\">\"avg_temp\"<\/span><span style=\"color: #E6EDF3\">)))<\/span>\n\n<span style=\"color: #E6EDF3\">(per_window<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">writeStream<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">outputMode(<\/span><span style=\"color: #A5D6FF\">\"append\"<\/span><span style=\"color: #E6EDF3\">)<\/span>                        <span style=\"color: #8B949E; font-style: italic\"># emit each window once, when it is final<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">option(<\/span><span style=\"color: #A5D6FF\">\"checkpointLocation\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #A5D6FF\">\"/Volumes/main/chk/device_5min\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">trigger(availableNow<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #79C0FF\">True<\/span><span style=\"color: #E6EDF3\">)<\/span>                  <span style=\"color: #8B949E; font-style: italic\"># process what's there, then stop<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">toTable(<\/span><span style=\"color: #A5D6FF\">\"main.silver.device_5min\"<\/span><span style=\"color: #E6EDF3\">))<\/span><\/pre><\/div>\n<div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Concept<\/th>\n<th>Options<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td><strong>Trigger<\/strong><\/td>\n<td>default / <code>processingTime=\"1 minute\"<\/code> (continuous micro-batches) · <strong><code>availableNow=True<\/code><\/strong> (incremental batch, then stop) · real-time mode (very low latency)<\/td>\n<\/tr>\n<tr>\n<td><strong>Output mode<\/strong><\/td>\n<td><strong>Append<\/strong>: only new, final rows (aggregations need a watermark) · <strong>Update<\/strong>: changed rows (use with <code>foreachBatch<\/code> + <code>MERGE<\/code>) · <strong>Complete<\/strong>: whole result each trigger (keeps all state)<\/td>\n<\/tr>\n<tr>\n<td><strong>Checkpoint<\/strong><\/td>\n<td>Source offsets + committed batches + state. <strong>One per query.<\/strong> Never share it or delete it<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>"}, {"title": "State, windows and watermarks", "icon": "🧠", "html": "<div class=\"sec-head\"><span class=\"sec-num\">03<\/span><span class=\"sec-icon\">🧠<\/span><h2>State, windows and watermarks<\/h2><\/div><pre class=\"diagram\">tumbling  |----|----|----|      fixed, non-overlapping: &quot;per 5 minutes&quot;\nsliding   |------|               overlapping: &quot;last 10 minutes, every 5 minutes&quot;\n            |------|\nsession   |--|   |-----|         gap-based: &quot;activity bursts per user&quot;<\/pre>\n<ul>\n<li><strong>Stateless<\/strong> operations (<code>select<\/code>, <code>filter<\/code>, stream-static join) don't remember anything between micro-batches.<\/li>\n<li><strong>Stateful<\/strong> operations (aggregations, <code>dropDuplicates<\/code>, stream-stream joins) keep <strong>state<\/strong> in the state store (RocksDB), and it is saved in the checkpoint.<\/li>\n<li><strong>Watermark<\/strong> = the latest event time seen minus the allowed delay. Windows older than the watermark are <strong>finalized<\/strong> and their state is <strong>dropped<\/strong>. Events arriving later than that can be ignored.<\/li>\n<li>A longer delay accepts later data, but keeps <strong>more state<\/strong> and delays append-mode output.<\/li>\n<li>Changing the aggregation keys, the window, or the number of stateful operators requires a <strong>new checkpoint<\/strong>.<\/li>\n<\/ul>"}, {"title": "Streaming joins and deduplication", "icon": "🌊", "html": "<div class=\"sec-head\"><span class=\"sec-num\">04<\/span><span class=\"sec-icon\">🌊<\/span><h2>Streaming joins and deduplication<\/h2><\/div><div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Join<\/th>\n<th>How it works<\/th>\n<th>Watch out<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td><strong>Stream-static<\/strong><\/td>\n<td>Each micro-batch joins with the <strong>current<\/strong> version of a Delta table<\/td>\n<td>Dimension changes are <strong>not<\/strong> re-applied to past results. Use an MV when results must stay correct<\/td>\n<\/tr>\n<tr>\n<td><strong>Stream-stream<\/strong><\/td>\n<td>Both sides buffered in state until they can match<\/td>\n<td>Needs <strong>watermarks on both sides<\/strong> plus a <strong>time-range condition<\/strong>, otherwise state grows forever<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #E6EDF3\">deduped<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #E6EDF3\">(events<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">withWatermark(<\/span><span style=\"color: #A5D6FF\">\"event_ts\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #A5D6FF\">\"1 hour\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">dropDuplicatesWithinWatermark([<\/span><span style=\"color: #A5D6FF\">\"event_id\"<\/span><span style=\"color: #E6EDF3\">]))<\/span>   <span style=\"color: #8B949E; font-style: italic\"># bounded state<\/span>\n<span style=\"color: #8B949E; font-style: italic\"># dropDuplicates([\"event_id\"]) without a watermark keeps every key forever<\/span><\/pre><\/div>\n<p><strong><code>foreachBatch<\/code><\/strong> runs batch code per micro-batch, e.g. a <code>MERGE<\/code> into Delta or writes to several sinks. It is at-least-once, so make it <strong>idempotent<\/strong> (MERGE is), and deduplicate inside the batch first.<\/p>"}, {"title": "Streaming in declarative pipelines", "icon": "🌊", "html": "<div class=\"sec-head\"><span class=\"sec-num\">05<\/span><span class=\"sec-icon\">🌊<\/span><h2>Streaming in declarative pipelines<\/h2><\/div><div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">SQL<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\">-- Bronze from Kafka: decode the value, keep metadata<\/span>\n<span style=\"color: #FF7B72\">CREATE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">OR<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">REFRESH<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">STREAMING<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">TABLE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">events_bronze<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span>\n<span style=\"color: #FF7B72\">SELECT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">CAST<\/span><span style=\"color: #E6EDF3\">(value<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">STRING)<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">payload,<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">timestamp<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">kafka_ts,<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">topic,<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">partition,<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">offset<\/span>\n<span style=\"color: #FF7B72\">FROM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">STREAM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">read_kafka(bootstrapServers<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">=&gt;<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'${kafka_servers}'<\/span><span style=\"color: #E6EDF3\">,<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">subscribe<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72; font-weight: bold\">=&gt;<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #A5D6FF\">'events'<\/span><span style=\"color: #E6EDF3\">);<\/span>\n\n<span style=\"color: #8B949E; font-style: italic\">-- Silver: parse, validate, deduplicate<\/span>\n<span style=\"color: #FF7B72\">CREATE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">OR<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">REFRESH<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">STREAMING<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">TABLE<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">events_silver<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">(<\/span>\n<span style=\"color: #6E7681\">  <\/span><span style=\"color: #FF7B72\">CONSTRAINT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">valid_device<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">EXPECT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">(device_id<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">IS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">NOT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">NULL<\/span><span style=\"color: #E6EDF3\">)<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">ON<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">VIOLATION<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">DROP<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">ROW<\/span>\n<span style=\"color: #E6EDF3\">)<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">SELECT<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">payload:device_id::string<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">device_id,<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">payload:temp::double<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">temp,<\/span>\n<span style=\"color: #6E7681\">            <\/span><span style=\"color: #E6EDF3\">payload:ts::<\/span><span style=\"color: #FF7B72\">timestamp<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">AS<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">event_ts<\/span>\n<span style=\"color: #FF7B72\">FROM<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #E6EDF3\">STREAM(events_bronze);<\/span><\/pre><\/div>\n<ul>\n<li>Pipelines manage <strong>checkpoints, retries and the schema location<\/strong> for you.<\/li>\n<li><strong>Append flows<\/strong>: several sources (e.g. one Kafka topic per region) write into one streaming table, and backfills run as a separate <code>ONCE<\/code> flow.<\/li>\n<li><strong>Quarantine<\/strong>: route rows that fail a rule into a separate table instead of dropping them silently.<\/li>\n<li>Use a <strong>materialized view<\/strong> for aggregates that must reflect late updates. A streaming table processes each row only once.<\/li>\n<li>A streaming read <strong>fails<\/strong> if its source table gets UPDATEs or DELETEs. Use <code>skipChangeCommits<\/code> or read the <strong>change data feed<\/strong>.<\/li>\n<\/ul>"}, {"title": "CDC and slowly changing dimensions", "icon": "🔁", "html": "<div class=\"sec-head\"><span class=\"sec-num\">06<\/span><span class=\"sec-icon\">🔁<\/span><h2>CDC and slowly changing dimensions<\/h2><\/div><div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #FF7B72\">from<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">pyspark<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">import<\/span> <span style=\"color: #E6EDF3\">pipelines<\/span> <span style=\"color: #FF7B72\">as<\/span> <span style=\"color: #E6EDF3\">dp<\/span>\n<span style=\"color: #FF7B72\">from<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">pyspark.sql.functions<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">import<\/span> <span style=\"color: #E6EDF3\">col,<\/span> <span style=\"color: #E6EDF3\">expr<\/span>\n\n<span style=\"color: #E6EDF3\">dp<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">create_streaming_table(<\/span><span style=\"color: #A5D6FF\">\"customers_silver\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n\n<span style=\"color: #E6EDF3\">dp<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">create_auto_cdc_flow(<\/span>\n    <span style=\"color: #E6EDF3\">target<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #A5D6FF\">\"customers_silver\"<\/span><span style=\"color: #E6EDF3\">,<\/span>\n    <span style=\"color: #E6EDF3\">source<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #A5D6FF\">\"customers_cdc_clean\"<\/span><span style=\"color: #E6EDF3\">,<\/span>\n    <span style=\"color: #E6EDF3\">keys<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #E6EDF3\">[<\/span><span style=\"color: #A5D6FF\">\"customer_id\"<\/span><span style=\"color: #E6EDF3\">],<\/span>\n    <span style=\"color: #E6EDF3\">sequence_by<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #E6EDF3\">col(<\/span><span style=\"color: #A5D6FF\">\"event_ts\"<\/span><span style=\"color: #E6EDF3\">),<\/span>                 <span style=\"color: #8B949E; font-style: italic\"># out-of-order events resolved by this column<\/span>\n    <span style=\"color: #E6EDF3\">apply_as_deletes<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #E6EDF3\">expr(<\/span><span style=\"color: #A5D6FF\">\"op = 'DELETE'\"<\/span><span style=\"color: #E6EDF3\">),<\/span>\n    <span style=\"color: #E6EDF3\">except_column_list<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #E6EDF3\">[<\/span><span style=\"color: #A5D6FF\">\"op\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #A5D6FF\">\"event_ts\"<\/span><span style=\"color: #E6EDF3\">],<\/span>\n    <span style=\"color: #E6EDF3\">stored_as_scd_type<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #A5D6FF\">2<\/span><span style=\"color: #E6EDF3\">,<\/span>                        <span style=\"color: #8B949E; font-style: italic\"># 1 = overwrite, 2 = keep history<\/span>\n    <span style=\"color: #E6EDF3\">track_history_column_list<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #E6EDF3\">[<\/span><span style=\"color: #A5D6FF\">\"address\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #A5D6FF\">\"segment\"<\/span><span style=\"color: #E6EDF3\">],<\/span>\n<span style=\"color: #E6EDF3\">)<\/span><\/pre><\/div>\n<div class=\"tbl\"><table>\n<thead>\n<tr>\n<th><\/th>\n<th>SCD Type 1<\/th>\n<th>SCD Type 2<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td>Keeps<\/td>\n<td>Latest row per key<\/td>\n<td>Every version, with <code>__START_AT<\/code> / <code>__END_AT<\/code><\/td>\n<\/tr>\n<tr>\n<td>Current rows<\/td>\n<td>All<\/td>\n<td><code>WHERE __END_AT IS NULL<\/code><\/td>\n<\/tr>\n<tr>\n<td>Typical question<\/td>\n<td>\"What is the customer's address?\"<\/td>\n<td>\"Which segment was the customer in <strong>when<\/strong> they ordered?\"<\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>\n<ul>\n<li><strong>AUTO CDC FROM SNAPSHOT:<\/strong> for sources that only deliver full snapshots.<\/li>\n<li><strong>Change data feed (CDF)<\/strong> (<code>delta.enableChangeDataFeed = true<\/code>) exposes row-level inserts, updates and deletes of a Delta table, so downstream processing touches only what changed.<\/li>\n<\/ul>"}, {"title": "Try it: incremental, exactly-once, stateful", "icon": "🧪", "html": "<div class=\"sec-head\"><span class=\"sec-num\">07<\/span><span class=\"sec-icon\">🧪<\/span><h2>Try it: incremental, exactly-once, stateful<\/h2><\/div><blockquote class=\"callout\">\n<p>Streams the synthetic <strong>retail<\/strong> orders with <code>availableNow<\/code> (the trigger Serverless supports). Run the processing twice to see the checkpoint at work.<\/p>\n<\/blockquote>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><span class=\"run\">▶ runs in the notebook<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\"># ✏️ FILL IN: the catalog.schema you can write to<\/span>\n<span style=\"color: #E6EDF3\">WORK_SCHEMA<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #A5D6FF\">\"FILL_IN\"<\/span>   <span style=\"color: #8B949E; font-style: italic\"># e.g. \"dbacademy.labuser1234567_1700000000\"<\/span><\/pre><\/div>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><span class=\"run\">▶ runs in the notebook<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\"># Load the retail tables from GitHub and create a volume for checkpoints<\/span>\n<span style=\"color: #FF7B72\">import<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">urllib.request<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">as<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">u<\/span><span style=\"color: #E6EDF3\">;<\/span> <span style=\"color: #E6EDF3\">exec(u<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">urlopen(<\/span><span style=\"color: #A5D6FF\">\"https://raw.githubusercontent.com/misrori/dbxhelp/main/dbxdata.py\"<\/span><span style=\"color: #E6EDF3\">)<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">read()<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">decode())<\/span>\n<span style=\"color: #E6EDF3\">S<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #E6EDF3\">load_dataset(<\/span><span style=\"color: #A5D6FF\">\"retail\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #E6EDF3\">WORK_SCHEMA)<\/span>\n<span style=\"color: #E6EDF3\">CHK<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #E6EDF3\">files_volume(WORK_SCHEMA)<\/span> <span style=\"color: #FF7B72; font-weight: bold\">+<\/span> <span style=\"color: #A5D6FF\">\"/checkpoints\"<\/span><\/pre><\/div>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><span class=\"run\">▶ runs in the notebook<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\"># Incremental bronze → silver stream. The checkpoint remembers what was processed<\/span>\n<span style=\"color: #FF7B72\">from<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">pyspark.sql<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #FF7B72\">import<\/span> <span style=\"color: #E6EDF3\">functions<\/span> <span style=\"color: #FF7B72\">as<\/span> <span style=\"color: #E6EDF3\">F<\/span>\n\n<span style=\"color: #FF7B72\">def<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #D2A8FF; font-weight: bold\">rows_in<\/span><span style=\"color: #E6EDF3\">(q):<\/span>\n    <span style=\"color: #FF7B72\">return<\/span> <span style=\"color: #E6EDF3\">sum(p[<\/span><span style=\"color: #A5D6FF\">\"numInputRows\"<\/span><span style=\"color: #E6EDF3\">]<\/span> <span style=\"color: #FF7B72\">if<\/span> <span style=\"color: #E6EDF3\">isinstance(p,<\/span> <span style=\"color: #E6EDF3\">dict)<\/span> <span style=\"color: #FF7B72\">else<\/span> <span style=\"color: #E6EDF3\">p<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">numInputRows<\/span> <span style=\"color: #FF7B72\">for<\/span> <span style=\"color: #E6EDF3\">p<\/span> <span style=\"color: #FF7B72; font-weight: bold\">in<\/span> <span style=\"color: #E6EDF3\">q<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">recentProgress)<\/span>\n\n<span style=\"color: #FF7B72\">def<\/span><span style=\"color: #6E7681\"> <\/span><span style=\"color: #D2A8FF; font-weight: bold\">run_silver<\/span><span style=\"color: #E6EDF3\">():<\/span>\n    <span style=\"color: #E6EDF3\">q<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #E6EDF3\">(spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">readStream<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">table(<\/span><span style=\"color: #A5D6FF\">\"fact_orders\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n         <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">filter(<\/span><span style=\"color: #A5D6FF\">\"status &lt;&gt; 'TEST'\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n         <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">withColumn(<\/span><span style=\"color: #A5D6FF\">\"processed_at\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #E6EDF3\">F<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">current_timestamp())<\/span>\n         <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">writeStream<\/span>\n         <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">option(<\/span><span style=\"color: #A5D6FF\">\"checkpointLocation\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #79C0FF\">f<\/span><span style=\"color: #A5D6FF\">\"{<\/span><span style=\"color: #E6EDF3\">CHK<\/span><span style=\"color: #A5D6FF\">}/orders_silver\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n         <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">trigger(availableNow<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #79C0FF\">True<\/span><span style=\"color: #E6EDF3\">)<\/span>\n         <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">toTable(<\/span><span style=\"color: #A5D6FF\">\"orders_silver_stream\"<\/span><span style=\"color: #E6EDF3\">))<\/span>\n    <span style=\"color: #E6EDF3\">q<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">awaitTermination()<\/span>\n    <span style=\"color: #FF7B72\">return<\/span> <span style=\"color: #E6EDF3\">rows_in(q)<\/span>\n\n<span style=\"color: #E6EDF3\">print(<\/span><span style=\"color: #A5D6FF\">\"1st run, rows processed:\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #E6EDF3\">run_silver())<\/span>\n<span style=\"color: #E6EDF3\">print(<\/span><span style=\"color: #A5D6FF\">\"2nd run, rows processed:\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #E6EDF3\">run_silver(),<\/span> <span style=\"color: #A5D6FF\">\"← nothing new, nothing reprocessed\"<\/span><span style=\"color: #E6EDF3\">)<\/span><\/pre><\/div>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><span class=\"run\">▶ runs in the notebook<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\"># New data arrives: only the new rows are processed<\/span>\n<span style=\"color: #E6EDF3\">spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">sql(<\/span><span style=\"color: #A5D6FF\">\"\"\"<\/span>\n<span style=\"color: #A5D6FF\">INSERT INTO fact_orders<\/span>\n<span style=\"color: #A5D6FF\">SELECT order_id + 1000000, current_date(), customer_id, product_id, quantity, discount, 'COMPLETED'<\/span>\n<span style=\"color: #A5D6FF\">FROM fact_orders LIMIT 100<\/span>\n<span style=\"color: #A5D6FF\">\"\"\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n<span style=\"color: #E6EDF3\">print(<\/span><span style=\"color: #A5D6FF\">\"3rd run, rows processed:\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #E6EDF3\">run_silver())<\/span>\n<span style=\"color: #E6EDF3\">display(spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">sql(<\/span><span style=\"color: #A5D6FF\">\"SELECT count(*) AS silver_rows FROM orders_silver_stream\"<\/span><span style=\"color: #E6EDF3\">))<\/span><\/pre><\/div>\n<div class=\"code\"><div class=\"code-bar\"><i><\/i><i><\/i><i><\/i><span class=\"lang\">PYTHON<\/span><span class=\"run\">▶ runs in the notebook<\/span><button class=\"copy\" type=\"button\">copy<\/button><\/div><pre><span style=\"color: #8B949E; font-style: italic\"># Stateful: weekly revenue per category (stream-static join + windowed aggregation)<\/span>\n<span style=\"color: #E6EDF3\">weekly<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #E6EDF3\">(spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">readStream<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">table(<\/span><span style=\"color: #A5D6FF\">\"fact_orders\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">join(spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">read<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">table(<\/span><span style=\"color: #A5D6FF\">\"dim_product\"<\/span><span style=\"color: #E6EDF3\">),<\/span> <span style=\"color: #A5D6FF\">\"product_id\"<\/span><span style=\"color: #E6EDF3\">)<\/span>                  <span style=\"color: #8B949E; font-style: italic\"># stream-static join<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">withColumn(<\/span><span style=\"color: #A5D6FF\">\"order_ts\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #E6EDF3\">F<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">col(<\/span><span style=\"color: #A5D6FF\">\"order_date\"<\/span><span style=\"color: #E6EDF3\">)<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">cast(<\/span><span style=\"color: #A5D6FF\">\"timestamp\"<\/span><span style=\"color: #E6EDF3\">))<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">groupBy(F<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">window(<\/span><span style=\"color: #A5D6FF\">\"order_ts\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #A5D6FF\">\"7 days\"<\/span><span style=\"color: #E6EDF3\">),<\/span> <span style=\"color: #A5D6FF\">\"category\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n    <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">agg(F<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">round(F<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">sum(F<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">col(<\/span><span style=\"color: #A5D6FF\">\"quantity\"<\/span><span style=\"color: #E6EDF3\">)<\/span> <span style=\"color: #FF7B72; font-weight: bold\">*<\/span> <span style=\"color: #E6EDF3\">F<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">col(<\/span><span style=\"color: #A5D6FF\">\"unit_price\"<\/span><span style=\"color: #E6EDF3\">)),<\/span> <span style=\"color: #A5D6FF\">2<\/span><span style=\"color: #E6EDF3\">)<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">alias(<\/span><span style=\"color: #A5D6FF\">\"revenue\"<\/span><span style=\"color: #E6EDF3\">),<\/span> <span style=\"color: #E6EDF3\">F<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">count(<\/span><span style=\"color: #A5D6FF\">\"*\"<\/span><span style=\"color: #E6EDF3\">)<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">alias(<\/span><span style=\"color: #A5D6FF\">\"orders\"<\/span><span style=\"color: #E6EDF3\">)))<\/span>\n\n<span style=\"color: #E6EDF3\">q<\/span> <span style=\"color: #FF7B72; font-weight: bold\">=<\/span> <span style=\"color: #E6EDF3\">(weekly<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">writeStream<\/span>\n     <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">outputMode(<\/span><span style=\"color: #A5D6FF\">\"complete\"<\/span><span style=\"color: #E6EDF3\">)<\/span>                       <span style=\"color: #8B949E; font-style: italic\"># small aggregate: rewrite the full result each trigger<\/span>\n     <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">option(<\/span><span style=\"color: #A5D6FF\">\"checkpointLocation\"<\/span><span style=\"color: #E6EDF3\">,<\/span> <span style=\"color: #79C0FF\">f<\/span><span style=\"color: #A5D6FF\">\"{<\/span><span style=\"color: #E6EDF3\">CHK<\/span><span style=\"color: #A5D6FF\">}/weekly\"<\/span><span style=\"color: #E6EDF3\">)<\/span>\n     <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">trigger(availableNow<\/span><span style=\"color: #FF7B72; font-weight: bold\">=<\/span><span style=\"color: #79C0FF\">True<\/span><span style=\"color: #E6EDF3\">)<\/span>\n     <span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">toTable(<\/span><span style=\"color: #A5D6FF\">\"orders_weekly_stream\"<\/span><span style=\"color: #E6EDF3\">))<\/span>\n<span style=\"color: #E6EDF3\">q<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">awaitTermination()<\/span>\n<span style=\"color: #E6EDF3\">display(spark<\/span><span style=\"color: #FF7B72; font-weight: bold\">.<\/span><span style=\"color: #E6EDF3\">sql(<\/span><span style=\"color: #A5D6FF\">\"SELECT window.start, category, revenue, orders FROM orders_weekly_stream ORDER BY window.start DESC, revenue DESC LIMIT 15\"<\/span><span style=\"color: #E6EDF3\">))<\/span><\/pre><\/div>\n<blockquote class=\"callout\">\n<p>In production, a large aggregate would use <strong>append<\/strong> mode plus <code>withWatermark(...)<\/code>, so finished windows are written once and their state is dropped.<\/p>\n<\/blockquote>"}, {"title": "Decision cheat sheet", "icon": "🧭", "html": "<div class=\"sec-head\"><span class=\"sec-num\">08<\/span><span class=\"sec-icon\">🧭<\/span><h2>Decision cheat sheet<\/h2><\/div><div class=\"tbl\"><table>\n<thead>\n<tr>\n<th>Situation<\/th>\n<th>Choose<\/th>\n<\/tr>\n<\/thead>\n<tbody>\n<tr>\n<td>Hourly SLA, files land continuously<\/td>\n<td><code>availableNow<\/code> trigger / <strong>triggered<\/strong> pipeline + schedule<\/td>\n<\/tr>\n<tr>\n<td>Seconds of latency on Kafka events<\/td>\n<td>Continuous micro-batches or <strong>real-time mode<\/strong><\/td>\n<\/tr>\n<tr>\n<td>Per-window aggregates written to Delta once<\/td>\n<td><strong>Append<\/strong> mode + <strong>watermark<\/strong><\/td>\n<\/tr>\n<tr>\n<td>Upsert each micro-batch into a table<\/td>\n<td><strong><code>foreachBatch<\/code> + <code>MERGE<\/code><\/strong> (idempotent)<\/td>\n<\/tr>\n<tr>\n<td>Duplicate events within an hour<\/td>\n<td><code>dropDuplicatesWithinWatermark<\/code><\/td>\n<\/tr>\n<tr>\n<td>Change feed with out-of-order updates and deletes<\/td>\n<td><strong>AUTO CDC<\/strong> + <code>SEQUENCE BY<\/code><\/td>\n<\/tr>\n<tr>\n<td>History of dimension changes<\/td>\n<td><strong>SCD Type 2<\/strong><\/td>\n<\/tr>\n<tr>\n<td>Propagate updates and deletes from silver to gold<\/td>\n<td><strong>Change data feed<\/strong><\/td>\n<\/tr>\n<\/tbody>\n<\/table><\/div>"}, {"title": "Common mistakes", "icon": "⚠️", "html": "<div class=\"sec-head\"><span class=\"sec-num\">09<\/span><span class=\"sec-icon\">⚠️<\/span><h2>Common mistakes<\/h2><\/div><ul>\n<li class=\"bad\">❌ An append-mode aggregation without a watermark. This is not allowed, and state is unbounded.<\/li>\n<li class=\"bad\">❌ Complete mode on a large keyspace. It keeps all state forever.<\/li>\n<li class=\"bad\">❌ Deleting or sharing a checkpoint to \"fix\" a stream. This causes duplicates or gaps.<\/li>\n<li class=\"bad\">❌ A stream-stream join without watermarks and a time condition.<\/li>\n<li class=\"bad\">❌ Streaming from a table that receives UPDATEs or DELETEs without CDF or <code>skipChangeCommits<\/code>.<\/li>\n<li class=\"bad\">❌ <code>trigger(once=True)<\/code> in new code. Use <strong><code>availableNow<\/code><\/strong>.<\/li>\n<\/ul>\n<p><strong>Next course:<\/strong> <em>Databricks Data Privacy<\/em>, which protects the data these pipelines produce.<\/p>"}];
 var QUIZ = [{"q": "A streaming aggregation per 5-minute window must be written to a Delta table in append mode. What else is required?", "o": ["Complete output mode", "A watermark on the event-time column", "A Spark cache on the source", "trigger(once=True)"], "c": 1, "e": "Append mode only emits final results. With an aggregation, Spark needs a watermark to know when a window is complete and its state can be dropped."}, {"q": "A job should process all newly arrived data every hour and then stop, to keep costs low. Which trigger fits?", "o": ["processingTime='1 hour'", "availableNow=True, scheduled hourly by a job", "Continuous trigger", "Real-time mode"], "c": 1, "e": "availableNow processes everything available (possibly in several batches) and then stops. A scheduled job turns it into an incremental batch. processingTime would keep the cluster running."}, {"q": "Which statement about streaming checkpoints is TRUE?", "o": ["Two queries writing to different tables can share one checkpoint", "Deleting the checkpoint is a safe way to recover from failures", "Each query needs its own checkpoint, which stores offsets and state", "Checkpoints are only needed for stateless queries"], "c": 2, "e": "The checkpoint holds source offsets, committed batches and state, giving exactly-once processing. Never share or delete it."}, {"q": "A stream of orders is joined to a customer dimension that changes, and gold results must always reflect the current customer data. What is the best choice?", "o": ["A stream-static join into a streaming table", "A materialized view that joins orders and customers", "A stream-stream join without watermarks", "Complete output mode"], "c": 1, "e": "A stream-static join uses the dimension as of processing time and never revisits old rows. A materialized view recomputes correctly when either side changes."}, {"q": "Duplicate events with the same event_id can arrive up to 30 minutes apart. How do you deduplicate with bounded state?", "o": ["`dropDuplicates(['event_id'])`", "`withWatermark('event_ts', '30 minutes').dropDuplicatesWithinWatermark(['event_id'])`", "`distinct()` in complete mode", "A MERGE in foreachBatch without dedup"], "c": 1, "e": "dropDuplicatesWithinWatermark keeps keys only as long as the watermark requires. dropDuplicates without a watermark stores every key forever."}];
-</script>
-<script>
 (function () {
-  var md = document.getElementById('source').textContent.replace(/<\\\/script/gi, '</script').trim();
-  marked.setOptions({ gfm: true, breaks: false });
-  function render(text) {
-    var div = document.createElement('div');
-    div.innerHTML = marked.parse(text);
-    div.querySelectorAll('pre code').forEach(function (el) { try { hljs.highlightElement(el); } catch (e) {} });
-    div.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; });
-    return div.innerHTML;
-  }
+  if (window.self !== window.top) document.body.classList.add('embedded');
+  if (QUIZ && QUIZ.length) SLIDES.push({ title: 'Check yourself', icon: '🎯', quiz: true,
+    html: '<div class="sec-head"><span class="sec-num">' + String(SLIDES.length).padStart(2, '0') + '</span><span class="sec-icon">🎯</span><h2>Check yourself</h2></div><div class="quiz"></div>' });
+  var idx = 0, stage = document.getElementById('stage'), dots = document.getElementById('dots');
+  var $ = function (id) { return document.getElementById(id); };
 
-  // Document view: the whole markdown file
-  var docBody = document.getElementById('docBody');
-  docBody.innerHTML = render(md);
-  if (QUIZ && QUIZ.length) {
-    docBody.insertAdjacentHTML('beforeend', '<h2>Check yourself</h2><div id="quizDoc"></div>');
-    dbxQuiz('quizDoc', QUIZ);
+  function wireCopy(root) {
+    root.querySelectorAll('.code').forEach(function (c) {
+      var b = c.querySelector('.copy'); if (!b) return;
+      b.onclick = function () {
+        var t = c.querySelector('pre').innerText;
+        (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { b.textContent = 'copied ✓'; setTimeout(function () { b.textContent = 'copy'; }, 1400); }, function () {});
+      };
+    });
   }
+  function confetti() {
+    var e = ['🎉', '✨', '🎊', '⭐', '🧡', '💜'];
+    for (var i = 0; i < 40; i++) {
+      var s = document.createElement('div'); s.className = 'confetti'; s.textContent = e[i % e.length];
+      s.style.left = Math.random() * 100 + 'vw'; s.style.animationDelay = Math.random() * .8 + 's'; document.body.appendChild(s);
+      setTimeout(function (n) { return function () { n.remove(); }; }(s), 3600);
+    }
+  }
+  function mountQuiz(el) { dbxQuiz(el, QUIZ, function (score, total) { if (score === total) confetti(); }); }
 
-  // Presentation view: split on "## " headings (outside fenced code blocks)
-  var slides = [], cur = [], fence = false;
-  md.split('\n').forEach(function (line) {
-    if (/^\s*```/.test(line)) fence = !fence;
-    if (!fence && /^## /.test(line) && cur.length) { slides.push(cur.join('\n')); cur = []; }
-    cur.push(line);
+  SLIDES.forEach(function (s, i) {
+    var d = document.createElement('button'); d.title = (i + 1) + '. ' + s.title; d.onclick = function () { go(i); }; dots.appendChild(d);
+    var c = document.createElement('div'); c.className = 'card';
+    c.innerHTML = '<div class="n">' + String(i + 1).padStart(2, '0') + '</div><div class="i">' + s.icon + '</div><div class="t">' + s.title + '</div>';
+    c.onclick = function () { overview(false); go(i); }; $('grid').appendChild(c);
   });
-  if (cur.length) slides.push(cur.join('\n'));
-  var html = slides.map(render), idx = 0;
-  if (QUIZ && QUIZ.length) { slides.push('quiz'); html.push('<h2>Check yourself</h2><div class="quiz-slot"></div>'); }
+  function go(n, dir) {
+    var prev = idx; idx = Math.max(0, Math.min(SLIDES.length - 1, n));
+    var s = SLIDES[idx], el = document.createElement('div');
+    el.className = 'slide ' + (idx === 0 ? 'title ' : '') + ((dir || (idx >= prev ? 1 : -1)) > 0 ? 'enter-r' : 'enter-l');
+    el.innerHTML = '<div class="dbx">' + s.html + '</div>';
+    Array.prototype.forEach.call(el.firstChild.children, function (ch, k) { ch.style.setProperty('--i', k); });
+    stage.innerHTML = ''; stage.appendChild(el); wireCopy(el);
+    if (s.quiz) mountQuiz(el.querySelector('.quiz'));
+    Array.prototype.forEach.call(dots.children, function (d, k) { d.classList.toggle('on', k === idx); });
+    $('count').textContent = (idx + 1) + ' / ' + SLIDES.length;
+    $('bar').style.width = ((idx + 1) / SLIDES.length * 100) + '%';
+    try { history.replaceState(null, '', '#slide-' + (idx + 1)); } catch (e) {}
+  }
+  function overview(on) { var o = $('overview'); o.classList.toggle('on', on === undefined ? !o.classList.contains('on') : on); }
+  $('prev').onclick = function () { go(idx - 1, -1); };
+  $('next').onclick = function () { go(idx + 1, 1); };
+  $('bOver').onclick = function () { mode('slides'); overview(); };
+  $('bFull').onclick = function () {
+    var r = document.documentElement;
+    if (document.fullscreenElement) document.exitFullscreen(); else if (r.requestFullscreen) r.requestFullscreen().catch(function () {});
+  };
+  var tx = null;
+  stage.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', function (e) { if (tx === null) return; var dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) go(idx + (dx < 0 ? 1 : -1)); tx = null; });
 
-  var slideEl = document.getElementById('slide'), counter = document.getElementById('counter'), progress = document.getElementById('progress');
-  function show(n) {
-    idx = Math.max(0, Math.min(slides.length - 1, n));
-    slideEl.innerHTML = html[idx];
-    slideEl.classList.toggle('title-slide', idx === 0);
-    slideEl.scrollTop = 0;
-    var slot = slideEl.querySelector('.quiz-slot');
-    if (slot) dbxQuiz(slot, QUIZ);
-    counter.textContent = (idx + 1) + ' / ' + slides.length;
-    progress.style.width = ((idx + 1) / slides.length * 100) + '%';
-    history.replaceState(null, '', '#slides/' + (idx + 1));
+  var docBuilt = false;
+  function buildDoc() {
+    if (docBuilt) return; docBuilt = true;
+    var toc = $('toc'), sc = $('docScroll');
+    SLIDES.forEach(function (s, i) {
+      var sec = document.createElement('div'); sec.className = 'dsec' + (i === 0 ? ' herosec' : ''); sec.id = 'sec-' + i;
+      sec.innerHTML = '<div class="dbx">' + s.html + '</div>'; sc.appendChild(sec); wireCopy(sec);
+      if (s.quiz) mountQuiz(sec.querySelector('.quiz'));
+      var a = document.createElement('a'); a.href = '#sec-' + i; a.innerHTML = '<span>' + s.icon + '</span><span>' + (i === 0 ? 'Overview' : s.title) + '</span>';
+      a.onclick = function (e) { e.preventDefault(); sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; toc.appendChild(a);
+    });
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (es) { es.forEach(function (en) { if (en.isIntersecting) en.target.classList.add('seen'); }); }, { root: sc, threshold: .05 });
+      sc.querySelectorAll('.dsec').forEach(function (s) { io.observe(s); });
+    } else sc.querySelectorAll('.dsec').forEach(function (s) { s.classList.add('seen'); });
+    sc.addEventListener('scroll', function () {
+      var cur = 0;
+      sc.querySelectorAll('.dsec').forEach(function (s, i) { if (s.offsetTop - sc.scrollTop < 140) cur = i; });
+      toc.querySelectorAll('a').forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+      $('bar').style.width = (sc.scrollTop / Math.max(1, sc.scrollHeight - sc.clientHeight) * 100) + '%';
+    });
   }
   function mode(m) {
-    var present = m === 'slides';
-    document.body.classList.toggle('present', present);
-    document.getElementById('btnSlides').classList.toggle('active', present);
-    document.getElementById('btnDoc').classList.toggle('active', !present);
-    if (present) show(idx); else history.replaceState(null, '', '#doc');
+    var doc = m === 'doc'; document.body.classList.toggle('docmode', doc);
+    $('bDoc').classList.toggle('on', doc); $('bSlides').classList.toggle('on', !doc);
+    if (doc) { buildDoc(); $('docScroll').dispatchEvent(new Event('scroll')); } else go(idx, 1);
   }
-  document.getElementById('btnDoc').onclick = function () { mode('doc'); };
-  document.getElementById('btnSlides').onclick = function () { mode('slides'); };
-  document.getElementById('prev').onclick = function () { show(idx - 1); };
-  document.getElementById('next').onclick = function () { show(idx + 1); };
-  document.getElementById('fs').onclick = function () {
-    if (document.fullscreenElement) document.exitFullscreen(); else document.getElementById('slides').requestFullscreen();
-  };
+  $('bDoc').onclick = function () { mode('doc'); };
+  $('bSlides').onclick = function () { mode('slides'); };
   document.addEventListener('keydown', function (e) {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    var present = document.body.classList.contains('present');
-    if (e.key === 'p' || e.key === 'P') return mode('slides');
-    if (e.key === 'd' || e.key === 'D') return mode('doc');
-    if (!present) return;
-    if (['ArrowRight', 'PageDown', ' '].indexOf(e.key) >= 0) { e.preventDefault(); show(idx + 1); }
-    else if (['ArrowLeft', 'PageUp'].indexOf(e.key) >= 0) { e.preventDefault(); show(idx - 1); }
-    else if (e.key === 'Home') show(0);
-    else if (e.key === 'End') show(slides.length - 1);
-    else if (e.key === 'f' || e.key === 'F') document.getElementById('fs').click();
+    var k = e.key, doc = document.body.classList.contains('docmode');
+    if (k === 'd' || k === 'D') return mode('doc');
+    if (k === 'p' || k === 'P') return mode('slides');
+    if (doc) return;
+    if (k === 'o' || k === 'O') return overview();
+    if (k === 'Escape') return overview(false);
+    if (k === 'f' || k === 'F') return $('bFull').click();
+    if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); go(idx + 1, 1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); go(idx - 1, -1); }
+    else if (k === 'Home') go(0, -1); else if (k === 'End') go(SLIDES.length - 1, 1);
   });
-
-  var m = location.hash.match(/^#slides(?:\/(\d+))?/);
-  if (m) { idx = (parseInt(m[1] || '1', 10) || 1) - 1; mode('slides'); }
+  var m = location.hash.match(/^#slide-(\d+)/); if (m) idx = parseInt(m[1], 10) - 1;
+  if (location.hash === '#doc') mode('doc'); else go(idx, 1);
 })();
 </script>
 </body>

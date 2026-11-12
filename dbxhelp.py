@@ -63,15 +63,17 @@ def dbxhelp(topic=None, target=None, overwrite=True, include_docs=True, branch=D
             )
             print(f"  notebook  {folder}/{nb['name']}")
 
-        if include_docs and t.get("doc"):
-            content = _dbxhelp_fetch(f"{src}/{t['doc']}", branch)
+        # the HTML presentation always comes along: the notebook's 🎞️ cell opens it from the same folder
+        files = [t.get("html")] + ([t.get("doc")] if include_docs else [])
+        for fname in [f for f in files if f]:
+            content = _dbxhelp_fetch(f"{src}/{fname}", branch)
             w.workspace.import_(
-                path=f"{folder}/{t['doc']}",
+                path=f"{folder}/{fname}",
                 content=base64.b64encode(content).decode(),
-                format=ImportFormat.AUTO,
+                format=ImportFormat.RAW,
                 overwrite=overwrite,
             )
-            print(f"  file      {folder}/{t['doc']}")
+            print(f"  file      {folder}/{fname}")
 
         folders.append((t["title"], folder))
 

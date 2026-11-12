@@ -284,3 +284,73 @@ There are three ways to use metric views in a dashboard (**Data** tab → **Add 
 - Feature availability: <https://docs.databricks.com/aws/en/uc-semantics/metric-views/feature-availability>
 - Dashboard datasets (local metric views, export): <https://docs.databricks.com/aws/en/dashboards/manage/data-modeling/datasets>
 - Genie Agents setup: <https://docs.databricks.com/aws/en/genie-agents/set-up>
+
+<!-- quiz:start -->
+## Check yourself
+
+**1. What is the main difference between a standard view and a metric view?**
+
+- a) A metric view is always materialized
+- b) A metric view fixes the measure definition, while the grouping is chosen at query time
+- c) A metric view can only be queried from dashboards
+- d) A metric view does not support joins
+
+<details><summary>Answer</summary>
+
+**b)** A standard view fixes both aggregation and GROUP BY. A metric view stores only the definitions, and the engine computes the measure correctly at whatever grain the query asks for.
+
+</details>
+
+**2. A view stores unique_customers per month. Why is SUM(unique_customers) over a year wrong?**
+
+- a) SUM is not allowed on views
+- b) Distinct counts are not additive: the same customer is counted in many months
+- c) Because of NULL values
+- d) It is correct
+
+<details><summary>Answer</summary>
+
+**b)** COUNT(DISTINCT) is non-additive. A metric view recomputes it from detail rows for the requested grain.
+
+</details>
+
+**3. Which query against a metric view is valid?**
+
+- a) `SELECT * FROM sales_metrics`
+- b) `SELECT region, SUM(net_revenue) FROM sales_metrics GROUP BY region`
+- c) `SELECT region, MEASURE(net_revenue) FROM sales_metrics GROUP BY region`
+- d) `SELECT m.*, c.name FROM sales_metrics m JOIN customers c ON ...`
+
+<details><summary>Answer</summary>
+
+**c)** Measures must be wrapped in MEASURE(). SELECT * and direct joins are not allowed (use a CTE for joins).
+
+</details>
+
+**4. Which agent metadata property does Genie import automatically to match user wording to fields and measures?**
+
+- a) format
+- b) synonyms
+- c) display_name
+- d) materialization
+
+<details><summary>Answer</summary>
+
+**b)** Synonyms (up to 10 per field or measure) are imported by Genie automatically. Formats and display names are mainly used by dashboards and BI tools.
+
+</details>
+
+**5. You prototyped KPIs as a local metric view in an AI/BI dashboard. How do you make them available to a Genie Agent?**
+
+- a) Copy the dashboard
+- b) Use 'Export as a metric view' to create a Unity Catalog metric view
+- c) Genie can read local metric views directly
+- d) It is not possible
+
+<details><summary>Answer</summary>
+
+**b)** Local metric views are scoped to one dashboard. Exporting creates a governed UC metric view that Genie, SQL and BI tools can use.
+
+</details>
+
+<!-- quiz:end -->

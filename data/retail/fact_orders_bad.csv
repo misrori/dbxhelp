@@ -1,0 +1,5 @@
+order_id,order_date,customer_id,product_id,quantity,discount,status
+90001,2026-11-01,12,3,five,0.0,COMPLETED
+90002,not-a-date,44,7,2,0.1,COMPLETED
+90003,2026-11-02,51,2,1,ten percent,OPEN
+90004,2026-11-02,77,9,3,0.0,COMPLETED

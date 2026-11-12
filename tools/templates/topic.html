@@ -4,170 +4,202 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{TITLE}} · dbxhelp</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css">
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 <style>
-  :root { --accent: #FF3621; --navy: #1B3139; --blue: #2272B4; --bg: #F9F7F4; --text: #1F2328; --muted: #6B7280; --border: #E5E7EB; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); }
-  header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: var(--navy); color: #fff; }
-  header a.home { color: #fff; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-  header .title { color: #CBD5E1; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-  .toggle { display: inline-flex; background: rgba(255,255,255,0.12); border-radius: 999px; padding: 3px; }
-  .toggle button { border: 0; background: transparent; color: #E2E8F0; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 0.9em; }
-  .toggle button.active { background: #fff; color: var(--navy); font-weight: 600; }
-  header .link { color: #E2E8F0; font-size: 0.85em; text-decoration: none; border: 1px solid rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 6px; }
-  header .link:hover { background: rgba(255,255,255,0.1); }
-
-  /* ---------- shared markdown styling ---------- */
-  .md h1 { font-size: 2em; color: var(--navy); margin: 0 0 0.5em; }
-  .md h2 { color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 0.3em; margin-top: 1.8em; }
-  .md h3 { color: var(--navy); }
-  .md a { color: var(--blue); }
-  .md code { background: #EEF2F6; padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.9em; }
-  .md pre { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow: auto; }
-  .md pre code { background: none; padding: 0; font-size: 0.88em; line-height: 1.5; }
-  .md blockquote { margin: 1em 0; padding: 10px 16px; border-left: 4px solid var(--blue); background: #E3F2FD; border-radius: 4px; color: #1F2937; }
-  .md blockquote p { margin: 0.3em 0; }
-  .md table { border-collapse: collapse; width: 100%; margin: 1em 0; background: #fff; font-size: 0.95em; }
-  .md th, .md td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
-  .md th { background: #F1F5F9; }
-  .md li { margin: 0.25em 0; line-height: 1.55; }
-  .md p { line-height: 1.6; }
-
-  /* ---------- document mode ---------- */
-  #doc { max-width: 920px; margin: 0 auto; padding: 32px 24px 80px; }
-  #doc .md { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 36px 44px; }
-
-  /* ---------- presentation mode ---------- */
-  #slides { display: none; height: calc(100vh - 52px); padding: 18px; }
-  body.present #doc { display: none; }
-  body.present #slides { display: flex; flex-direction: column; align-items: center; }
-  .stage { flex: 1; width: 100%; max-width: 1280px; display: flex; align-items: center; justify-content: center; min-height: 0; }
-  .slide { width: 100%; height: 100%; max-height: 760px; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-top: 6px solid var(--accent); padding: 40px 56px; overflow: auto; font-size: 1.22em; }
-  .slide.title-slide { display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, var(--navy), #24495A); color: #fff; }
-  .slide.title-slide h1 { color: #fff; font-size: 2.3em; }
-  .slide.title-slide blockquote { background: rgba(255,255,255,0.1); border-left-color: var(--accent); color: #fff; }
-  .slide.title-slide code { background: rgba(255,255,255,0.15); color: #fff; }
-  .slide.title-slide strong { color: #FFD7CF; }
-  .slide h2 { margin-top: 0; font-size: 1.6em; border-bottom-color: var(--accent); }
-  .controls { display: flex; align-items: center; gap: 14px; padding-top: 12px; color: var(--muted); font-size: 0.9em; }
-  .controls button { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 1em; }
-  .controls button:hover { border-color: var(--blue); }
-  .progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--accent); transition: width 0.2s; }
-  body:not(.present) .progress { display: none; }
-  :fullscreen #slides { height: 100vh; }
-  @media (max-width: 700px) { .slide { padding: 24px; font-size: 1em; } #doc .md { padding: 20px; } header .title { display: none; } }
-  @media print { header, .controls, .progress { display: none; } #doc .md { border: 0; } }
+{{NB_CSS}}
+:root{--navy:#1B3139;--accent:#FF3621;--blue:#2272B4;--purple:#7C4DFF;--teal:#00A3A1;--bg:#F4F2EE;--muted:#6B7280;--line:#E5E7EB}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:#1F2937;overflow:hidden}
+body.embedded{height:760px}
+#app{display:flex;flex-direction:column;height:100%}
+header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--navy);color:#fff;flex:none;z-index:5}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:.02em}
+.crumb{color:#94A3B8;font-size:.9em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.seg{display:inline-flex;background:rgba(255,255,255,.1);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;color:#CBD5E1;padding:6px 14px;border-radius:999px;cursor:pointer;font-size:.88em;font-family:inherit}
+.seg button.on{background:#fff;color:var(--navy);font-weight:700}
+.hbtn{border:1px solid rgba(255,255,255,.25);background:transparent;color:#E2E8F0;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.85em;font-family:inherit}
+.hbtn:hover{background:rgba(255,255,255,.1)}
+#bar{height:3px;background:linear-gradient(90deg,var(--accent),var(--purple),var(--teal));width:0;transition:width .35s ease;flex:none}
+#slides{flex:1;display:flex;flex-direction:column;min-height:0;padding:18px 22px 10px;position:relative}
+.stage{flex:1;position:relative;min-height:0;perspective:1400px}
+.slide{position:absolute;inset:0;background:#fff;border-radius:20px;box-shadow:0 18px 50px rgba(27,49,57,.14);overflow:auto;padding:34px 52px 40px}
+.slide.enter-r{animation:inR .5s cubic-bezier(.2,.8,.2,1) both}
+.slide.enter-l{animation:inL .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes inR{from{opacity:0;transform:translateX(60px) rotateY(-6deg)}to{opacity:1;transform:none}}
+@keyframes inL{from{opacity:0;transform:translateX(-60px) rotateY(6deg)}to{opacity:1;transform:none}}
+.slide .dbx{max-width:none;font-size:18px}
+.slide .dbx .sec-head h2{font-size:32px}
+.slide .dbx table{font-size:16px}
+.slide .dbx .code pre{font-size:14.5px}
+.slide .dbx>*{animation:dbxRise .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0) * 90ms + 120ms)}
+.slide.title{padding:0;overflow:hidden;background:transparent;box-shadow:0 18px 50px rgba(27,49,57,.25)}
+.slide.title .dbx{height:100%;display:flex;flex-direction:column;position:relative}
+.slide.title .hero{flex:1;margin:0;border-radius:20px;display:flex;align-items:center;padding:60px 70px 150px}
+.slide.title .hero h1{font-size:54px}
+.slide.title .sub{font-size:20px}
+.slide.title .b1{width:420px;height:420px}.slide.title .b2{width:340px;height:340px}.slide.title .b3{width:300px;height:300px}
+.slide.title .idea{position:absolute;left:70px;right:70px;bottom:40px;font-size:18px;background:rgba(255,255,255,.96)}
+.slide.title .dbx>:not(.hero):not(.idea){display:none}
+.controls{display:flex;align-items:center;gap:12px;padding-top:12px;flex:none}
+.controls .nav{border:1px solid var(--line);background:#fff;border-radius:10px;width:40px;height:36px;cursor:pointer;font-size:16px}
+.controls .nav:hover{border-color:var(--accent);color:var(--accent)}
+.dots{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}
+.dots button{width:10px;height:10px;border-radius:50%;border:0;background:#CBD5E1;cursor:pointer;padding:0;transition:all .25s}
+.dots button.on{background:var(--accent);width:28px;border-radius:6px}
+.count{color:var(--muted);font-size:.85em;min-width:60px;text-align:right}
+.hint{color:#94A3B8;font-size:.78em;white-space:nowrap}
+#overview{position:absolute;inset:0;background:rgba(244,242,238,.97);z-index:4;display:none;overflow:auto;padding:26px}
+#overview.on{display:block;animation:dbxRise .3s both}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.card{background:#fff;border-radius:14px;padding:16px;cursor:pointer;border:2px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.06);transition:all .2s}
+.card:hover{transform:translateY(-3px);border-color:var(--accent)}
+.card .n{font-size:.75em;color:var(--muted);font-weight:700}
+.card .i{font-size:28px;margin:6px 0}
+.card .t{font-weight:700;color:var(--navy)}
+#doc{flex:1;display:none;min-height:0}
+body.docmode #slides{display:none}
+body.docmode #doc{display:flex}
+#toc{width:270px;flex:none;overflow:auto;padding:22px 14px;border-right:1px solid var(--line);background:#fff}
+#toc a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:9px;color:#334155;text-decoration:none;font-size:.9em;margin:2px 0}
+#toc a:hover{background:#F1F5F9}
+#toc a.on{background:#FFF1EE;color:#C62D1A;font-weight:700}
+#docScroll{flex:1;overflow:auto;padding:26px 34px 80px}
+.dsec{background:#fff;border-radius:18px;padding:26px 32px;margin:0 auto 18px;max-width:1000px;box-shadow:0 4px 18px rgba(27,49,57,.06);opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s cubic-bezier(.2,.7,.2,1)}
+.dsec.seen{opacity:1;transform:none}
+.dsec.herosec{padding:0;background:transparent;box-shadow:none}
+.dsec .dbx>*{animation:none}
+.quiz{max-width:820px}
+.confetti{position:fixed;top:-20px;font-size:22px;z-index:9;animation:fall 2.6s linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.7}}
+.dbx .code .copy{display:inline-block;margin-left:auto;border:1px solid #30363D;background:#21262D;color:#C9D1D9;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer}
+.dbx .code .run+.copy{margin-left:10px}
+@media (max-width:760px){.slide{padding:22px}.slide.title .hero{padding:30px 30px 160px}.slide.title .hero h1{font-size:32px}.slide.title .idea{left:16px;right:16px}#toc{display:none}.crumb{display:none}.hint{display:none}}
+@media print{header,.controls,#bar,#toc{display:none}body{overflow:visible}#doc{display:block}#slides{display:none}.dsec{opacity:1;transform:none;box-shadow:none}}
 </style>
 </head>
 <body>
+<div id="app">
 <header>
-  <a class="home" href="{{HOME}}" title="All topics"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</a>
-  <span class="title">{{MODULE}} › {{TITLE}}</span>
-  <div class="toggle" role="tablist">
-    <button id="btnDoc" class="active" title="Document view (D)">📄 Document</button>
-    <button id="btnSlides" title="Presentation view (P)">🎞️ Presentation</button>
-  </div>
-  <a class="link" href="{{MD_FILE}}" download>⬇ .md</a>
-  <a class="link" href="{{GITHUB_URL}}" target="_blank">GitHub</a>
+  <div class="brand"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FF3621"><path d="M12 2 2 7.5l10 5.5 10-5.5L12 2Zm0 13.2L4.2 11 2 12.2 12 17.7l10-5.5-2.2-1.2L12 15.2Zm0 4.6-7.8-4.3L2 16.7 12 22l10-5.3-2.2-1.2L12 19.8Z"/></svg>dbxhelp</div>
+  <div class="crumb">{{MODULE}} › {{TITLE}}</div>
+  <div class="seg"><button id="bSlides" class="on">🎞️ Slides</button><button id="bDoc">📄 Document</button></div>
+  <button class="hbtn" id="bOver" title="Overview (O)">▦</button>
+  <button class="hbtn" id="bFull" title="Fullscreen (F)">⛶</button>
 </header>
-
-<main id="doc"><article class="md" id="docBody"></article></main>
-
+<div id="bar"></div>
 <section id="slides">
-  <div class="stage"><div class="slide md" id="slide"></div></div>
-  <div class="controls">
-    <button id="prev" title="Previous (←)">←</button>
-    <span id="counter"></span>
-    <button id="next" title="Next (→ / Space)">→</button>
-    <button id="fs" title="Fullscreen (F)">⛶</button>
-    <span>← → navigate · F fullscreen · D document</span>
-  </div>
+  <div class="stage" id="stage"></div>
+  <div class="controls"><button class="nav" id="prev" title="Previous (←)">←</button><div class="dots" id="dots"></div><span class="hint">← → navigate · O overview · F fullscreen · D document</span><span class="count" id="count"></span><button class="nav" id="next" title="Next (→)">→</button></div>
+  <div id="overview"><div class="grid" id="grid"></div></div>
 </section>
-<div class="progress" id="progress"></div>
-
-<script type="text/markdown" id="source">
-{{MARKDOWN}}
-</script>
+<section id="doc"><nav id="toc"></nav><div id="docScroll"></div></section>
+</div>
 <script>
 {{QUIZ_JS}}
+var SLIDES = {{SLIDES_JSON}};
 var QUIZ = {{QUIZ_JSON}};
-</script>
-<script>
 (function () {
-  var md = document.getElementById('source').textContent.replace(/<\\\/script/gi, '</script').trim();
-  marked.setOptions({ gfm: true, breaks: false });
-  function render(text) {
-    var div = document.createElement('div');
-    div.innerHTML = marked.parse(text);
-    div.querySelectorAll('pre code').forEach(function (el) { try { hljs.highlightElement(el); } catch (e) {} });
-    div.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; });
-    return div.innerHTML;
-  }
+  if (window.self !== window.top) document.body.classList.add('embedded');
+  if (QUIZ && QUIZ.length) SLIDES.push({ title: 'Check yourself', icon: '🎯', quiz: true,
+    html: '<div class="sec-head"><span class="sec-num">' + String(SLIDES.length).padStart(2, '0') + '</span><span class="sec-icon">🎯</span><h2>Check yourself</h2></div><div class="quiz"></div>' });
+  var idx = 0, stage = document.getElementById('stage'), dots = document.getElementById('dots');
+  var $ = function (id) { return document.getElementById(id); };
 
-  // Document view: the whole markdown file
-  var docBody = document.getElementById('docBody');
-  docBody.innerHTML = render(md);
-  if (QUIZ && QUIZ.length) {
-    docBody.insertAdjacentHTML('beforeend', '<h2>Check yourself</h2><div id="quizDoc"></div>');
-    dbxQuiz('quizDoc', QUIZ);
+  function wireCopy(root) {
+    root.querySelectorAll('.code').forEach(function (c) {
+      var b = c.querySelector('.copy'); if (!b) return;
+      b.onclick = function () {
+        var t = c.querySelector('pre').innerText;
+        (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { b.textContent = 'copied ✓'; setTimeout(function () { b.textContent = 'copy'; }, 1400); }, function () {});
+      };
+    });
   }
+  function confetti() {
+    var e = ['🎉', '✨', '🎊', '⭐', '🧡', '💜'];
+    for (var i = 0; i < 40; i++) {
+      var s = document.createElement('div'); s.className = 'confetti'; s.textContent = e[i % e.length];
+      s.style.left = Math.random() * 100 + 'vw'; s.style.animationDelay = Math.random() * .8 + 's'; document.body.appendChild(s);
+      setTimeout(function (n) { return function () { n.remove(); }; }(s), 3600);
+    }
+  }
+  function mountQuiz(el) { dbxQuiz(el, QUIZ, function (score, total) { if (score === total) confetti(); }); }
 
-  // Presentation view: split on "## " headings (outside fenced code blocks)
-  var slides = [], cur = [], fence = false;
-  md.split('\n').forEach(function (line) {
-    if (/^\s*```/.test(line)) fence = !fence;
-    if (!fence && /^## /.test(line) && cur.length) { slides.push(cur.join('\n')); cur = []; }
-    cur.push(line);
+  SLIDES.forEach(function (s, i) {
+    var d = document.createElement('button'); d.title = (i + 1) + '. ' + s.title; d.onclick = function () { go(i); }; dots.appendChild(d);
+    var c = document.createElement('div'); c.className = 'card';
+    c.innerHTML = '<div class="n">' + String(i + 1).padStart(2, '0') + '</div><div class="i">' + s.icon + '</div><div class="t">' + s.title + '</div>';
+    c.onclick = function () { overview(false); go(i); }; $('grid').appendChild(c);
   });
-  if (cur.length) slides.push(cur.join('\n'));
-  var html = slides.map(render), idx = 0;
-  if (QUIZ && QUIZ.length) { slides.push('quiz'); html.push('<h2>Check yourself</h2><div class="quiz-slot"></div>'); }
+  function go(n, dir) {
+    var prev = idx; idx = Math.max(0, Math.min(SLIDES.length - 1, n));
+    var s = SLIDES[idx], el = document.createElement('div');
+    el.className = 'slide ' + (idx === 0 ? 'title ' : '') + ((dir || (idx >= prev ? 1 : -1)) > 0 ? 'enter-r' : 'enter-l');
+    el.innerHTML = '<div class="dbx">' + s.html + '</div>';
+    Array.prototype.forEach.call(el.firstChild.children, function (ch, k) { ch.style.setProperty('--i', k); });
+    stage.innerHTML = ''; stage.appendChild(el); wireCopy(el);
+    if (s.quiz) mountQuiz(el.querySelector('.quiz'));
+    Array.prototype.forEach.call(dots.children, function (d, k) { d.classList.toggle('on', k === idx); });
+    $('count').textContent = (idx + 1) + ' / ' + SLIDES.length;
+    $('bar').style.width = ((idx + 1) / SLIDES.length * 100) + '%';
+    try { history.replaceState(null, '', '#slide-' + (idx + 1)); } catch (e) {}
+  }
+  function overview(on) { var o = $('overview'); o.classList.toggle('on', on === undefined ? !o.classList.contains('on') : on); }
+  $('prev').onclick = function () { go(idx - 1, -1); };
+  $('next').onclick = function () { go(idx + 1, 1); };
+  $('bOver').onclick = function () { mode('slides'); overview(); };
+  $('bFull').onclick = function () {
+    var r = document.documentElement;
+    if (document.fullscreenElement) document.exitFullscreen(); else if (r.requestFullscreen) r.requestFullscreen().catch(function () {});
+  };
+  var tx = null;
+  stage.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', function (e) { if (tx === null) return; var dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) go(idx + (dx < 0 ? 1 : -1)); tx = null; });
 
-  var slideEl = document.getElementById('slide'), counter = document.getElementById('counter'), progress = document.getElementById('progress');
-  function show(n) {
-    idx = Math.max(0, Math.min(slides.length - 1, n));
-    slideEl.innerHTML = html[idx];
-    slideEl.classList.toggle('title-slide', idx === 0);
-    slideEl.scrollTop = 0;
-    var slot = slideEl.querySelector('.quiz-slot');
-    if (slot) dbxQuiz(slot, QUIZ);
-    counter.textContent = (idx + 1) + ' / ' + slides.length;
-    progress.style.width = ((idx + 1) / slides.length * 100) + '%';
-    history.replaceState(null, '', '#slides/' + (idx + 1));
+  var docBuilt = false;
+  function buildDoc() {
+    if (docBuilt) return; docBuilt = true;
+    var toc = $('toc'), sc = $('docScroll');
+    SLIDES.forEach(function (s, i) {
+      var sec = document.createElement('div'); sec.className = 'dsec' + (i === 0 ? ' herosec' : ''); sec.id = 'sec-' + i;
+      sec.innerHTML = '<div class="dbx">' + s.html + '</div>'; sc.appendChild(sec); wireCopy(sec);
+      if (s.quiz) mountQuiz(sec.querySelector('.quiz'));
+      var a = document.createElement('a'); a.href = '#sec-' + i; a.innerHTML = '<span>' + s.icon + '</span><span>' + (i === 0 ? 'Overview' : s.title) + '</span>';
+      a.onclick = function (e) { e.preventDefault(); sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; toc.appendChild(a);
+    });
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (es) { es.forEach(function (en) { if (en.isIntersecting) en.target.classList.add('seen'); }); }, { root: sc, threshold: .05 });
+      sc.querySelectorAll('.dsec').forEach(function (s) { io.observe(s); });
+    } else sc.querySelectorAll('.dsec').forEach(function (s) { s.classList.add('seen'); });
+    sc.addEventListener('scroll', function () {
+      var cur = 0;
+      sc.querySelectorAll('.dsec').forEach(function (s, i) { if (s.offsetTop - sc.scrollTop < 140) cur = i; });
+      toc.querySelectorAll('a').forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+      $('bar').style.width = (sc.scrollTop / Math.max(1, sc.scrollHeight - sc.clientHeight) * 100) + '%';
+    });
   }
   function mode(m) {
-    var present = m === 'slides';
-    document.body.classList.toggle('present', present);
-    document.getElementById('btnSlides').classList.toggle('active', present);
-    document.getElementById('btnDoc').classList.toggle('active', !present);
-    if (present) show(idx); else history.replaceState(null, '', '#doc');
+    var doc = m === 'doc'; document.body.classList.toggle('docmode', doc);
+    $('bDoc').classList.toggle('on', doc); $('bSlides').classList.toggle('on', !doc);
+    if (doc) { buildDoc(); $('docScroll').dispatchEvent(new Event('scroll')); } else go(idx, 1);
   }
-  document.getElementById('btnDoc').onclick = function () { mode('doc'); };
-  document.getElementById('btnSlides').onclick = function () { mode('slides'); };
-  document.getElementById('prev').onclick = function () { show(idx - 1); };
-  document.getElementById('next').onclick = function () { show(idx + 1); };
-  document.getElementById('fs').onclick = function () {
-    if (document.fullscreenElement) document.exitFullscreen(); else document.getElementById('slides').requestFullscreen();
-  };
+  $('bDoc').onclick = function () { mode('doc'); };
+  $('bSlides').onclick = function () { mode('slides'); };
   document.addEventListener('keydown', function (e) {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    var present = document.body.classList.contains('present');
-    if (e.key === 'p' || e.key === 'P') return mode('slides');
-    if (e.key === 'd' || e.key === 'D') return mode('doc');
-    if (!present) return;
-    if (['ArrowRight', 'PageDown', ' '].indexOf(e.key) >= 0) { e.preventDefault(); show(idx + 1); }
-    else if (['ArrowLeft', 'PageUp'].indexOf(e.key) >= 0) { e.preventDefault(); show(idx - 1); }
-    else if (e.key === 'Home') show(0);
-    else if (e.key === 'End') show(slides.length - 1);
-    else if (e.key === 'f' || e.key === 'F') document.getElementById('fs').click();
+    var k = e.key, doc = document.body.classList.contains('docmode');
+    if (k === 'd' || k === 'D') return mode('doc');
+    if (k === 'p' || k === 'P') return mode('slides');
+    if (doc) return;
+    if (k === 'o' || k === 'O') return overview();
+    if (k === 'Escape') return overview(false);
+    if (k === 'f' || k === 'F') return $('bFull').click();
+    if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); go(idx + 1, 1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); go(idx - 1, -1); }
+    else if (k === 'Home') go(0, -1); else if (k === 'End') go(SLIDES.length - 1, 1);
   });
-
-  var m = location.hash.match(/^#slides(?:\/(\d+))?/);
-  if (m) { idx = (parseInt(m[1] || '1', 10) || 1) - 1; mode('slides'); }
+  var m = location.hash.match(/^#slide-(\d+)/); if (m) idx = parseInt(m[1], 10) - 1;
+  if (location.hash === '#doc') mode('doc'); else go(idx, 1);
 })();
 </script>
 </body>

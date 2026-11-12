@@ -37,8 +37,12 @@ def retail():
     for cid in range(1, 501):
         region = pick(rng, [("EMEA", .45), ("North America", .30), ("APAC", .17), ("LATAM", .08)])
         segment = pick(rng, [("Enterprise", .2), ("SMB", .4), ("Consumer", .4)])
-        customers.append((cid, f"Customer {cid:04d}", region, segment))
-    write_csv(out / "dim_customer.csv", ["customer_id", "customer_name", "region", "segment"], customers)
+        email = f"customer{cid:04d}@example.com"
+        birth_year = rng.randint(1950, 2005)
+        postal_code = f"{rng.randint(1000, 9999)}"
+        customers.append((cid, f"Customer {cid:04d}", region, segment, email, birth_year, postal_code))
+    write_csv(out / "dim_customer.csv",
+              ["customer_id", "customer_name", "region", "segment", "email", "birth_year", "postal_code"], customers)
 
     # Cheap categories have low ids, and low ids are ordered far more often (see fact_orders)
     categories = [("Books", 15.0), ("Beauty", 30.0), ("Home", 80.0), ("Sports", 120.0), ("Electronics", 650.0)]
@@ -60,8 +64,15 @@ def retail():
             pick(rng, [(0.10, .30), (0.25, .10), (0.0, .60)]),
             pick(rng, [("TEST", .02), ("CANCELLED", .06), ("OPEN", .04), ("COMPLETED", .88)]),
         ))
-    write_csv(out / "fact_orders.csv",
-              ["order_id", "order_date", "customer_id", "product_id", "quantity", "discount", "status"], orders)
+    header = ["order_id", "order_date", "customer_id", "product_id", "quantity", "discount", "status"]
+    write_csv(out / "fact_orders.csv", header, orders)
+    # a few malformed rows for rescued-data demos
+    write_csv(out / "fact_orders_bad.csv", header, [
+        (90001, "2026-11-01", 12, 3, "five", 0.0, "COMPLETED"),
+        (90002, "not-a-date", 44, 7, 2, 0.1, "COMPLETED"),
+        (90003, "2026-11-02", 51, 2, 1, "ten percent", "OPEN"),
+        (90004, "2026-11-02", 77, 9, 3, 0.0, "COMPLETED"),
+    ])
 
     manifest = {
         "name": "retail",
@@ -73,7 +84,10 @@ def retail():
              "columns": [["customer_id", "BIGINT NOT NULL", "Unique customer identifier"],
                          ["customer_name", "STRING", "Customer display name"],
                          ["region", "STRING", "Sales region: EMEA, North America, APAC, LATAM"],
-                         ["segment", "STRING", "Customer segment: Enterprise, SMB, Consumer"]]},
+                         ["segment", "STRING", "Customer segment: Enterprise, SMB, Consumer"],
+                         ["email", "STRING", "Customer email address (PII, synthetic)"],
+                         ["birth_year", "INT", "Year of birth (PII, synthetic)"],
+                         ["postal_code", "STRING", "Postal code (quasi-identifier, synthetic)"]]},
             {"name": "dim_product", "file": "dim_product.csv", "comment": "Product dimension",
              "primary_key": ["product_id"],
              "columns": [["product_id", "BIGINT NOT NULL", "Unique product identifier"],
@@ -92,6 +106,8 @@ def retail():
                          ["discount", "DOUBLE", "Discount rate applied to the order (0.0 - 1.0)"],
                          ["status", "STRING", "COMPLETED, OPEN, CANCELLED, or TEST (internal test orders - always exclude)"]]},
         ],
+        "extra_files": [{"file": "fact_orders_bad.csv", "folder": "fact_orders_bad",
+                         "comment": "4 orders with malformed values (quantity 'five', bad date, bad discount)"}],
     }
     (out / "dataset.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(f"data/retail: {len(customers)} customers, {len(products)} products, {len(orders)} orders")
